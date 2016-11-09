@@ -1,6 +1,15 @@
 # usecases-hackathon-2016
 The central point of the CYCLONE Usecases Hackathon (November 2016)
 
+# Venue
+
+IFB-core - UMS 3601
+Bâtiment 21 rez-de-chaussée,
+CNRS, 2 av. de la Terrasse,
+91190 Gif-sur-Yvette, France
+
+Map : http://www.france-bioinformatique.fr/fr/plan-dacc%C3%A8s
+
 # Participants
 
 IFB developers: T. Lacroix, P. Veber, S. Blanck, A. Josso 
