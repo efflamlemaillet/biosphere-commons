@@ -46,6 +46,8 @@ Presentation of CYCLONE components (20’ each)
 
 # Usefull links
 
-CYCLONE Usecases portal : https://cyclone.france-bioinformatique.fr
+CYCLONE Usecases portal: https://cyclone.france-bioinformatique.fr
 
-IFB cloud portal : http://cloud.france-bioinformatique.fr
+IFB cloud portal: http://cloud.france-bioinformatique.fr
+
+SLACK: http://cyclone-project.slack.com
