@@ -56,9 +56,14 @@ Presentation of CYCLONE components (20’ each)
 14:00-16:00 Hackathon
 
 # Usefull links
+_For most of thses tools, you need to ask for an account and to be added to the right group_
 
-CYCLONE Usecases portal: https://cyclone.france-bioinformatique.fr
+CYCLONE Usecases portal: https://cyclone.france-bioinformatique.fr (Account required)
 
-IFB cloud portal: http://cloud.france-bioinformatique.fr
+IFB cloud portal: http://cloud.france-bioinformatique.fr (Account required)
 
-SLACK: http://cyclone-project.slack.com
+SLACK: http://cyclone-project.slack.com (Account required)
+
+Nuvla/Slipstream: https://nuvla.cyclone-project.eu (Account required)
+
+Testbed @LAL: https://keystone.lal.in2p3.fr/dashboard/auth/login/ (Account required)
