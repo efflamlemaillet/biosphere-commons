@@ -3,8 +3,10 @@ The central point of the CYCLONE Usecases Hackathon (November 2016)
 
 # Venue
 
+The hackathon will take place in the building 26 (Council room), but you can also reach us in our premises.
+
 IFB-core - UMS 3601
-Bâtiment 21 rez-de-chaussée,
+Building 21,
 CNRS, 2 av. de la Terrasse,
 91190 Gif-sur-Yvette, France
 
