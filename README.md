@@ -18,7 +18,7 @@ IFB developers: T. Lacroix, P. Veber, S. Blanck, A. Josso
 
 IFB-core : C. Blanchet, B. Brancotte, S. Perrin, M. Bedri, J. Lorenzo
 
-CYCLONE partners (out of IFB-core): C. Loomis (SixSQ), M. Slawik and Omer (TUB, Webex), I. Canyameres (i2CAT, Webex)
+CYCLONE partners (out of IFB-core): C. Loomis (SixSQ), M. Slawik and Ö. Malik (TUB, Webex), I. Canyameres (i2CAT, Webex)
 
 # Agenda
 
@@ -39,7 +39,7 @@ Presentation of applications (10’ each)
 
 Presentation of CYCLONE components (20’ each)
 * Slipstream, C. Loomis
-* Federation Proxy and tools, I. Zilci
+* Federation Proxy and tools, M. Slawik and Ö. Malik
 * CNSMO, I. Canyameres
 * New developments of IFB portal, B. Brancotte
 
