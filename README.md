@@ -43,7 +43,7 @@ Presentation of CYCLONE components (20’ each)
 * CNSMO, I. Canyameres
 * New developments of IFB portal, B. Brancotte
 
-12:30-14:30 Lunch
+12:30-14:00 Lunch
 
 14:00-18:00 Hackathon
 
@@ -51,9 +51,9 @@ Presentation of CYCLONE components (20’ each)
 
 9:00-12:30 Hackathon
 
-12:30-14:30 Lunch
+12:00-13:30 Lunch
 
-14:00-16:00 Hackathon
+13:30-16:00 Hackathon
 
 # Usefull links
 _For most of thses tools, you need to ask for an account and to be added to the right group_
