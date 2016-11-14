@@ -34,7 +34,7 @@ Presentation of applications (10’ each)
 * T. Lacroix, new developments of CYCLONE UC2
 * P. Veber, CYCLONE UC11
 * S. Blanck (in link with CYCLONE UC13)
-* A. Josso
+* A. Josso, App PathoTRACk
 * S. Perrin, CYCLONE UC3
 
 Presentation of CYCLONE components (20’ each)
