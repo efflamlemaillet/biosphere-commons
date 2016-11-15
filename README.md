@@ -67,3 +67,5 @@ SLACK: http://cyclone-project.slack.com (Account required)
 Nuvla/Slipstream: https://nuvla.cyclone-project.eu (Account required)
 
 Testbed @LAL: https://keystone.lal.in2p3.fr/dashboard/auth/login/ (Account required)
+
+Meeting room: https://rendez-vous.renater.fr/cycloneucshack2016
