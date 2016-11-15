@@ -60,19 +60,17 @@ Organisation of the hackathon : hack-howto.md
 # Usefull links
 _For most of thses tools, you need to ask for an account and to be added to the right group_
 
-CYCLONE Usecases portal: https://cyclone.france-bioinformatique.fr (Account required)
-
-IFB cloud portal: http://cloud.france-bioinformatique.fr (Account required)
+Meeting room: https://rendez-vous.renater.fr/cycloneucshack2016
 
 SLACK: http://cyclone-project.slack.com (Account required)
 
-Testbed @LAL: https://keystone.lal.in2p3.fr/dashboard/auth/login/ (Account required)
+CYCLONE Usecases portal: https://cyclone.france-bioinformatique.fr (Account required)
 
-Meeting room: https://rendez-vous.renater.fr/cycloneucshack2016
+IFB cloud portal: http://cloud.france-bioinformatique.fr (Account required).
+IFB Slipstream: https://slipstream.france-bioinformatique.fr
 
 Nuvla/Slipstream : 
-https://nuvla.cyclone-project.eu (Account required)
-
+https://nuvla.cyclone-project.eu (Account required).
 General Documentation 
 – http://ssdocs.sixsq.com
 • Community Edition Code
@@ -83,3 +81,5 @@ General Documentation
 – https://github.com/slipstream/SlipStreamPythonAPI
 • Clojure API
 – https://github.com/slipstream/SlipStreamClojureAPI
+
+Testbed @LAL: https://keystone.lal.in2p3.fr/dashboard/auth/login/ (Account required)
