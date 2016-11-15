@@ -47,6 +47,8 @@ Presentation of CYCLONE components (20’ each)
 
 14:00-18:00 Hackathon
 
+Organisation of the hackathon : hack-howto.md
+
 **Day 2, 16 November 2016**
 
 9:00-12:30 Hackathon
