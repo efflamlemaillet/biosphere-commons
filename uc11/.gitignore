@@ -1,0 +1,6 @@
+*~
+.merlin
+.ocamlinit
+_build
+*.byte
+*.native
