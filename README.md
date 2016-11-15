@@ -64,8 +64,20 @@ IFB cloud portal: http://cloud.france-bioinformatique.fr (Account required)
 
 SLACK: http://cyclone-project.slack.com (Account required)
 
-Nuvla/Slipstream: https://nuvla.cyclone-project.eu (Account required)
-
 Testbed @LAL: https://keystone.lal.in2p3.fr/dashboard/auth/login/ (Account required)
 
 Meeting room: https://rendez-vous.renater.fr/cycloneucshack2016
+
+Nuvla/Slipstream : 
+https://nuvla.cyclone-project.eu (Account required)
+
+General Documentation 
+– http://ssdocs.sixsq.com
+• Community Edition Code
+– https://github.com/slipstream
+• REST API
+– http://ssapi.sixsq.com
+• Python API
+– https://github.com/slipstream/SlipStreamPythonAPI
+• Clojure API
+– https://github.com/slipstream/SlipStreamClojureAPI
