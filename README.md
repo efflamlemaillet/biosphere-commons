@@ -1,6 +1,8 @@
 # usecases-hackathon-2016
 The central point of the CYCLONE Usecases Hackathon (November 2016)
 
+Outcomes of the hackathon: [Demos](demos.md)
+
 # Venue
 
 The hackathon will take place in the building 26 (Council room), but you can also reach us in our premises.
@@ -47,7 +49,7 @@ Presentation of CYCLONE components (20’ each)
 
 14:00-18:00 Hackathon
 
-Organisation of the hackathon : hack-howto.md
+Organisation of the hackathon : [HOWTO](hack-howto.md)
 
 **Day 2, 16 November 2016**
 
