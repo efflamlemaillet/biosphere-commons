@@ -21,7 +21,7 @@ gen_key_for_user(){
         return
     fi
     if [ "$(getent passwd $1 | wc -l)" == "0" ]; then
-        useradd --create-home $1
+        useradd --shell bash --create-home $1
     fi
     mkdir -p $usr_home/.ssh/
     chmod 755 $usr_home/.ssh/
@@ -47,6 +47,11 @@ publish_pubkey(){
         fi
     done
     ss-set pubkey "$pubkey"
+}
+
+get_ip_for_component(){
+    echo $(getent hosts $(ss-get $1:hostname) | awk '{ print $1 }' | head -n 1)
+    #echo $(ss-get $1:vpn.address)
 }
 
 allow_others(){
