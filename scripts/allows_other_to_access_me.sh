@@ -1,5 +1,3 @@
-#!/bin/bash
-
 check_json_tool_shed(){
     if [ ! -e /scripts/json_tool_shed.py ]; then
         mkdir -p /scripts/
@@ -21,7 +19,10 @@ gen_key_for_user(){
     if [ -e $usr_home/.ssh/id_rsa ]; then
         return
     fi
-    mkdir $usr_home/.ssh/
+    if [ "$(getent passwd $1 | wc -l)" == "0" ]; then
+        useradd --create-home $1
+    fi
+    mkdir -p $usr_home/.ssh/
     chown $1:$1 $usr_home/.ssh/
     ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
     ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
