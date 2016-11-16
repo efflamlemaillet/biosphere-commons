@@ -8,6 +8,7 @@ check_json_tool_shed(){
 
 gen_key_for_user(){
     ss-display "Setting ssh key for $1"
+    echo "Setting ssh key for $1"
     if [ "$1" == "" ]; then
         return
     fi
@@ -23,11 +24,11 @@ gen_key_for_user(){
         useradd --create-home $1
     fi
     mkdir -p $usr_home/.ssh/
+    chmod go-w
     ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
     ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
     chown $1:$1 -R $usr_home/.ssh/
-    ls -la $usr_home/.ssh/
-    ss-display "Setting ssh key for $1 done"
+    echo "Setting ssh key for $1 done"
 }
 
 publish_pubkey(){
@@ -50,6 +51,7 @@ publish_pubkey(){
 
 allow_others(){
     ss-display "Allowing others to access to me"
+    echo "Allowing others to access to me"
     check_json_tool_shed
     for name in `ss-get allowed_components | sed 's/, /,/g' | sed 's/,/\n/g' `; do 
         if [ "$name" == "none" ]; then
@@ -85,9 +87,9 @@ allow_others(){
                     fi
                     DOT_SSH=/home/$local_user/.ssh/
                     mkdir -p $DOT_SSH
-                    chmod +x+r $DOT_SSH
+                    chmod 744 $DOT_SSH
                     touch $DOT_SSH/authorized_keys
-                    chmod +x $DOT_SSH/authorized_keys
+                    chmod 744 $DOT_SSH/authorized_keys
                     chown -R $local_user:$local_user /home/$local_user/
                 fi
                 echo "#other components that can access to it" >> $DOT_SSH/authorized_keys
@@ -98,6 +100,7 @@ allow_others(){
             done
         fi
     done
+    echo "Allowing others to access to me done"
 }
 
 if [ "$1" == "--dry-run" ]; then
