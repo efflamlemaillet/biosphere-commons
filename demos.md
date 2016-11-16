@@ -16,7 +16,7 @@ Hackathon Goals:
 - try to create an application with Slipstream with multi components (each dedicated to a service of PathoTRACK platform)
 
 
-All application and components are available in [UC12 folder in Slipstream workspace](https://nuv.la/module/cyclone/UC12_metagenomics_pathotrack).
+Application and components are available in [UC12 folder in Slipstream workspace](https://nuv.la/module/cyclone/UC12_metagenomics_pathotrack).
 
 2 components are working at the end of the hackathon: mysql server and PathoTRACK web user interface server.
 
