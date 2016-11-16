@@ -23,9 +23,9 @@ gen_key_for_user(){
         useradd --create-home $1
     fi
     mkdir -p $usr_home/.ssh/
-    chown $1:$1 $usr_home/.ssh/
     ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
     ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
+    chown $1:$1 -R $usr_home/.ssh/
 }
 
 publish_pubkey(){
