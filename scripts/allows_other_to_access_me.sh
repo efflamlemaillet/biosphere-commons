@@ -1,5 +1,7 @@
 mkdir -p /scripts/
-wget https://github.com/cyclone-project/usecases-hackathon-2016/blob/master/scripts/json_tool_shed.py  -O /scripts/json_tool_shed.py
+if [ ! -e /scripts/json_tool_shed.py ]; then
+    wget https://github.com/cyclone-project/usecases-hackathon-2016/blob/master/scripts/json_tool_shed.py  -O /scripts/json_tool_shed.py
+fi
 
 ss-display "Allowing others to access to me"
 for name in `ss-get allowed_components | sed 's/, /,/g' | sed 's/,/\n/g' `; do 
