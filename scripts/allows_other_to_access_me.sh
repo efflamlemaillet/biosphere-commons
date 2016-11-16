@@ -62,11 +62,16 @@ allow_others(){
         if [ "$name" == "none" ]; then
             echo -e "not needed in fact"
         else
-            IFS=:
-            ary=($name)
-            name=${ary[0]}
-            remote_user=${ary[1]:-root}
-            local_user=${ary[2]:-root}
+            #IFS=:
+            #ary=($name)
+            #name=${ary[0]}
+            #remote_user=${ary[1]:-root}
+            #local_user=${ary[2]:-root}
+            remote_user=$(echo $name| cut -d':' -f2)
+            local_user=$(echo $name| cut -d':' -f3)
+            name=$(echo $name| cut -d':' -f1)
+            remote_user=${remote_user:-root}
+            local_user=${remote_user:-root}
             mult=$(ss-get --timeout 480 $name:multiplicity)
             if [ "mult" == "" ]; then
                 ss-abort "Failed to retrieve multiplicity of $name on $(ss-get hostname)"
