@@ -12,9 +12,9 @@ gen_key_for_user(){
         return
     fi
     if [ "$1" == "root" ]; then
-        usr_home=/root/
+        usr_home=/root
     else
-        usr_home=/home/$1/
+        usr_home=/home/$1
     fi
     if [ -e $usr_home/.ssh/id_rsa ]; then
         return
@@ -34,11 +34,11 @@ publish_pubkey(){
     #pubkey=$(ss-get --timeout 480 pubkey)
     pubkey="{}"
     echo "Publishing pubkey of root"
-    pubkey=$(/ifb/bin/tool_shed.py add_in_json "$pubkey" 'root' "$(cat ~/.ssh/id_rsa.pub)" --print-value)
+    pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" 'root' "$(cat ~/.ssh/id_rsa.pub)" --print-value)
     for user in $(ls -1 /home/); do 
         if [ -e /home/$user/.ssh/id_rsa.pub ]; then
             echo "Publishing pubkey of $user"
-            pubkey=$(/ifb/bin/tool_shed.py add_in_json "$pubkey" "$user" "$(cat /home/$user/.ssh/id_rsa.pub)" --print-value)
+            pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" "$user" "$(cat /home/$user/.ssh/id_rsa.pub)" --print-value)
         else
             echo "Publishing pubkey of $user impossible, /home/$user/.ssh/id_rsa.pub is missing "
         fi
