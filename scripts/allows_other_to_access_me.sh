@@ -24,7 +24,7 @@ gen_key_for_user(){
         useradd --create-home $1
     fi
     mkdir -p $usr_home/.ssh/
-    chmod go-w
+    chmod 755 $usr_home/.ssh/
     ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
     ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
     chown $1:$1 -R $usr_home/.ssh/
@@ -87,7 +87,7 @@ allow_others(){
                     fi
                     DOT_SSH=/home/$local_user/.ssh/
                     mkdir -p $DOT_SSH
-                    chmod 744 $DOT_SSH
+                    chmod 755 $DOT_SSH
                     touch $DOT_SSH/authorized_keys
                     chmod 744 $DOT_SSH/authorized_keys
                     chown -R $local_user:$local_user /home/$local_user/
