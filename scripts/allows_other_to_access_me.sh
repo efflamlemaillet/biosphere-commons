@@ -8,10 +8,10 @@ check_json_tool_shed(){
 
 gen_key_for_user(){
     ss-display "Setting ssh key for $1"
-    if [ "$1" == ""]; then
+    if [ "$1" == "" ]; then
         return
     fi
-    if [ "$1" == "root"]; then
+    if [ "$1" == "root" ]; then
         usr_home=/root/
     else
         usr_home=/home/$1/
