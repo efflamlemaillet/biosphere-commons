@@ -26,6 +26,8 @@ gen_key_for_user(){
     ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
     ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
     chown $1:$1 -R $usr_home/.ssh/
+    ls -la $usr_home/.ssh/
+    ss-display "Setting ssh key for $1 done"
 }
 
 publish_pubkey(){
@@ -91,6 +93,7 @@ allow_others(){
                 echo "#other components that can access to it" >> $DOT_SSH/authorized_keys
                 echo "#$name.$i" >> $DOT_SSH/authorized_keys
                 echo "$pubkey" >> $DOT_SSH/authorized_keys
+                ls -la $DOT_SSH
                 echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user done"
             done
         fi
