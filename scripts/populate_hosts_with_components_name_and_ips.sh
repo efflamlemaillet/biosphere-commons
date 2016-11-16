@@ -7,10 +7,7 @@ populate_hosts_with_components_name_and_ips(){
         ip_field_name=${1:-hostname}
         echo "Using $ip_field_name as field containing the ip"
         for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' `; do 
-            IFS=:
-            ary=($name)
-            cloud=${ary[0]}
-            name=${ary[1]}
+            name=$(echo $name| cut -d':' -f2)
             mult=$(ss-get --timeout 480 $name:multiplicity)
             if [ "mult" == "" ]; then
                 ss-abort "Failed to retrieve multiplicity of $name on $(ss-get hostname)"
