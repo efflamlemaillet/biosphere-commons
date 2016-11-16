@@ -16,8 +16,13 @@ populate_hosts_with_components_name_and_ips(){
             for (( i=1; i <= $mult; i++ )); do
                 echo -e "Fetching ip of $name.$i"
                 ip=$(ss-get --timeout 480 $name.$i:$ip_field_name)
-                echo "$ip    $name-$i" >> /etc/hosts
-                echo "$ip is now in /etc/hosts and known as $name-$i"
+                if [ "$mult" == "1" ]; then
+                    comp_name=$name
+                else
+                    comp_name="$name-$i"
+                fi
+                echo "$ip    $comp_name" >> /etc/hosts
+                echo "$ip is now in /etc/hosts and known as $comp_name"
             done
         done
     else
