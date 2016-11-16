@@ -4,8 +4,8 @@ populate_hosts_with_components_name_and_ips(){
     ss-display "Populating /etc/hosts"
     category=$(ss-get ss:category)
     if [ "$category" == "Deployment" ]; then
-        ip_field_name={$1:-hostname}
-        ss-display "Using $ip_field_name as field containing the ip"
+        ip_field_name=${1:-hostname}
+        echo "Using $ip_field_name as field containing the ip"
         for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' `; do 
             IFS=:
             ary=($name)
