@@ -64,7 +64,7 @@ allow_others(){
                 return 1
             fi
             for (( i=1; i <= $mult; i++ )); do
-                echo -e "Allowing $name.$i to ssh me"
+                echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user"
                 pubkey=$(ss-get --timeout 480 $name.$i:pubkey)
                 pubkey=$(/scripts/json_tool_shed.py find_in_json "$pubkey" "$remote_user" --print-values)
                 if [ "$pubkey" == "" ]; then
