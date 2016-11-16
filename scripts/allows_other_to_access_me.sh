@@ -91,6 +91,7 @@ allow_others(){
                 echo "#other components that can access to it" >> $DOT_SSH/authorized_keys
                 echo "#$name.$i" >> $DOT_SSH/authorized_keys
                 echo "$pubkey" >> $DOT_SSH/authorized_keys
+                echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user done"
             done
         fi
     done
