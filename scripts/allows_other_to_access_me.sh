@@ -28,6 +28,25 @@ gen_key_for_user(){
     chmod 755 $usr_home/.ssh/
     ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
     ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        hostnames_in_cluster=" "
+        for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
+            mult=$(ss-get --timeout 480 $name:multiplicity)
+            if [ "mult" == "" ]; then
+                ss-abort "Failed to retrieve multiplicity of $name on $(ss-get hostname)"
+                return 1
+            fi
+            for (( i=1; i <= $mult; i++ )); do
+                hostnames_in_cluster="$hostnames_in_cluster $name-$i $name.$i"
+            done
+        done
+        echo "\nHost $hostnames_in_cluster
+        ConnectTimeout 3
+        StrictHostKeyChecking no
+        UserKnownHostsFile /dev/null
+        ">>/home/$NEW_USER/.ssh/config
+    fi
     chown $1:$1 -R $usr_home/.ssh/
     echo "Setting ssh key for $1 done"
 }
