@@ -21,7 +21,8 @@ gen_key_for_user(){
         return
     fi
     if [ "$(getent passwd $1 | wc -l)" == "0" ]; then
-        useradd --shell bash --create-home $1
+        useradd --shell /bin/bash --create-home $1
+        chmod 755 $usr_home/
     fi
     mkdir -p $usr_home/.ssh/
     chmod 755 $usr_home/.ssh/
