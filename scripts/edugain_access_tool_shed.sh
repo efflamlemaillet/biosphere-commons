@@ -25,6 +25,6 @@ if [ "$1" == "--dry-run" ]; then
     echo "you could do :"
     echo "    init_edugain_acces_to_user edugain "
     echo "    EDUGAIN_EMAIL=echo_owner_email"
-    echo "    add_email_for_edugain_acces_to_user $(echo_owner_email) edugain"
+    echo "    add_email_for_edugain_acces_to_user \$(echo_owner_email) edugain"
     echo "    add_email_for_edugain_acces_to_user john.doe@nowhere.com edugain"
 fi
