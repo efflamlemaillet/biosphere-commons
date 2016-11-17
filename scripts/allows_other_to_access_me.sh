@@ -41,10 +41,11 @@ gen_key_for_user(){
                 hostnames_in_cluster="$hostnames_in_cluster $name-$i $name.$i"
             done
         done
-        echo "\nHost $hostnames_in_cluster
+        echo "Host $hostnames_in_cluster
         ConnectTimeout 3
         StrictHostKeyChecking no
         UserKnownHostsFile /dev/null
+        
         ">>$usr_home/.ssh/config
         chmod 755 $usr_home/.ssh/config
     fi
