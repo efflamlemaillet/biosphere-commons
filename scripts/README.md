@@ -40,6 +40,35 @@ get the email of the VM owner
 
 OWNER_EMAIL=$(/scripts/echo_owner_email.sh)
 
+## edugain_access_tool_shed.sh
+
+### add_email_for_edugain_acces_to_user
+
+usage:
+```
+source /scripts/edugain_access_tool_shed.sh --dry-run
+init_edugain_acces_to_user edugain
+add_email_for_edugain_acces_to_user $(echo_owner_email) edugain
+add_email_for_edugain_acces_to_user john.doe@nowhere.com edugain
+```
+
+### echo_owner_email
+
+usage:
+```
+source /scripts/edugain_access_tool_shed.sh --dry-run
+OWNER_EMAIL=$(echo_owner_email)
+```
+
+### init_edugain_acces_to_user
+
+usage:
+```
+source /scripts/edugain_access_tool_shed.sh --dry-run
+init_edugain_acces_to_user edugain
+```
+
+
 ## json_tool_shed.py
 
 used by other scripts
