@@ -15,14 +15,23 @@ def add_in_json_command(json_string, key, value, print_values=False):
         :param print_values: print to stdout the returned value(s)
 
     Returns:
-        the json modified such as the key is associated at depth 0 to the given value
+        the json modified such as the key is associated at depth 0 to the given value, if the key was previously
+        associated to an array, and the value not an array, the value is appended to the array.
 
     """
     import json
+    from ast import literal_eval
     try:
         data = json.loads(json_string)
     except ValueError as e:
         data = {}
+    try:
+        value = literal_eval(value)
+    except ValueError:
+        pass
+    if value.__class__ != list and key in data.keys() and data[key].__class__ == list:
+        data[key].append(value)
+        value = data[key]
     data.update({key: value})
     data = json.dumps(data)
     if print_values:
@@ -54,19 +63,28 @@ def find_in_json_command(json_string, key, recursive=False, return_all=False, se
         print json.dumps({'t': {'k': 1, 'y': 2}, 'u': {'k': 12, 'y': 22}, 'k': 3})
         return ""
     ret = []
-    if key in data.keys():
-        ret.append(str(data[key]))
-    if (return_all or len(ret) == 0) and recursive:
-        for v in data.values():
-            found = search_in_json_content(key, v, return_all)
-            if found is not None:
-                if return_all:
-                    for r in found:
-                        ret.append(str(r))
-                else:
-                    if print_values:
-                        print found
-                    return found
+    found = search_in_json_content(key, data, recursive, return_all)
+    if found is not None:
+        if return_all:
+            for r in found:
+                ret.append(str(r))
+        else:
+            if print_values:
+                print found
+            return str(found)
+    # if key in data.keys():
+    #     ret.append(str(data[key]))
+    # if (return_all or len(ret) == 0) and recursive:
+    #     for v in data.values():
+    #         found = search_in_json_content(key, v, return_all)
+    #         if found is not None:
+    #             if return_all:
+    #                 for r in found:
+    #                     ret.append(str(r))
+    #             else:
+    #                 if print_values:
+    #                     print found
+    #                 return found
 
     final_str = separator.join(ret)
     if print_values:
@@ -74,7 +92,7 @@ def find_in_json_command(json_string, key, recursive=False, return_all=False, se
     return final_str
 
 
-def search_in_json_content(keyword, json_content, return_all=False):
+def search_in_json_content(keyword, json_content, recursive, return_all=False):
     '''
     find and return the first value corresponding to the keyword entered.
     It's a recursive function.
@@ -92,7 +110,10 @@ def search_in_json_content(keyword, json_content, return_all=False):
         # for each element
         for element in json_content:
             # call this function and if something else than None is returned, stop the loop
-            res = search_in_json_content(keyword, element)
+            res = search_in_json_content(keyword=keyword,
+                                         json_content=element,
+                                         recursive=recursive,
+                                         return_all=return_all)
             if res is not None:
                 if not return_all:
                     return res
@@ -103,14 +124,19 @@ def search_in_json_content(keyword, json_content, return_all=False):
         # for each key check if the key is the keyword
         for key in json_content.keys():
             # if it's not the case, call this function on whatever is the value of the key (and stop it if there is a result)
-            if key != keyword:
-                res = search_in_json_content(keyword, json_content[key])
+            if str(key) != str(keyword):
+                if not recursive:
+                    res = None
+                else:
+                    res = search_in_json_content(keyword=keyword,
+                                                 json_content=json_content[key],
+                                                 recursive=recursive,
+                                                 return_all=return_all)
                 if res is not None:
                     if not return_all:
                         return res
                     for v in res:
                         values.append(v)
-                        break
             # if the key is the keyword : hurra! you found your stuff! just return the result and stop the loop
             else:
                 if not return_all:
