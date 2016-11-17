@@ -6,6 +6,9 @@ Example can be found in nuv.la [in a single vm script](https://nuv.la/module/cyc
 
 ## allows_other_to_access_me.sh
 
+### gen_key_for_user
+
+generate the id_rsa key for the user given in parameter, if the user is missing, the user is created
 
 ### publish_pubkey
 
@@ -14,10 +17,6 @@ publish in pubkey variable of the vm the pubkey of every user that we can find
 ### allow_others
 
 apply the rules specified in allowed_components
-
-### gen_key_for_user
-
-generate the id_rsa key for the user given in parameter, if the user is missing, the user is created
 
 #### Example: 
 * Host **alice**
