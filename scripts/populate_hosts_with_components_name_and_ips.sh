@@ -30,6 +30,30 @@ populate_hosts_with_components_name_and_ips(){
     fi
 }
 
+populate_hosts_with_components_name_and_ips_on_vm_add(){
+    ip_field_name=${1:-hostname}
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/./-/g")
+        echo Processing $INSTANCE_NAME
+        vpn_address=$(ss-get $INSTANCE_NAME:ip_field_name)
+        echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME/$INSTANCE_NAME_SAFE, $vpn_address"
+        echo "$vpn_address    $INSTANCE_NAME " >> /etc/hosts
+        echo "$vpn_address    $INSTANCE_NAME_SAFE " >> /etc/hosts
+    done
+}
+
+populate_hosts_with_components_name_and_ips_on_vm_remove(){
+    ip_field_name=${1:-hostname}
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/./-/g")
+        echo Processing $INSTANCE_NAME
+        vpn_address=$(ss-get $INSTANCE_NAME:ip_field_name)
+        echo "Removing instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME/$INSTANCE_NAME_SAFE, $vpn_address"
+        sed -i '/$INSTANCE_NAME /d' ./infile
+        sed -i '/$INSTANCE_NAME_SAFE /d' ./infile
+    done
+}
+
 if [ "$1" == "--dry-run" ]; then
     echo "function loaded for populate_hosts_with_components_name_and_ips.sh"
 else
