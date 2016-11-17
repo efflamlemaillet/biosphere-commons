@@ -20,17 +20,17 @@ apply the rules specified in allowed_components
 generate the id_rsa key for the user given in parameter, if the user is missing, the user is created
 
 #### Example: 
-* Host alice
+* Host **alice**
  * allowed_components="bob:root:root, vpn:edugain:visitor"
-* Host bob
+* Host **bob**
  * allowed_components="vpn:edugain:visitor"
-* Host vpn
+* Host **vpn**
  * allowed_components="none"
 
 With this configuration :
-* user edugain on host vpn can do `ssh visitor@alice`
-* user edugain on host vpn can do `ssh visitor@bob`
-* user root on host bob can do `ssh root@alice`
+* user **edugain** on host **vpn** can do `ssh visitor@alice`
+* user **edugain** on host **vpn** can do `ssh visitor@bob`
+* user **root** on host **bob** can do `ssh root@alice`
 
 
 ## complex.conf
