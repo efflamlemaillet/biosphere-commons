@@ -34,12 +34,6 @@ With this configuration :
 
 ## complex.conf
 
-## echo_owner_email.sh
-
-get the email of the VM owner
-
-OWNER_EMAIL=$(/scripts/echo_owner_email.sh)
-
 ## edugain_access_tool_shed.sh
 
 ### add_email_for_edugain_acces_to_user
