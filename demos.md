@@ -3,6 +3,12 @@
 # UC2 Cloud virtual pipeline for microbial genomes analysis
 
 ## Insyght
+Hackathon Goals for UC2 bacterial genomics:
+- organize the VM infrastructure and who do what with Bryan and Jonathan. The problem with the current implementation is that it relies on an image of bacterial genomics for the master and the slave. The bacterial genomics image is quite big and deploying multiples nodes causes frequent crashes. We agreed on a multi-layer implementation in slipstream that will be minimal for the slaves (blast and klast only as 3rd party software).
+	- Bryan and Jonathan are in charge of the "core" VM layers: SGE cluster in a VPN, miniconda, etc… (See below).
+	- I take care of the install specific to the bacterial genomics master VM (Bacterial_Genomics_v3_master): insyght app and pipeline, 3rd party bioinformatics softwares, postgresql, …
+- create a Bacterial_Genomics_v3_master VM using Slipstream and launch it on the IFB Openstask cloud (pilot): I started with the install of bioperl through the perl installer (not conda) and launched it successfully on the IFB Openstask cloud (pilot). The bioperl install can be replaced by the conda install once I extend the SGE_Miniconda_Master VM by Jonathan. For me the next steps will be to continue installing the Bacterial_Genomics_v3_master via slipstream and contact Bryan and Jonathan when it is done.
+The Application and components are available in the [Bacterial_Genomics folder in Slipstream workspace](https://nuvla.cyclone-project.eu/module/cyclone/Bacterial_Genomics/6409)
 
 ## SGE and miniconda
 
