@@ -45,7 +45,8 @@ gen_key_for_user(){
         ConnectTimeout 3
         StrictHostKeyChecking no
         UserKnownHostsFile /dev/null
-        ">>/home/$NEW_USER/.ssh/config
+        ">>$usr_home/.ssh/config
+        chmod 755 $usr_home/.ssh/config
     fi
     chown $1:$1 -R $usr_home/.ssh/
     echo "Setting ssh key for $1 done"
@@ -109,7 +110,7 @@ allow_others(){
                     DOT_SSH=~/.ssh
                 else
                     if [ "$(getent passwd $local_user | wc -l)" == "0" ]; then
-                        useradd --create-home $local_user
+                        useradd --create-home $local_user --shell /bin/bash
                     else
                         if [ ! -e /home/$local_user ]; then
                             mkhomedir_helper $local_user
