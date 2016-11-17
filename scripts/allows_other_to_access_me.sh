@@ -57,11 +57,11 @@ publish_pubkey(){
     #pubkey=$(ss-get --timeout 480 pubkey)
     pubkey="{}"
     echo "Publishing pubkey of root"
-    pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" 'root' "$(cat ~/.ssh/id_rsa.pub)" --print-value)
+    pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" 'root' "u'$(cat ~/.ssh/id_rsa.pub)'" --print-value)
     for user in $(ls -1 /home/); do 
         if [ -e /home/$user/.ssh/id_rsa.pub ]; then
             echo "Publishing pubkey of $user"
-            pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" "$user" "$(cat /home/$user/.ssh/id_rsa.pub)" --print-value)
+            pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" "$user" "u'$(cat /home/$user/.ssh/id_rsa.pub)'" --print-value)
         else
             echo "Publishing pubkey of $user impossible, /home/$user/.ssh/id_rsa.pub is missing "
         fi
