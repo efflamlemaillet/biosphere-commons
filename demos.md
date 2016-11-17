@@ -35,10 +35,11 @@ Next steps will be the configuration of input and output variables for component
 Hackathon Goals: 
 
 - create a VM with the a dockerized version of Galaxy using Slipstream and launch it on Exoscale Cloud and IFB Openstask cloud (pilot)
+- Test edugain authentication in Galaxy
 
 Application and components are available in [UC13 folder in Slipstream workspace](https://nuv.la/module/cyclone/UC13-Galaxy).
 
-At the end of the Hackathon dockerized version of galaxy (version 6433) has been deployed on exoscale, but some problem during docker installation remain on the IFB core pilot.
+At the end of the Hackathon, a dockerized version of galaxy (version 6433) has been deployed on exoscale, but some problem during docker installation remain on the IFB core pilot.
 
 ![dashboard-screenshot](./uc13/nuvla.png)
 ![pathotrack-home-page](./uc13/galaxy_hackathon.png)
