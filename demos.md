@@ -17,8 +17,8 @@ Function (that will be) used in UC2 are regrouped in [./scripts/](https://github
 
 Hackathon Goals: 
 
-- create a VM with the PathoTRACK platform using Slipstream and launch it on Exoscale Cloud and IFB Openstask cloud (pilot)
-- try to create an application with Slipstream with multi components (each dedicated to a service of PathoTRACK platform)
+- Create a VM with the PathoTRACK platform using Slipstream and launch it on Exoscale Cloud and IFB Openstask cloud (pilot)
+- Test edugain authentication in Galaxy
 
 
 Application and components are available in [UC12 folder in Slipstream workspace](https://nuv.la/module/cyclone/UC12_metagenomics_pathotrack).
@@ -31,3 +31,17 @@ Application and components are available in [UC12 folder in Slipstream workspace
 Next steps will be the configuration of input and output variables for components and try to interconnect them in application configuration.
 
 # UC13 Shared environment between cloud Galaxy portals 
+
+Hackathon Goals: 
+
+- create a VM with the a dockerized version of Galaxy using Slipstream and launch it on Exoscale Cloud and IFB Openstask cloud (pilot)
+
+Application and components are available in [UC13 folder in Slipstream workspace](https://nuv.la/module/cyclone/UC13-Galaxy).
+
+At the end of the Hackathon dockerized version of galaxy (version 6433) has been deployed on exoscale, but some problem during docker installation remain on the IFB core pilot.
+
+![dashboard-screenshot](./uc13/nuvla.png)
+![pathotrack-home-page](./uc13/galaxy_hackathon.png)
+
+Next steps will be able to deploy the VM on the IFB core pilot and to be able to authenticate user with edugain credentials.
+
