@@ -20,7 +20,7 @@ IFB developers: T. Lacroix, P. Veber, S. Blanck, A. Josso
 
 IFB-core : C. Blanchet, B. Brancotte, S. Perrin, M. Bedri, J. Lorenzo, A. Sepou Ngailo, F. Sené
 
-CYCLONE partners (out of IFB-core): C. Loomis (SixSQ), M. Slawik and Ö. Malik (TUB, Webex), I. Canyameres (i2CAT, Webex)
+CYCLONE partners (out of IFB-core): C. Loomis (SixSQ), M. Slawik and Ö. Malik (TUB, Visioconference), I. Canyameres (i2CAT, Visioconference)
 
 # Agenda
 
