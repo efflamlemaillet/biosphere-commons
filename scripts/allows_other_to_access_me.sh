@@ -16,7 +16,8 @@ get_users_that_i_should_have(){
 $(ss-get $name.1:allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | grep "$nodename" | cut -d: -f2)"
         done  
     fi
-    users="$users\n$(ss-get allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d: -f3)"
+    users="$users
+$(ss-get allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d: -f3)"
     echo $users | sort | uniq | grep -v "^$"
 }
 
