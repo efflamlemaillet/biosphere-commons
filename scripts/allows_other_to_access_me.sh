@@ -61,7 +61,7 @@ gen_key_for_user_and_allows_hosts(){
 get_hostnames_in_cluster(){
     hostnames_in_cluster=" "
     for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
-        ids=$(ss-get --timeout 480 $name:ids)
+        ids=$(ss-get --timeout 1200 $name:ids)
         if [ "$ids" == "" ]; then
             ss-abort "Failed to retrieve ids of $name on $(ss-get hostname)"
             return 1
@@ -84,7 +84,7 @@ gen_key_for_user(){
 publish_pubkey(){
     ss-display "Fetching already published pubkey(s)"
     check_json_tool_shed
-    #pubkey=$(ss-get --timeout 480 pubkey)
+    #pubkey=$(ss-get --timeout 1200 pubkey)
     pubkey="{}"
     echo "Publishing pubkey of root"
     pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" 'root' "u'$(cat ~/.ssh/id_rsa.pub)'" --print-value)
@@ -122,14 +122,14 @@ allow_others(){
             name=$(echo $name| cut -d':' -f1)
             remote_user=${remote_user:-root}
             local_user=${local_user:-root}
-            ids=$(ss-get --timeout 480 $name:ids)
+            ids=$(ss-get --timeout 1200 $name:ids)
             if [ "$ids" == "" ]; then
                 ss-abort "Failed to retrieve ids of $name on $(ss-get hostname)"
                 return 1
             fi
             for i in $(echo $ids | sed 's/,/\n/g'); do
                 echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user"
-                pubkey=$(ss-get --timeout 480 $name.$i:pubkey)
+                pubkey=$(ss-get --timeout 1200 $name.$i:pubkey)
                 pubkey=$(/scripts/json_tool_shed.py find_in_json "$pubkey" "$remote_user" --print-values)
                 if [ "$pubkey" == "" ]; then
                     ss-abort "Failed to retrieve pubkey of $name.$i on $(ss-get hostname)"
