@@ -117,7 +117,7 @@ allow_others(){
             local_user=$(echo $name| cut -d':' -f3)
             name=$(echo $name| cut -d':' -f1)
             remote_user=${remote_user:-root}
-            local_user=${remote_user:-root}
+            local_user=${local_user:-root}
             mult=$(ss-get --timeout 480 $name:multiplicity)
             if [ "mult" == "" ]; then
                 ss-abort "Failed to retrieve multiplicity of $name on $(ss-get hostname)"
