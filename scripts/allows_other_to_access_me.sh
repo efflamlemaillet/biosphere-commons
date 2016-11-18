@@ -165,8 +165,17 @@ allow_others(){
 
 auto_gen_users(){
     hostnames_in_cluster="$(get_hostnames_in_cluster)"
+    nodename=$(ss-get nodename)
     for user in $(get_users_that_i_should_have); do 
         gen_key_for_user_and_allows_hosts "$user" "$hostnames_in_cluster"
+        for host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep -v '\-[0-9]*$' ); do 
+            target_user=$(echo $(ss-get $host:allowed_components) | sed 's/, /\n/g' | grep "^$nodename:$user:" | cut -d: -f3)
+            if [ "$(echo $target_user | sed 's/ /\n/g' | wc -l)" == "1" ]; then
+                echo "Host $host
+                user $target_user
+                ">> $(cat /etc/passwd | grep "^visitor" | cut -d: -f6)/.ssh/config
+            fi
+        done
     done
 }
 
