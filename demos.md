@@ -12,6 +12,15 @@ The Application and components are available in the [Bacterial_Genomics folder i
 
 ## SGE and miniconda
 
+Hackathon Goals:
+- Create SGE cluster in a VPN (without VPN in progress)
+- Install blast on slave with Miniconda
+
+The recipe is available [here](https://nuv.la/module/cyclone/Bacterial_Genomics/SGE_Miniconda_cluster).
+
+![dashboard-screenshot](./uc2/cluster_sge.png)
+
+
 ## Scripts
 Function (that will be) used in UC2 are regrouped in [./scripts/](https://github.com/cyclone-project/usecases-hackathon-2016/tree/master/scripts) with a HOWTO detailing their usage. [A component](https://nuv.la/module/cyclone/neo4j/script_tester#5-application-workflows+4-deployment) and [a recipe](https://nuv.la/module/cyclone/neo4j/allows_access_example/6553#1-application-components) have been made to allow you to see them in action.
 
