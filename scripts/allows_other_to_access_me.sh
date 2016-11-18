@@ -6,7 +6,20 @@ check_json_tool_shed(){
     fi
 }
 
-gen_key_for_user(){
+get_users_that_i_should_have(){
+    users=""
+    category=$(ss-get ss:category)
+    nodename=$(ss-get nodename)
+    if [ "$category" == "Deployment" ]; then    
+        for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
+            users="$users\n$(ss-get $name.1:allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | grep "$nodename" | cut -d: -f2)"
+        done  
+    fi
+    users="$users\n$(ss-get allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d: -f3)"
+    echo $users | sort | uniq | grep -v "^$"
+}
+
+gen_key_for_user_and_allows_hosts(){
     ss-display "Setting ssh key for $1"
     echo "Setting ssh key for $1"
     if [ "$1" == "" ]; then
@@ -30,17 +43,7 @@ gen_key_for_user(){
     ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
     category=$(ss-get ss:category)
     if [ "$category" == "Deployment" ]; then
-        hostnames_in_cluster=" "
-        for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
-            mult=$(ss-get --timeout 480 $name:multiplicity)
-            if [ "mult" == "" ]; then
-                ss-abort "Failed to retrieve multiplicity of $name on $(ss-get hostname)"
-                return 1
-            fi
-            for (( i=1; i <= $mult; i++ )); do
-                hostnames_in_cluster="$hostnames_in_cluster $name-$i $name.$i"
-            done
-        done
+        hostnames_in_cluster="$2"
         echo "Host $hostnames_in_cluster
         ConnectTimeout 3
         StrictHostKeyChecking no
@@ -51,6 +54,25 @@ gen_key_for_user(){
     fi
     chown $1:$1 -R $usr_home/.ssh/
     echo "Setting ssh key for $1 done"
+}
+
+get_hostnames_in_cluster(){
+    hostnames_in_cluster=" "
+    for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
+        mult=$(ss-get --timeout 480 $name:multiplicity)
+        if [ "mult" == "" ]; then
+            ss-abort "Failed to retrieve multiplicity of $name on $(ss-get hostname)"
+            return 1
+        fi
+        for (( i=1; i <= $mult; i++ )); do
+            hostnames_in_cluster="$hostnames_in_cluster $name-$i $name.$i"
+        done
+    done
+    echo  $hostnames_in_cluster
+}
+
+gen_key_for_user(){
+    gen_key_for_user_and_allows_hosts $1 $(get_hostnames_in_cluster)
 }
 
 publish_pubkey(){
@@ -135,9 +157,25 @@ allow_others(){
     echo "Allowing others to access to me done"
 }
 
+auto_gen_users(){
+    hostnames_in_cluster="$(get_hostnames_in_cluster)"
+    for user in $(get_users_that_i_should_have); do 
+        gen_key_for_user_and_allows_hosts $user $hostnames_in_cluster
+    done
+}
+
 if [ "$1" == "--dry-run" ]; then
     echo "function loaded"
+    echo "You can do:"
+    echo "    source /scripts/allows_other_to_access_me.sh --dry-run "
+    echo "    auto_gen_users"
+    echo "    gen_key_for_user alice"
+    echo "    gen_key_for_user bob"
+    echo "    gen_key_for_user charlie"
+    echo "    publish_pubkey"
+    echo "    allow_others"
 else
+    auto_gen_users
     publish_pubkey
     allow_others
 fi
