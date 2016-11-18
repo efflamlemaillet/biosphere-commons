@@ -22,8 +22,8 @@ $(ss-get allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | c
 }
 
 gen_key_for_user_and_allows_hosts(){
-    ss-display "Setting ssh key for $1"
-    echo "Setting ssh key for $1"
+    ss-display "Setting ssh key for $1 to hosts $2"
+    echo "Setting ssh key for $1 to hosts $2"
     if [ "$1" == "" ]; then
         return
     fi
@@ -66,9 +66,13 @@ get_hostnames_in_cluster(){
             ss-abort "Failed to retrieve multiplicity of $name on $(ss-get hostname)"
             return 1
         fi
-        for (( i=1; i <= $mult; i++ )); do
-            hostnames_in_cluster="$hostnames_in_cluster $name-$i $name.$i"
-        done
+        if [ "$mult" == "1" ]; then
+            hostnames_in_cluster="$hostnames_in_cluster $name"
+        else
+            for (( i=1; i <= $mult; i++ )); do
+                hostnames_in_cluster="$hostnames_in_cluster $name-$i $name.$i"
+            done
+        fi
     done
     echo  $hostnames_in_cluster
 }
