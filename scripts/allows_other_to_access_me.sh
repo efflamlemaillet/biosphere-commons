@@ -78,7 +78,7 @@ get_hostnames_in_cluster(){
 }
 
 gen_key_for_user(){
-    gen_key_for_user_and_allows_hosts $1 $(get_hostnames_in_cluster)
+    gen_key_for_user_and_allows_hosts "$1" "$(get_hostnames_in_cluster)"
 }
 
 publish_pubkey(){
@@ -166,7 +166,7 @@ allow_others(){
 auto_gen_users(){
     hostnames_in_cluster="$(get_hostnames_in_cluster)"
     for user in $(get_users_that_i_should_have); do 
-        gen_key_for_user_and_allows_hosts $user $hostnames_in_cluster
+        gen_key_for_user_and_allows_hosts "$user" "$hostnames_in_cluster"
     done
 }
 
