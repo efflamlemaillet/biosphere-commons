@@ -172,7 +172,7 @@ auto_gen_users(){
             if [ "$(echo $target_user | sed 's/ /\n/g' | wc -l)" == "1" ]; then
                 echo "Host $host
                 user $target_user
-                ">> $(cat /etc/passwd | grep "^visitor" | cut -d: -f6)/.ssh/config
+                ">> "$(cat /etc/passwd | grep "^visitor" | cut -d: -f6)/.ssh/config"
             fi
         done
     done
