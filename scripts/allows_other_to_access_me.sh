@@ -74,7 +74,7 @@ gen_key_for_user_and_allows_hosts(){
 get_hostnames_in_cluster(){
     hostnames_in_cluster=" "
     for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
-        ids=$(get_ids_for_component)
+        ids=$(get_ids_for_component $name)
         if [ "$ids" == "1" ]; then
             hostnames_in_cluster="$hostnames_in_cluster $name"
         else
@@ -130,7 +130,7 @@ allow_others(){
             name=$(echo $name| cut -d':' -f1)
             remote_user=${remote_user:-root}
             local_user=${local_user:-root}
-            ids=$(get_ids_for_component)
+            ids=$(get_ids_for_component $name)
             for i in $(echo $ids | sed 's/,/\n/g'); do
                 echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user"
                 pubkey=$(ss-get --timeout 1200 $name.$i:pubkey)
