@@ -6,6 +6,19 @@ check_json_tool_shed(){
     fi
 }
 
+get_ids_for_component(){
+    if [ "$(ss-get $1:mult)" == "0" ]; then
+        echo ""
+    else
+        echo $(ss-get --timeout 1200 $1:ids)
+    fi
+    #ids=$(ss-get --timeout 1200 $name:ids)
+    #if [ "$ids" == "" ]; then
+    #    ss-abort "Failed to retrieve ids of $name on $(ss-get hostname)"
+    #    return 1
+    #fi
+}
+
 get_users_that_i_should_have(){
     users=""
     category=$(ss-get ss:category)
@@ -61,11 +74,7 @@ gen_key_for_user_and_allows_hosts(){
 get_hostnames_in_cluster(){
     hostnames_in_cluster=" "
     for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
-        ids=$(ss-get --timeout 1200 $name:ids)
-        if [ "$ids" == "" ]; then
-            ss-abort "Failed to retrieve ids of $name on $(ss-get hostname)"
-            return 1
-        fi
+        ids=$(get_ids_for_component)
         if [ "$ids" == "1" ]; then
             hostnames_in_cluster="$hostnames_in_cluster $name"
         else
@@ -121,11 +130,7 @@ allow_others(){
             name=$(echo $name| cut -d':' -f1)
             remote_user=${remote_user:-root}
             local_user=${local_user:-root}
-            ids=$(ss-get --timeout 1200 $name:ids)
-            if [ "$ids" == "" ]; then
-                ss-abort "Failed to retrieve ids of $name on $(ss-get hostname)"
-                return 1
-            fi
+            ids=$(get_ids_for_component)
             for i in $(echo $ids | sed 's/,/\n/g'); do
                 echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user"
                 pubkey=$(ss-get --timeout 1200 $name.$i:pubkey)
