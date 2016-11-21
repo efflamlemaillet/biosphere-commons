@@ -168,9 +168,14 @@ allow_others(){
 }
 
 auto_gen_users(){
+    echo "auto_gen_users"
     hostnames_in_cluster="$(get_hostnames_in_cluster)"
+    echo "hostnames_in_cluster:$hostnames_in_cluster"
     nodename=$(ss-get nodename)
-    for user in $(get_users_that_i_should_have); do 
+    echo "nodename:$nodename"
+    users_that_i_should_have=$(get_users_that_i_should_have)
+    echo "users_that_i_should_have:$users_that_i_should_have"
+    for user in $users_that_i_should_have; do 
         gen_key_for_user_and_allows_hosts "$user" "$hostnames_in_cluster"
         for host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep -v '\-[0-9]*$' ); do 
             target_user=$(echo $(ss-get $host:allowed_components) | sed 's/, /\n/g' | grep "^$nodename:$user:" | cut -d: -f3)
