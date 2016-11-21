@@ -26,7 +26,7 @@ get_available_components() {
             available_components="$available_components,$name"
         fi
     done
-    echo "$available_components"
+    echo "$available_components" | sed 's/^,//g'
 }
 
 get_users_that_i_should_have(){
