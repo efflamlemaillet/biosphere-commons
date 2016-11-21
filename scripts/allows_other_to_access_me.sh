@@ -19,12 +19,22 @@ get_ids_for_component(){
     #fi
 }
 
+get_available_components() {
+    available_components=""
+    for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do     
+        if [ "$(ss-get $name:multiplicity)" != "0" ]; then
+            available_components="$available_components,$name"
+        fi
+    done
+    echo "$available_components"
+}
+
 get_users_that_i_should_have(){
     users=""
     category=$(ss-get ss:category)
     nodename=$(ss-get nodename)
     if [ "$category" == "Deployment" ]; then    
-        for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
+        for name in `$(get_available_components) | sed 's/,/\n/g' | cut -d':' -f2`; do 
             users="$users
 $(ss-get $name.1:allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | grep "$nodename" | cut -d: -f2)"
         done  
@@ -73,7 +83,7 @@ gen_key_for_user_and_allows_hosts(){
 
 get_hostnames_in_cluster(){
     hostnames_in_cluster=" "
-    for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
+    for name in `$(get_available_components) | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do 
         ids=$(get_ids_for_component $name)
         if [ "$ids" == "1" ]; then
             hostnames_in_cluster="$hostnames_in_cluster $name"
@@ -168,14 +178,9 @@ allow_others(){
 }
 
 auto_gen_users(){
-    echo "auto_gen_users"
     hostnames_in_cluster="$(get_hostnames_in_cluster)"
-    echo "hostnames_in_cluster:$hostnames_in_cluster"
     nodename=$(ss-get nodename)
-    echo "nodename:$nodename"
-    users_that_i_should_have=$(get_users_that_i_should_have)
-    echo "users_that_i_should_have:$users_that_i_should_have"
-    for user in $users_that_i_should_have; do 
+    for user in $(get_users_that_i_should_have); do 
         gen_key_for_user_and_allows_hosts "$user" "$hostnames_in_cluster"
         for host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep -v '\-[0-9]*$' ); do 
             target_user=$(echo $(ss-get $host:allowed_components) | sed 's/, /\n/g' | grep "^$nodename:$user:" | cut -d: -f3)
