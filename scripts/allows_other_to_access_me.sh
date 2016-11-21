@@ -7,7 +7,6 @@ check_json_tool_shed(){
 }
 
 get_ids_for_component(){
-    echo "get_ids_for_component $1"
     if [ "$(ss-get $1:multiplicity)" == "0" ]; then
         echo ""
     else
