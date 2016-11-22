@@ -36,7 +36,7 @@ populate_hosts_with_components_name_and_ips(){
 populate_hosts_with_components_name_and_ips_on_vm_add(){
     ip_field_name=${1:-hostname}
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
-        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/./-/g")
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
         echo Processing $INSTANCE_NAME
         vpn_address=$(ss-get $INSTANCE_NAME:$ip_field_name)
         echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME/$INSTANCE_NAME_SAFE, $vpn_address"
@@ -48,7 +48,7 @@ populate_hosts_with_components_name_and_ips_on_vm_add(){
 populate_hosts_with_components_name_and_ips_on_vm_remove(){
     ip_field_name=${1:-hostname}
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
-        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/./-/g")
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
         echo Processing $INSTANCE_NAME
         vpn_address=$(ss-get $INSTANCE_NAME:$ip_field_name)
         echo "Removing instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME/$INSTANCE_NAME_SAFE, $vpn_address"
