@@ -10,7 +10,7 @@ Place yourself somewhere, on your computer, on the master, whereever you want
 
 ### Install virtual env
 
-`sudo apt-get install virtualenv -y`
+`sudo apt-get install python-virtualenv -y`
 
 ### Install the client
 
@@ -18,6 +18,7 @@ Place yourself somewhere, on your computer, on the master, whereever you want
 cd /tmp/
 virtualenv ss-cli
 source ss-cli/bin/activate
+pip install httplib2
 pip install slipstream-client
 ```
 
