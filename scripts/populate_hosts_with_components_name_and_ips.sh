@@ -16,15 +16,8 @@ populate_hosts_with_components_name_and_ips(){
             for (( i=1; i <= $mult; i++ )); do
                 echo -e "Fetching ip of $name.$i"
                 ip=$(ss-get --timeout 480 $name.$i:$ip_field_name)
-                if [ "$mult" == "1" ]; then
-                    comp_name="$name.1 "
-                    comp_name_safe="$name "
-                else
-                    comp_name="$name-$i "
-                    comp_name_safe="$name-$i "
-                fi
-                echo "$ip    $comp_name" >> /etc/hosts
-                echo "$ip    $comp_name_safe" >> /etc/hosts
+                echo "$ip    $name-1 " >> /etc/hosts
+                echo "$ip    $name.1 " >> /etc/hosts
                 echo "$ip is now in /etc/hosts and known as $comp_name"
             done
         done
@@ -52,6 +45,7 @@ populate_hosts_with_components_name_and_ips_on_vm_remove(){
         echo Processing $INSTANCE_NAME
         vpn_address=$(ss-get $INSTANCE_NAME:$ip_field_name)
         echo "Removing instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME/$INSTANCE_NAME_SAFE, $vpn_address"
+        sed -i "/$INSTANCE_NAME /d" /etc/hosts
         sed -i "/$INSTANCE_NAME /d" /etc/hosts
         #as INSTANCE_NAME contains a dot where it can also be a - the next line is useless
         #sed -i "/$INSTANCE_NAME_SAFE /d" /etc/hosts 
