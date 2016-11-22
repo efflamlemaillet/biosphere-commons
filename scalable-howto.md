@@ -1,4 +1,4 @@
-##Source
+# Scalable, HOWTO ?
 
 Based on ssdocs, [here](http://ssdocs.sixsq.com/en/v3.14/advanced_tutorial/automating-slipstream.html#setup) and [there](http://ssdocs.sixsq.com/en/v3.14/advanced_tutorial/scalable-applications.html#scale-up-with-cli)
 
