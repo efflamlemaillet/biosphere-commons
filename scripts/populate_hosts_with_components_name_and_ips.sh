@@ -52,8 +52,9 @@ populate_hosts_with_components_name_and_ips_on_vm_remove(){
         echo Processing $INSTANCE_NAME
         vpn_address=$(ss-get $INSTANCE_NAME:$ip_field_name)
         echo "Removing instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME/$INSTANCE_NAME_SAFE, $vpn_address"
-        sed -i '/$INSTANCE_NAME /d' /etc/hosts
-        sed -i '/$INSTANCE_NAME_SAFE /d' /etc/hosts
+        sed -i "/$INSTANCE_NAME /d" /etc/hosts
+        #as INSTANCE_NAME contains a dot where it can also be a - the next line is useless
+        #sed -i "/$INSTANCE_NAME_SAFE /d" /etc/hosts 
     done
 }
 
