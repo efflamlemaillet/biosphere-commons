@@ -41,3 +41,7 @@ export SLIPSTREAM_RUN=1fd05d69-5904-4fb1-a86b-6d823e0ac8d5
 
 `ss-node-add $SLIPSTREAM_RUN slave 2`
 
+## Clear abort flag
+
+`ss-abort $SLIPSTREAM_RUN --cancel`
+
