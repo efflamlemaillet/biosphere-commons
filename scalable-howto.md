@@ -33,11 +33,11 @@ export SLIPSTREAM_RUN=1fd05d69-5904-4fb1-a86b-6d823e0ac8d5
 
 `ss-user-get $SLIPSTREAM_USERNAME -u $SLIPSTREAM_USERNAME -p $SLIPSTREAM_PASSWORD | grep "<user"`
 
-## scale down you cluster, remove *slave* #3
+## scale down you cluster, remove slave #3
 
-`ss-node-remove $SLIPSTREAM_RUN 3`
+`ss-node-remove $SLIPSTREAM_RUN slave 3`
 
-## scale up you cluster, add two *slave*s
+## scale up you cluster, add two slaves
 
-`ss-node-add $SLIPSTREAM_RUN 2`
+`ss-node-add $SLIPSTREAM_RUN slave 2`
 
