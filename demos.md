@@ -20,6 +20,10 @@ The recipe is available [here](https://nuv.la/module/cyclone/Bacterial_Genomics/
 
 ![dashboard-screenshot](./uc2/cluster_sge.png)
 
+Features:
+- Deployment SGE cluster with or without VPN
+- Scalable for add or remove VM, see [here](https://github.com/cyclone-project/usecases-hackathon-2016/blob/master/scalable-howto.md)
+- Miniconda ready on Master and Slaves with "Application Parameters", see [master](https://nuv.la/module/cyclone/Bacterial_Genomics/SGE_Miniconda_Master#4-application-parameters) or [slave](https://nuv.la/module/cyclone/Bacterial_Genomics/SGE_Miniconda_Node#4-application-parameters)
 
 ## Scripts
 Function (that will be) used in UC2 are regrouped in [./scripts/](https://github.com/cyclone-project/usecases-hackathon-2016/tree/master/scripts) with a HOWTO detailing their usage. [A component](https://nuv.la/module/cyclone/neo4j/script_tester#5-application-workflows+4-deployment) and [a recipe](https://nuv.la/module/cyclone/neo4j/allows_access_example/6553#1-application-components) have been made to allow you to see them in action.
