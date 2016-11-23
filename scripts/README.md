@@ -32,6 +32,14 @@ With this configuration :
 * user **root** on host **bob** can do `ssh root@alice`
 
 
+### auto_gen_users
+
+generate id_rsa key for users that need to have one, when a user is mentionned somewhere but not yet present, the user is created.
+
+#### Example:
+
+From previously described cluster, vpn needs to have an `edugain` user, and alice a `visitor` user. If they are missing they will be created, and then their id_rsa key.
+
 ## complex.conf
 
 ## edugain_access_tool_shed.sh
