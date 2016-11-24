@@ -1,5 +1,13 @@
 #!/bin/bash
 
+get_ids_for_component(){
+    if [ "$(ss-get $1:multiplicity)" == "0" ]; then
+        echo ""
+    else
+        echo $(ss-get --timeout 1200 $1:ids)
+    fi
+}
+
 populate_hosts_with_components_name_and_ips(){
     ss-display "Populating /etc/hosts"
     category=$(ss-get ss:category)
@@ -13,15 +21,16 @@ populate_hosts_with_components_name_and_ips(){
                 ss-abort "Failed to retrieve multiplicity of $name on $(ss-get hostname)"
                 return 1
             fi
-            for (( i=1; i <= $mult; i++ )); do
+            ids=$(get_ids_for_component $name)
+            for i in $(echo $ids | sed 's/,/\n/g'); do
                 echo -e "Fetching ip of $name.$i"
                 ip=$(ss-get --timeout 480 $name.$i:$ip_field_name)
-                echo "$ip    $name-1 " >> /etc/hosts
-                echo "$ip    $name.1 " >> /etc/hosts
+                echo "$ip    $name-$i " >> /etc/hosts
+                echo "$ip    $name.$i " >> /etc/hosts
                 if [ "$mult" == "1" ]; then
                     echo "$ip    $name " >> /etc/hosts
                 fi
-                echo "$ip is now in /etc/hosts and known as $comp_name"
+                echo "$ip is now in /etc/hosts and known as $name-$i, $name.$i and maybe $name if only one"
             done
         done
     else
