@@ -189,13 +189,13 @@ auto_gen_users(){
             target_users_count=$(echo $target_users | grep -v "^$" | sed 's/ /\n/g' | wc -l)
             ssh_config="$(cat /etc/passwd | grep "^$user:" | cut -d: -f6)/.ssh/config"
             if [ "$target_users_count" == "1" ]; then
-                for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" | grep -v '\-[0-9]*$' ); do 
+                for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" ); do 
                     echo "Host $real_host #END
                     user $target_users
                     ">> $ssh_config
                 done
             else
-                for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" | grep -v '\-[0-9]*$' ); do 
+                for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" ); do 
                     sed -i "/Host $real_host #END/,+1d" $ssh_config
                 done
             fi
