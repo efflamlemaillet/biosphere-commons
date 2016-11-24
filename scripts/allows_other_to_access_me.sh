@@ -184,10 +184,10 @@ auto_gen_users(){
         gen_key_for_user_and_allows_hosts "$user" "$hostnames_in_cluster"
         for host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep -v '\-[0-9]*$' ); do 
             target_user=$(echo $(ss-get $host:allowed_components) | sed 's/, /\n/g' | grep "^$nodename:$user:" | cut -d: -f3)
-            if [ "$(echo $target_user | sed 's/ /\n/g' | wc -l)" == "1" ]; then
+            if [ "$(echo $target_user | grep -v "^$" | sed 's/ /\n/g' | wc -l)" == "1" ]; then
                 echo "Host $host
                 user $target_user
-                ">> "$(cat /etc/passwd | grep "^$user" | cut -d: -f6)/.ssh/config"
+                ">> "$(cat /etc/passwd | grep "^$user:" | cut -d: -f6)/.ssh/config"
             fi
         done
     done
