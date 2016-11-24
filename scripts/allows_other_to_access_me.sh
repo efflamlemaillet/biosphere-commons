@@ -69,7 +69,9 @@ gen_key_for_user_and_allows_hosts(){
     category=$(ss-get ss:category)
     if [ "$category" == "Deployment" ]; then
         hostnames_in_cluster="$2"
-        echo "Host $hostnames_in_cluster
+        echo "">>$usr_home/.ssh/config
+        sed -i "/#GEN_HOSTS_CONFIG/,+4d" $usr_home/.ssh/config
+        echo "Host $hostnames_in_cluster #GEN_HOSTS_CONFIG
         ConnectTimeout 3
         StrictHostKeyChecking no
         UserKnownHostsFile /dev/null
@@ -188,15 +190,14 @@ auto_gen_users(){
             target_users=$(echo $(ss-get $host:allowed_components) | sed 's/, /\n/g' | grep "^$nodename:$user:" | cut -d: -f3)
             target_users_count=$(echo $target_users | grep -v "^$" | sed 's/ /\n/g' | wc -l)
             ssh_config="$(cat /etc/passwd | grep "^$user:" | cut -d: -f6)/.ssh/config"
+            for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" ); do 
+                sed -i "/Host $real_host #END/,+2d" $ssh_config
+            done
             if [ "$target_users_count" == "1" ]; then
                 for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" ); do 
                     echo "Host $real_host #END
                     user $target_users
                     ">> $ssh_config
-                done
-            else
-                for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" ); do 
-                    sed -i "/Host $real_host #END/,+1d" $ssh_config
                 done
             fi
         done
