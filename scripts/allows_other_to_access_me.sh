@@ -166,11 +166,13 @@ allow_others(){
                     chmod 744 $DOT_SSH/authorized_keys
                     chown -R $local_user:$local_user /home/$local_user/
                 fi
-                echo "#other components that can access to it" >> $DOT_SSH/authorized_keys
-                echo "#$name.$i" >> $DOT_SSH/authorized_keys
-                echo "$pubkey" >> $DOT_SSH/authorized_keys
-                ls -la $DOT_SSH
-                echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user done"
+                msg="#component $name.$i can ssh me"
+                if [ "$(grep "$msg" $DOT_SSH/authorized_keys | wc -l)" == "0" ]; then
+                    echo $msg >> $DOT_SSH/authorized_keys
+                    echo "$pubkey" >> $DOT_SSH/authorized_keys
+                    ls -la $DOT_SSH
+                    echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user done"
+                fi
             done
         fi
     done
@@ -183,11 +185,19 @@ auto_gen_users(){
     for user in $(get_users_that_i_should_have); do 
         gen_key_for_user_and_allows_hosts "$user" "$hostnames_in_cluster"
         for host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep -v '\-[0-9]*$' ); do 
-            target_user=$(echo $(ss-get $host:allowed_components) | sed 's/, /\n/g' | grep "^$nodename:$user:" | cut -d: -f3)
-            if [ "$(echo $target_user | grep -v "^$" | sed 's/ /\n/g' | wc -l)" == "1" ]; then
-                echo "Host $host
-                user $target_user
-                ">> "$(cat /etc/passwd | grep "^$user:" | cut -d: -f6)/.ssh/config"
+            target_users=$(echo $(ss-get $host:allowed_components) | sed 's/, /\n/g' | grep "^$nodename:$user:" | cut -d: -f3)
+            target_users_count=$(echo $target_users | grep -v "^$" | sed 's/ /\n/g' | wc -l)
+            ssh_config="$(cat /etc/passwd | grep "^$user:" | cut -d: -f6)/.ssh/config"
+            if [ "$target_users_count" == "1" ]; then
+                for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" | grep -v '\-[0-9]*$' ); do 
+                    echo "Host $real_host #END
+                    user $target_users
+                    ">> $ssh_config
+                done
+            else
+                for real_host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep "$host" | grep -v '\-[0-9]*$' ); do 
+                    sed -i "/Host $real_host #END/,+1d" $ssh_config
+                done
             fi
         done
     done
