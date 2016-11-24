@@ -18,6 +18,9 @@ populate_hosts_with_components_name_and_ips(){
                 ip=$(ss-get --timeout 480 $name.$i:$ip_field_name)
                 echo "$ip    $name-1 " >> /etc/hosts
                 echo "$ip    $name.1 " >> /etc/hosts
+                if [ "$mult" == "1" ]; then
+                    echo "$ip    $name " >> /etc/hosts
+                fi
                 echo "$ip is now in /etc/hosts and known as $comp_name"
             done
         done
@@ -30,11 +33,13 @@ populate_hosts_with_components_name_and_ips_on_vm_add(){
     ip_field_name=${1:-hostname}
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+        INSTANCE_NAME_NO_NUM=$(echo $INSTANCE_NAME | cut -d. -f1)
         echo Processing $INSTANCE_NAME
         vpn_address=$(ss-get $INSTANCE_NAME:$ip_field_name)
         echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME/$INSTANCE_NAME_SAFE, $vpn_address"
-        echo "$vpn_address    $INSTANCE_NAME " >> /etc/hosts
         echo "$vpn_address    $INSTANCE_NAME_SAFE " >> /etc/hosts
+        echo "$vpn_address    $INSTANCE_NAME " >> /etc/hosts
+        sed -i "/$INSTANCE_NAME_NO_NUM /d" /etc/hosts
     done
 }
 
