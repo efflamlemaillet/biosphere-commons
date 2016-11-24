@@ -42,6 +42,8 @@ From previously described cluster, vpn needs to have an `edugain` user, and alic
 
 ## complex.conf
 
+File required to enable all SGE options during configuration: [deployment of master](https://nuv.la/module/cyclone/Bacterial_Genomics/SGE_Miniconda_Master/6800#5-application-workflows+4-deployment)
+
 ## edugain_access_tool_shed.sh
 
 ### add_email_for_edugain_acces_to_user
