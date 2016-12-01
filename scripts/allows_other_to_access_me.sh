@@ -54,9 +54,9 @@ gen_key_for_user_and_allows_hosts(){
     if [ "$usr_home" == "" ]; then
         useradd --shell /bin/bash --create-home $1
         usr_home=$(getent passwd $1 | cut -d: -f6)
+        mkdir $usr_home/.ssh/
+        chmod 755 $usr_home/.ssh/
     fi
-    #mkdir -p $usr_home/.ssh/
-    #chmod 755 $usr_home/.ssh/
     if [ ! -e $usr_home/.ssh/id_rsa ]; then
         ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
         ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
@@ -152,16 +152,16 @@ allow_others(){
                     if [ "$(getent passwd $local_user | wc -l)" == "0" ]; then
                         useradd --create-home $local_user --shell /bin/bash
                     else
-                        if [ ! -e /home/$local_user ]; then
-                            mkhomedir_helper $local_user
-                        fi
+                        mkhomedir_helper $local_user
                     fi
-                    DOT_SSH=/home/$local_user/.ssh/
-                    mkdir -p $DOT_SSH
-                    chmod 755 $DOT_SSH
-                    touch $DOT_SSH/authorized_keys
-                    chmod 744 $DOT_SSH/authorized_keys
-                    chown -R $local_user:$local_user /home/$local_user/
+                    DOT_SSH="$(getent passwd $local_user | cut -d: -f6)/.ssh/"
+                    if [ ! -d $DOT_SSH ]; then
+                        mkdir $DOT_SSH
+                        chmod 755 $DOT_SSH
+                        touch $DOT_SSH/authorized_keys
+                        chmod 744 $DOT_SSH/authorized_keys
+                        chown -R $local_user:$local_user /home/$local_user/
+                    fi
                 fi
                 msg="#component $name.$i can ssh me"
                 if [ "$(grep "$msg" $DOT_SSH/authorized_keys | wc -l)" == "0" ]; then
