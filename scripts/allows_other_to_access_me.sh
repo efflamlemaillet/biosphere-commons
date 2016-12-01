@@ -172,7 +172,7 @@ allow_others(){
                 if [ "$(grep "$msg" $DOT_SSH/authorized_keys | wc -l)" == "0" ]; then
                     echo $msg >> $DOT_SSH/authorized_keys
                     echo "$pubkey" >> $DOT_SSH/authorized_keys
-                    ls -la $DOT_SSH
+                    ls -laHi $DOT_SSH
                     echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user done"
                 fi
             done
