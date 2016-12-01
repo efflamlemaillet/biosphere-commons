@@ -65,6 +65,7 @@ gen_key_for_user_and_allows_hosts(){
     if [ ! -e $usr_home/.ssh/id_rsa ]; then
         ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
         ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
+        chmod 700 $usr_home/.ssh/id_rsa
     fi
     category=$(ss-get ss:category)
     if [ "$category" == "Deployment" ]; then
@@ -77,7 +78,8 @@ gen_key_for_user_and_allows_hosts(){
         UserKnownHostsFile /dev/null
         
         ">>$usr_home/.ssh/config
-        chmod -R 755 $usr_home/.ssh/
+        chmod -R g-w $usr_home/.ssh/
+        chmod -R o-w $usr_home/.ssh/
     fi
     chown $1:$1 -R $usr_home/.ssh/
     echo "Setting ssh key for $1 done"
