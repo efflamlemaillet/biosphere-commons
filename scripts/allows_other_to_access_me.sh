@@ -159,7 +159,7 @@ allow_others(){
                     else
                         mkhomedir_helper $local_user
                     fi
-                    DOT_SSH="$(getent passwd $local_user | cut -d: -f6)/.ssh/"
+                    DOT_SSH="$(getent passwd $local_user | cut -d: -f6)/.ssh"
                     if [ ! -d $DOT_SSH ]; then
                         mkdir $DOT_SSH
                         chmod 755 $DOT_SSH
