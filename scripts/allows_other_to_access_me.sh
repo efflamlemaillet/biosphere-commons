@@ -50,26 +50,21 @@ gen_key_for_user_and_allows_hosts(){
     if [ "$1" == "" ]; then
         return
     fi
-    if [ "$1" == "root" ]; then
-        usr_home=/root
-    else
-        usr_home=/home/$1
-    fi
-    if [ -e $usr_home/.ssh/id_rsa ]; then
-        return
-    fi
-    if [ "$(getent passwd $1 | wc -l)" == "0" ]; then
+    usr_home=$(getent passwd $1 | cut -d: -f6)
+    if [ "$usr_home" == "" ]; then
         useradd --shell /bin/bash --create-home $1
-        chmod 755 $usr_home/
+        usr_home=$(getent passwd $1 | cut -d: -f6)
     fi
-    mkdir -p $usr_home/.ssh/
-    chmod 755 $usr_home/.ssh/
-    ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
-    ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
+    #mkdir -p $usr_home/.ssh/
+    #chmod 755 $usr_home/.ssh/
+    if [ ! -e $usr_home/.ssh/id_rsa ]; then
+        ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
+        ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
+    fi
     category=$(ss-get ss:category)
     if [ "$category" == "Deployment" ]; then
         hostnames_in_cluster="$2"
-        echo "">>$usr_home/.ssh/config
+        echo "#$(date)">>$usr_home/.ssh/config
         sed -i "/#GEN_HOSTS_CONFIG/,+4d" $usr_home/.ssh/config
         echo "Host $hostnames_in_cluster #GEN_HOSTS_CONFIG
         ConnectTimeout 3
