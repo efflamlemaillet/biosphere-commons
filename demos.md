@@ -29,6 +29,23 @@ Features:
 Function (that will be) used in UC2 are regrouped in [./scripts/](https://github.com/cyclone-project/usecases-hackathon-2016/tree/master/scripts) with a HOWTO detailing their usage. [A component](https://nuv.la/module/cyclone/neo4j/script_tester#5-application-workflows+4-deployment) and [a recipe](https://nuv.la/module/cyclone/neo4j/allows_access_example/6553#1-application-components) have been made to allow you to see them in action.
 
 # UC3 Live remote cloud processing of sequencing data
+## Design on UC-3:
+- create cluster with :
+	- one master who share disk on data and reference genome with all slaves;
+	- x slaves who analysis data, one sample per slave ;
+- integrate an graphique interface to launch docker and monitore cluster, with Shipyard ;
+
+## Technologies used :
+- Docker swarm has been choice for cluster. Involve a docker images exit for each tool used to analysis. In demo, the exemple use Tophat2 for mapping step and for post-processing output files with samtools. Docker version used is 1.11.3;
+- VPN, use CNSMO solution, CNSMO agent is the base on all nodes ;
+- authentification with edugain.
+
+![UC3_design](./uc3/uc3-design.png)
+
+## During hackathon:
+- add a web page to see and dowload output files. The access use edugain authentification;
+- improve vizualization of results;
+
 
 # UC11 Assembling genomes from sequencing reads 
 
