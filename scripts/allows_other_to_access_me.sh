@@ -50,11 +50,14 @@ gen_key_for_user_and_allows_hosts(){
     if [ "$1" == "" ]; then
         return
     fi
-    usr_home=$(getent passwd $1 | cut -d: -f6)
-    if [ "$usr_home" == "" ]; then
+    getent passwd $1 > /dev/null
+    user_missing=$?
+    if [ "$user_missing" != "0" ]; then
         useradd --shell /bin/bash --create-home $1
-        usr_home=$(getent passwd $1 | cut -d: -f6)
+    else
+        mkhomedir_helper $1
     fi
+    usr_home=$(getent passwd $1 | cut -d: -f6)
     if [ ! -e $usr_home/.ssh/ ]; then
         mkdir $usr_home/.ssh/
         chmod 755 $usr_home/.ssh/
