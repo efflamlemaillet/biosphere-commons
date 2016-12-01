@@ -54,6 +54,8 @@ gen_key_for_user_and_allows_hosts(){
     if [ "$usr_home" == "" ]; then
         useradd --shell /bin/bash --create-home $1
         usr_home=$(getent passwd $1 | cut -d: -f6)
+    fi
+    if [ ! -e $usr_home/.ssh/ ]; then
         mkdir $usr_home/.ssh/
         chmod 755 $usr_home/.ssh/
     fi
@@ -72,7 +74,7 @@ gen_key_for_user_and_allows_hosts(){
         UserKnownHostsFile /dev/null
         
         ">>$usr_home/.ssh/config
-        chmod 755 $usr_home/.ssh/config
+        chmod -R 755 $usr_home/.ssh/
     fi
     chown $1:$1 -R $usr_home/.ssh/
     echo "Setting ssh key for $1 done"
@@ -143,7 +145,7 @@ allow_others(){
                 pubkey=$(ss-get --timeout 1200 $name.$i:pubkey)
                 pubkey=$(/scripts/json_tool_shed.py find_in_json "$pubkey" "$remote_user" --print-values)
                 if [ "$pubkey" == "" ]; then
-                    ss-abort "Failed to retrieve pubkey of $name.$i on $(ss-get hostname)"
+                    ss-abort "Failed to retrieve pubkey of user $remote_user from host $name.$i on $(ss-get hostname)"
                     return 1
                 fi
                 if [ "$local_user" == "root" ]; then
