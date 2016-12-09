@@ -164,12 +164,11 @@ allow_others(){
                     DOT_SSH="$(getent passwd $local_user | cut -d: -f6)/.ssh"
                     if [ ! -d $DOT_SSH ]; then
                         mkdir $DOT_SSH
-                        chmod 700 $DOT_SSH
-                        touch $DOT_SSH/authorized_keys
-                        chmod 700 $DOT_SSH/authorized_keys
-                        chown -R $local_user:$local_user /home/$local_user/
+                        echo "# allows_other_to_access_me.sh created it" >> $DOT_SSH/authorized_keys
                     fi
+                    chmod 700 $DOT_SSH
                 fi
+                LOCAL_USER_HOME_DIR="$(getent passwd $local_user | cut -d: -f6)"
                 msg="#component $name.$i can ssh me"
                 if [ "$(grep "$msg" $DOT_SSH/authorized_keys | wc -l)" == "0" ]; then
                     echo $msg >> $DOT_SSH/authorized_keys
@@ -177,6 +176,8 @@ allow_others(){
                     ls -laHi $DOT_SSH
                     echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user done"
                 fi
+                chmod 700 "$LOCAL_USER_HOME_DIR/.ssh/authorized_keys"
+                chown -R $local_user:$local_user "$LOCAL_USER_HOME_DIR"
             done
         fi
     done
