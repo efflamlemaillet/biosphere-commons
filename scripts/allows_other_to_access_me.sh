@@ -164,13 +164,12 @@ allow_others(){
                     DOT_SSH="$(getent passwd $local_user | cut -d: -f6)/.ssh"
                     if [ ! -d $DOT_SSH ]; then
                         mkdir $DOT_SSH
-                        echo "# allows_other_to_access_me.sh created it" >> $DOT_SSH/authorized_keys
                     fi
                     chmod 700 $DOT_SSH
                 fi
                 LOCAL_USER_HOME_DIR="$(getent passwd $local_user | cut -d: -f6)"
                 msg="#component $name.$i can ssh me"
-                if [ "$(grep "$msg" $DOT_SSH/authorized_keys | wc -l)" == "0" ]; then
+                if [ "$(grep "$msg" $DOT_SSH/authorized_keys 2>/dev/null | wc -l)" == "0" ]; then
                     echo $msg >> $DOT_SSH/authorized_keys
                     echo "$pubkey" >> $DOT_SSH/authorized_keys
                     ls -laHi $DOT_SSH
