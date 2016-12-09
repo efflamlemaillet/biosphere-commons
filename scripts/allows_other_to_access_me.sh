@@ -60,7 +60,7 @@ gen_key_for_user_and_allows_hosts(){
     usr_home=$(getent passwd $1 | cut -d: -f6)
     if [ ! -e $usr_home/.ssh/ ]; then
         mkdir $usr_home/.ssh/
-        chmod 755 $usr_home/.ssh/
+        chmod 700 $usr_home/.ssh/
     fi
     if [ ! -e $usr_home/.ssh/id_rsa ]; then
         ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
@@ -78,8 +78,8 @@ gen_key_for_user_and_allows_hosts(){
         UserKnownHostsFile /dev/null
         
         ">>$usr_home/.ssh/config
-        chmod -R g-w $usr_home/.ssh/
-        chmod -R o-w $usr_home/.ssh/
+        chmod -R 700 $usr_home/.ssh/
+        chmod -R 700 $usr_home/.ssh/
     fi
     chown $1:$1 -R $usr_home/.ssh/
     echo "Setting ssh key for $1 done"
@@ -164,9 +164,9 @@ allow_others(){
                     DOT_SSH="$(getent passwd $local_user | cut -d: -f6)/.ssh"
                     if [ ! -d $DOT_SSH ]; then
                         mkdir $DOT_SSH
-                        chmod 755 $DOT_SSH
+                        chmod 700 $DOT_SSH
                         touch $DOT_SSH/authorized_keys
-                        chmod 744 $DOT_SSH/authorized_keys
+                        chmod 700 $DOT_SSH/authorized_keys
                         chown -R $local_user:$local_user /home/$local_user/
                     fi
                 fi
