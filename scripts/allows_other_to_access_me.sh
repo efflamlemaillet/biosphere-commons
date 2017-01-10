@@ -21,11 +21,15 @@ get_ids_for_component(){
 
 get_available_components() {
     available_components=""
-    for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do     
-        if [ "$(ss-get $name:multiplicity)" != "0" ]; then
-            available_components="$available_components,$name"
-        fi
-    done
+    if [ "$category" == "Deployment" ]; then
+        for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do     
+            if [ "$(ss-get $name:multiplicity)" != "0" ]; then
+                available_components="$available_components,$name"
+            fi
+        done
+    else
+        available_components="machine"
+    fi
     echo "$available_components" | sed 's/^,//g'
 }
 
