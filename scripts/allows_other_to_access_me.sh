@@ -36,8 +36,8 @@ get_available_components() {
 get_users_that_i_should_have(){
     users=""
     category=$(ss-get ss:category)
-    nodename=$(ss-get nodename)
     if [ "$category" == "Deployment" ]; then
+        nodename=$(ss-get nodename)
         for name in `echo "$(get_available_components)" | sed 's/,/\n/g' | cut -d':' -f2`; do 
             users="$users
 $(ss-get $name.1:allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | grep "$nodename" | cut -d: -f2)"
