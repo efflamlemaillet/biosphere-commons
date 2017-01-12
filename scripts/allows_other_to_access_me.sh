@@ -140,6 +140,7 @@ allow_others(){
     ss-display "Allowing others to access to me"
     echo "Allowing others to access to me"
     check_json_tool_shed
+    category=$(ss-get ss:category)
     for name in `ss-get allowed_components | sed 's/, /,/g' | sed 's/,/\n/g' `; do 
         if [ "$name" == "none" ]; then
             echo -e "not needed in fact"
@@ -157,7 +158,11 @@ allow_others(){
             ids=$(get_ids_for_component $name)
             for i in $(echo $ids | sed 's/,/\n/g'); do
                 echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user"
-                pubkey=$(ss-get --timeout 1200 $name.$i:pubkey)
+                if [ "$category" == "Deployment" ]; then
+                    pubkey=$(ss-get --timeout 1200 $name.$i:pubkey)
+                else
+                    pubkey=$(ss-get --timeout 1200 $name:pubkey)
+                fi
                 pubkey=$(/scripts/json_tool_shed.py find_in_json "$pubkey" "$remote_user" --print-values)
                 if [ "$pubkey" == "" ]; then
                     ss-abort "Failed to retrieve pubkey of user $remote_user from host $name.$i on $(ss-get hostname)"
