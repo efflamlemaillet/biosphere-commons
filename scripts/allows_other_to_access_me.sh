@@ -7,6 +7,7 @@ check_json_tool_shed(){
 }
 
 get_ids_for_component(){
+    category=$(ss-get ss:category)
     if [ "$category" == "Deployment" ]; then
         if [ "$(ss-get $1:multiplicity)" == "0" ]; then
             echo ""
@@ -25,6 +26,7 @@ get_ids_for_component(){
 
 get_available_components() {
     available_components=""
+    category=$(ss-get ss:category)
     if [ "$category" == "Deployment" ]; then
         for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do     
             if [ "$(ss-get $name:multiplicity)" != "0" ]; then
@@ -193,7 +195,12 @@ allow_others(){
 
 auto_gen_users(){
     hostnames_in_cluster="$(get_hostnames_in_cluster)"
-    nodename=$(ss-get nodename)
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        nodename=$(ss-get nodename)
+    else
+        nodename="machine"
+    fi
     for user in $(get_users_that_i_should_have); do 
         gen_key_for_user_and_allows_hosts "$user" "$hostnames_in_cluster"
         for host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep -v '\-[0-9]*$' ); do 
