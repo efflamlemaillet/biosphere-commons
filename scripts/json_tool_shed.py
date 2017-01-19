@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 
 # from gitosis@projects.france-bioinformatique.fr:cloudweb.git
 # path /cloudweb/rainbio2/tool_shed.py
