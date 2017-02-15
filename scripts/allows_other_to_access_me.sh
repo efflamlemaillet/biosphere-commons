@@ -85,7 +85,7 @@ gen_key_for_user_and_allows_hosts(){
         echo "#$(date)">>$usr_home/.ssh/config
         sed -i "/#GEN_HOSTS_CONFIG/,+4d" $usr_home/.ssh/config
         echo "Host $hostnames_in_cluster #GEN_HOSTS_CONFIG
-        ConnectTimeout 3
+        ConnectTimeout 30
         StrictHostKeyChecking no
         UserKnownHostsFile /dev/null
         
