@@ -1,0 +1,481 @@
+#! /bin/bash
+
+# Variable
+IP_MASTER=$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | awk -F '[ :]' '{print $4}' )
+NODE=""
+BASH=~/.bashrc
+SHIPYARD_FILE=/ifb/bin/ifb-deploy-shipyard
+CLUSTER_DIR=/root/cluster
+WORK_DIR=/root/mydisk
+INCLUDE_CONFIG=yes
+
+JOINED_NODES=${CLUSTER_DIR}/"joined_nodes"
+
+# Variable to create shared volume
+USE_NFS_SERVER=no
+PACKAGES="nfs-kernel-server"
+EXPORTS_F=/etc/exports
+EXPORTS_RULES="(rw,no_root_squash,subtree_check)"
+
+log=${CLUSTER_DIR}/shipyard.log
+
+function msglog() 
+{
+   	echo -e "$@" | tee -a $log
+}
+
+function msgerr() 
+{ 
+	msglog "================== \n ERROR $@"
+}
+
+function update_bashrc(){
+	msglog "\n=======  Add command in .bashrc file"
+
+	echo -e "\n# Add entry for Docker Swarm"   >> $BASH
+	#used only on the swarm manager
+	echo -e "alias swarm-docker='docker -H tcp://0.0.0.0:5732 --cluster-advertise eth0:2375' "  >> $BASH
+
+	# echo -e "\nIP=$(ifconfig |grep "192.54.201."|cut -d ":" -f 2|cut -d " " -f 1)"  >> $BASH
+	echo -e "\nIP=$IP_MASTER" >> $BASH
+}
+
+function get_ipnodes()
+{
+	less $NODE | grep -v "#"
+}
+
+
+function run_command2vm()
+{
+	ip_node=$1
+	cmd=$2
+
+	if [ "X$1" == "X" ]; then msgerr "Run command2vm: missing ip node." ; exit 1 ; fi
+	if [ "X$2" == "X" ]; then msgerr "Run command2vm: missing command." ; exit 1 ; fi
+	
+	msglog "Command ssh  ssh $SSH_OPTIONS root@${ip_node} $cmd"
+	ssh -o StrictHostKeyChecking=no -p 22 root@${ip_node} $cmd
+
+	if [ $? -ne 0 ]; then
+		msgerr "command: $cmd , failed on VM ${ip_node}"
+		# exit 1
+	else
+		msglog "SUCCESS execute command $cmd  on VM ${ip_node}"
+	fi
+}
+
+
+function check_nodes_exists()
+{
+	# check 
+	status=0
+
+	for ip in $(get_ipnodes)
+	do
+		msglog "slave with ip $ip"
+		
+		run_command2vm $ip "ls" &> /dev/null
+
+		if [ $? -eq 0 ]
+		then
+			msglog "Test connexion $ip successed"
+		else
+			msgerr "ERROR test connexion on $ip. Check machine exist or IP valid "
+			status=1
+		fi
+		
+		if [ $status -ne 0 ]
+		then
+			msgerr "FAIL create shared volume, one or more slaves not found status $status"
+			exit 1
+		fi
+	done
+}
+
+
+# On master
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+function config_master()
+{
+
+	msglog "Configure SSL certificate on master $IP_MASTER"
+	msglog "no yet implemented."
+
+	msglog "Installation automatic master node"
+	export ACTION=deploy 
+	export PORT=80 
+	$SHIPYARD_FILE >> $log
+
+}
+
+# On slave
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+function config_node()
+{
+	local newnodes=$1
+	
+	for val in $(less $newnodes ); do
+		ip_node=$(echo $val | cut -d':' -f1)
+
+		if [ "$INCLUDE_CONFIG"  == "yes" ]; then
+			# Update identifiant docker
+			msglog "Re initialize identifiant file on $ip_node"
+	    	run_command2vm $ip_node "rm /etc/docker/key.json &> /dev/null ;  service docker stop ; service docker start"
+	    fi
+
+		msglog "Stop running Shipyard service, if exits."		
+	    ssh root@${ip_node} "service shipyard stop &> /dev/null"
+		ssh root@${ip_node} "service shipyard clean &> /dev/null"
+
+
+		msglog "Installation automatic new slave $ip_node in cluster"
+		scp $SHIPYARD_FILE root@${ip_node}:/ifb/bin/
+		run_command2vm $ip_node "chmod 755 $SHIPYARD_FILE \
+			&& export ACTION=node DISCOVERY=etcd://$IP_MASTER:4001 \
+			&& $SHIPYARD_FILE &> slave_deploy.log"
+	done
+}
+
+function add_nodes()
+{
+	local tmp=/tmp/newnodes
+	local count=0
+	rm $tmp &> /dev/null
+
+	# Create file with all new IP node not included in joined_node file.
+	for l in $(get_ipnodes)
+	do 
+		# Check new node
+		n=$( if [ -f $JOINED_NODES ]; then grep -c $l $JOINED_NODES; else echo 0 ; fi )		
+		if [ $n -eq 1 ]; then
+			msglog "Node $l already included in cluster."
+		else
+			count=$((count + 1))
+			msglog "Add new node in cluster $l, number $count"
+			echo ${l} >> $tmp
+		fi
+	done
+
+	if [ $count -eq 0 ]; then
+		msglog "All nodes already included in cluster."
+	else 
+		# Add new file		
+		# Configure node
+		config_node $tmp
+		
+		# Create exports file with node IP
+		build_exports_file $tmp
+
+		# reload NFS server
+		reload_nfs_server
+
+		# Mount volume
+		mount_node $tmp
+
+		# Clean remove temporary file
+		rm $tmp
+	fi
+}
+
+
+########################################################################################################################
+# Shared virtual disk
+########################################################################################################################
+function create_shared_volume()
+{
+
+	msglog "Create shared volume on master"
+	mkdir -p $WORK_DIR &> /dev/null
+	umount -f $WORK_DIR &> /dev/null
+
+	if [ "$USE_NFS_SERVER" == "yes" ]; then 
+
+		msglog "Add access to mydisk from NFS Server to master"
+		run_command2vm $IP_DATA "echo -e '${WORK_DIR}\t${IP_MASTER}${EXPORTS_RULES}' >> $EXPORTS_F"
+		run_command2vm $IP_DATA "service nfs reload"
+		m=$(ssh root@${IP_DATA} grep -c $IP_MASTER $EXPORTS_F)		
+		if [ $m -eq 0 ];then msgerr "FAIL to add $IP_MASTER in $EXPORTS_F file in NFS server $IP_DATA." ; exit 1; fi
+
+		msglog "Mount mydisk from NFS server on Master"
+		mount ${IP_DATA}:/$WORK_DIR $WORK_DIR
+	else 
+
+		install_nfs_server
+
+		msglog "Create work dir on master "
+		mkdir -p $WORK_DIR
+
+		# Add configuration to slaves
+		# create tmp file
+		tmp_f=/tmp/exports.tmp
+		if [ -f $EXPORTS_F ]; then
+			mv $EXPORTS_F $tmp_f
+		fi
+	fi
+}
+
+function install_nfs_server()
+{
+	msglog "### NFS server : configure and run"
+	apt-get update &> /dev/null
+
+	if [ $? -ne 0 ]; then msglog "FAIL update machine" ; exit 1 ; fi
+
+	msglog "NFS install package."
+	apt-get install -y $PACKAGES &> /dev/null
+
+	if [ $? -ne 0 ]; then msgerr "install $PACKAGES on system"; else msglog "SUCCESS $PACKAGES installed."; fi
+
+	# Check install
+	# service nfs-kernel-server status
+	msglog "end install configure NFS"
+}
+
+
+function build_exports_file()
+{
+	# Create exports file with node IP
+	if [ "$USE_NFS_SERVER" == "yes" ]; then 
+		build_exports_file_on_nfsserver $@
+	else 
+		build_exports_file_on_master $@
+	fi
+}
+
+function build_exports_file_on_nfsserver()
+{
+	local newnodes=$1
+
+	for val in $(less $newnodes ); do
+		ip_node=$(echo $val | cut -d':' -f1)
+
+		msglog "Share mydisk directory for vm $ip_node"
+		
+		n=$(ssh root@${IP_DATA} grep -c $ip_node $EXPORTS_F )
+		if [ $n -ge 1 ]; then
+			# Node already setting
+			msglog "Node already include in $EXPORTS_F file."
+			continue
+		fi
+
+		run_command2vm $IP_DATA "echo -e '${WORK_DIR}\t${ip_node}${EXPORTS_RULES}' >> $EXPORTS_F"
+		run_command2vm $IP_DATA "service nfs reload"
+	done
+}
+
+function build_exports_file_on_master()
+{
+	local newnodes=$1
+
+	for val in $(less $newnodes ); do
+		ip_node=$(echo $val | cut -d':' -f1)
+
+		msglog "Share mydisk directory for vm $ip_node"
+		
+		n=$( if [ -f $EXPORTS_F ]; then grep -c $ip_node $EXPORTS_F ; else echo 0; fi )
+		if [ $n -ge 1 ]; then
+			# Node already setting
+			msglog "Node already include in $EXPORTS_F file."
+			continue
+		fi
+
+		echo -ne "${WORK_DIR}\t${ip_node}${EXPORTS_RULES}\n" >> $EXPORTS_F
+		if [ $? -ne 0 ];then msgerr "FAIL to add $ip_node in $EXPORTS_F" ; exit 1; fi
+	done
+}
+
+function reload_nfs_server()
+{
+	# reload NFS server
+	if [ "$USE_NFS_SERVER" == "yes" ]; then 
+		reload_nfs_server_on_nfsserver
+	else
+		reload_nfs_server_master		
+	fi
+}
+
+function reload_nfs_server_on_nfsserver()
+{
+	msglog "Restart NFS server $IP_DATA"
+	
+	# Restart NFS server
+	run_command2vm $IP_DATA "service nfs reload"
+
+    msglog "Check dir export"
+	run_command2vm $IP_DATA "exportfs -av"
+}
+
+function reload_nfs_server_master()
+{
+	msglog "Restart nfs kernel server"
+	# Restart NFS server
+	service nfs-kernel-server stop
+	service nfs-kernel-server start
+
+    msglog "List machine in exports file \n $(less $EXPORTS_F)"
+
+	msglog "Check dir export"
+	exportfs -av
+	
+	msglog "Check directory exported with NFS server."
+
+	if [ $(exportfs -av | wc -l) -eq 0 ]
+	then
+		msgerr "export $WORK_DIR failed"
+		exit 1
+	else
+		msglog "SUCCESS export $WORK_DIR"
+	fi
+}
+
+
+function mount_node()
+{
+
+	local newnodes=$1
+	
+	for val in $(less $newnodes ); do
+		ip_node=$(echo $val | cut -d':' -f1)
+		
+		msglog "Mount $WORK_DIR on $ip_node"
+
+		msglog "DEBUG ssh root@${ip_node} mkdir -p $WORK_DIR &> /dev/null"
+		ssh -o StrictHostKeyChecking=no root@${ip_node} mkdir -p $WORK_DIR &> /dev/null
+
+		msglog "DEBUG ssh root@${ip_node} umount -f $WORK_DIR &> /dev/null"
+		ssh -o StrictHostKeyChecking=no root@${ip_node} umount -f $WORK_DIR &> /dev/null
+
+		msglog "DEBUG ssh root@${ip_node} mount ${IP_DATA}:/$WORK_DIR $WORK_DIR"
+		ssh -o StrictHostKeyChecking=no root@${ip_node} mount ${IP_DATA}:$WORK_DIR $WORK_DIR
+		if [ $? -ne 0 ]; then msgerr "Fail to mount workdir on node $ip_node."; exit 1 ; fi
+
+		msglog "Update joined_node file"
+		echo $ip_node >> $JOINED_NODES
+	done
+}
+
+########################################################################################################################
+# uninstall cluster
+########################################################################################################################
+
+function uninstall_nodes()
+{
+	msglog "Clean nodes"
+	for l in $(get_ipnodes)
+	do 
+		msglog "Clean node $l"
+		run_command2vm $l /ifb/bin/uninstall_shipyard.sh  &> /tmp/uninstall_cluster.log
+	done
+
+	msglog "Clean master"
+	/ifb/bin/uninstall_shipyard.sh  &> /tmp/uninstall_cluster.log
+}
+
+function uninstall_cluster()
+{
+	# Confirm demand to uninstall cluster
+	echo "Confirm demand to uninstall cluster : "
+	read rep 
+
+	case $rep in
+        [Yy]* ) uninstall_nodes ;;
+		
+        * ) exit 0 ;;
+	esac
+
+
+}
+
+
+########################################################################################################################
+##
+# Main
+##
+########################################################################################################################
+if [ -h $0 ]; then realfile=$(readlink $0) ; else readfile=$0 ; fi
+
+usage="$(basename "$realfile") <path_to_node_file> [nfs-server-ip] -- program to create Cluster Swarm with Shipyard interface. 
+one argument : path to the node.l file which contains all IP nodes.
+Optional : if data directory is mounted from NFS server, set the IP on server.
+Use option 'uninstall' to uninstall cluster."
+
+mkdir $WORK_DIR &> /dev/null
+
+# Check arguments
+if [ $# -eq 0 ]
+then
+	msgerr "Missing arguments in command line\n\tset path to node.l file included ip node."
+	echo -e "\n${usage}\n"
+	exit 1
+fi
+
+
+NODE=$1
+
+if [ ! -f $NODE -o -z $NODE ]
+then
+	msgerr "Node file $NODE not exists or is empty."
+	echo -e "\n${usage}\n"
+	exit 1
+fi
+
+
+if [ $# -eq 1 ];then
+	IP_DATA=$IP_MASTER
+	msglog "Data directory is mount on master node. $IP_DATA"
+else
+	if [ $2 == "uninstall" ]
+	then
+		msglog "Ask to uninstall existing cluster"
+		uninstall_cluster
+		exit 0
+	
+	else 
+		IP_DATA=$2
+		USE_NFS_SERVER=yes
+		msglog "Set the IP on NFS server $IP_DATA"
+
+		ssh -o StrictHostKeyChecking=no -p 22 root@$IP_DATA ls &> /dev/null
+		if [ $? -ne 0 ];then msgerr "NFS server not accessible $IP_DATA"; exit 1; fi
+	fi
+fi
+
+# Prepare execution
+mkdir -p $CLUSTER_DIR &> /dev/null
+echo "" > $log
+
+# Check all nodes exists
+check_nodes_exists
+
+
+if [ ! -f /root/cluster/cluster_init ]; then
+
+	# Stop existing service Shipyard 
+	msglog "Stop Shipyard service"
+	if [ $( service shipyard status | grep "is running"  &> /dev/null  ; echo $? ) -eq 0 ];then 
+		service shipyard stop
+		service shipyard clean
+		msglog "successfully stop Shipyard service"
+	fi
+
+	# Configure all nodes
+	config_master
+
+	msglog "Update bashrc file"
+	update_bashrc
+
+	# Create shared volume
+	create_shared_volume
+	touch /root/cluster/cluster_init
+fi
+
+# Add nodes in cluster
+add_nodes
+
+
+msglog "\n\nShipyard successfully installed, access on $IP_MASTER admin|shipyard"
+msglog "\nSource .bashrc file."
+
