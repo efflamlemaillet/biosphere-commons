@@ -7,10 +7,15 @@ check_json_tool_shed(){
 }
 
 get_ids_for_component(){
-    if [ "$(ss-get $1:multiplicity)" == "0" ]; then
-        echo ""
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        if [ "$(ss-get $1:multiplicity)" == "0" ]; then
+            echo ""
+        else
+            echo $(ss-get --timeout 1200 $1:ids)
+        fi
     else
-        echo $(ss-get --timeout 1200 $1:ids)
+       echo "1"
     fi
     #ids=$(ss-get --timeout 1200 $name:ids)
     #if [ "$ids" == "" ]; then
@@ -21,22 +26,29 @@ get_ids_for_component(){
 
 get_available_components() {
     available_components=""
-    for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do     
-        if [ "$(ss-get $name:multiplicity)" != "0" ]; then
-            available_components="$available_components,$name"
-        fi
-    done
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        for name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do     
+            if [ "$(ss-get $name:multiplicity)" != "0" ]; then
+                available_components="$available_components,$name"
+            fi
+        done
+    else
+        available_components="machine"
+    fi
     echo "$available_components" | sed 's/^,//g'
 }
 
 get_users_that_i_should_have(){
     users=""
     category=$(ss-get ss:category)
-    nodename=$(ss-get nodename)
     if [ "$category" == "Deployment" ]; then
+        nodename=$(ss-get nodename)
         for name in `echo "$(get_available_components)" | sed 's/,/\n/g' | cut -d':' -f2`; do 
+            ids=$(get_ids_for_component $name)
+            id=$(echo $ids | sed 's/,/\n/g' | head -n 1);
             users="$users
-$(ss-get $name.1:allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | grep "$nodename" | cut -d: -f2)"
+$(ss-get $name.$id:allowed_components | grep -v none | sed 's/, /,/g' | sed 's/,/\n/g' | grep "$nodename" | cut -d: -f2)"
         done  
     fi
     users="$users
@@ -50,34 +62,36 @@ gen_key_for_user_and_allows_hosts(){
     if [ "$1" == "" ]; then
         return
     fi
-    if [ "$1" == "root" ]; then
-        usr_home=/root
-    else
-        usr_home=/home/$1
-    fi
-    if [ -e $usr_home/.ssh/id_rsa ]; then
-        return
-    fi
-    if [ "$(getent passwd $1 | wc -l)" == "0" ]; then
+    getent passwd $1 > /dev/null
+    user_missing=$?
+    if [ "$user_missing" != "0" ]; then
         useradd --shell /bin/bash --create-home $1
-        chmod 755 $usr_home/
+    else
+        mkhomedir_helper $1
     fi
-    mkdir -p $usr_home/.ssh/
-    chmod 755 $usr_home/.ssh/
-    ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
-    ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
+    usr_home=$(getent passwd $1 | cut -d: -f6)
+    if [ ! -e $usr_home/.ssh/ ]; then
+        mkdir $usr_home/.ssh/
+        chmod 700 $usr_home/.ssh/
+    fi
+    if [ ! -e $usr_home/.ssh/id_rsa ]; then
+        ssh-keygen -f $usr_home/.ssh/id_rsa -t rsa -N ''
+        ssh-keygen -y -f $usr_home/.ssh/id_rsa > $usr_home/.ssh/id_rsa.pub
+        chmod 700 $usr_home/.ssh/id_rsa
+    fi
     category=$(ss-get ss:category)
     if [ "$category" == "Deployment" ]; then
         hostnames_in_cluster="$2"
-        echo "">>$usr_home/.ssh/config
+        echo "#$(date)">>$usr_home/.ssh/config
         sed -i "/#GEN_HOSTS_CONFIG/,+4d" $usr_home/.ssh/config
         echo "Host $hostnames_in_cluster #GEN_HOSTS_CONFIG
-        ConnectTimeout 3
+        ConnectTimeout 30
         StrictHostKeyChecking no
         UserKnownHostsFile /dev/null
         
         ">>$usr_home/.ssh/config
-        chmod 755 $usr_home/.ssh/config
+        chmod -R 700 $usr_home/.ssh/
+        chmod -R 700 $usr_home/.ssh/
     fi
     chown $1:$1 -R $usr_home/.ssh/
     echo "Setting ssh key for $1 done"
@@ -108,7 +122,7 @@ publish_pubkey(){
     #pubkey=$(ss-get --timeout 1200 pubkey)
     pubkey="{}"
     for user in $(cat /etc/passwd | grep -v nologin |cut -d: -f1 ); do 
-        pubkey_path="$(cat /etc/passwd | grep "^$user" | cut -d: -f6)/.ssh/id_rsa.pub"
+        pubkey_path="$(getent passwd $user | cut -d: -f6)/.ssh/id_rsa.pub"
         if [ -e $pubkey_path ]; then 
             echo "Publishing pubkey of $user"
             pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" "$user" "u'$(cat $pubkey_path)'" --print-value)
@@ -128,6 +142,7 @@ allow_others(){
     ss-display "Allowing others to access to me"
     echo "Allowing others to access to me"
     check_json_tool_shed
+    category=$(ss-get ss:category)
     for name in `ss-get allowed_components | sed 's/, /,/g' | sed 's/,/\n/g' `; do 
         if [ "$name" == "none" ]; then
             echo -e "not needed in fact"
@@ -145,10 +160,14 @@ allow_others(){
             ids=$(get_ids_for_component $name)
             for i in $(echo $ids | sed 's/,/\n/g'); do
                 echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user"
-                pubkey=$(ss-get --timeout 1200 $name.$i:pubkey)
+                if [ "$category" == "Deployment" ]; then
+                    pubkey=$(ss-get --timeout 1200 $name.$i:pubkey)
+                else
+                    pubkey=$(ss-get --timeout 1200 $name:pubkey)
+                fi
                 pubkey=$(/scripts/json_tool_shed.py find_in_json "$pubkey" "$remote_user" --print-values)
                 if [ "$pubkey" == "" ]; then
-                    ss-abort "Failed to retrieve pubkey of $name.$i on $(ss-get hostname)"
+                    ss-abort "Failed to retrieve pubkey of user $remote_user from host $name.$i on $(ss-get hostname)"
                     return 1
                 fi
                 if [ "$local_user" == "root" ]; then
@@ -157,24 +176,24 @@ allow_others(){
                     if [ "$(getent passwd $local_user | wc -l)" == "0" ]; then
                         useradd --create-home $local_user --shell /bin/bash
                     else
-                        if [ ! -e /home/$local_user ]; then
-                            mkhomedir_helper $local_user
-                        fi
+                        mkhomedir_helper $local_user
                     fi
-                    DOT_SSH=/home/$local_user/.ssh/
-                    mkdir -p $DOT_SSH
-                    chmod 755 $DOT_SSH
-                    touch $DOT_SSH/authorized_keys
-                    chmod 744 $DOT_SSH/authorized_keys
-                    chown -R $local_user:$local_user /home/$local_user/
+                    DOT_SSH="$(getent passwd $local_user | cut -d: -f6)/.ssh"
+                    if [ ! -d $DOT_SSH ]; then
+                        mkdir $DOT_SSH
+                    fi
+                    chmod 700 $DOT_SSH
                 fi
+                LOCAL_USER_HOME_DIR="$(getent passwd $local_user | cut -d: -f6)"
                 msg="#component $name.$i can ssh me"
-                if [ "$(grep "$msg" $DOT_SSH/authorized_keys | wc -l)" == "0" ]; then
+                if [ "$(grep "$msg" $DOT_SSH/authorized_keys 2>/dev/null | wc -l)" == "0" ]; then
                     echo $msg >> $DOT_SSH/authorized_keys
                     echo "$pubkey" >> $DOT_SSH/authorized_keys
-                    ls -la $DOT_SSH
+                    ls -laHi $DOT_SSH
                     echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user done"
                 fi
+                chmod 700 "$LOCAL_USER_HOME_DIR/.ssh/authorized_keys"
+                chown -R $local_user:$local_user "$LOCAL_USER_HOME_DIR"
             done
         fi
     done
@@ -183,7 +202,12 @@ allow_others(){
 
 auto_gen_users(){
     hostnames_in_cluster="$(get_hostnames_in_cluster)"
-    nodename=$(ss-get nodename)
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        nodename=$(ss-get nodename)
+    else
+        nodename="machine"
+    fi
     for user in $(get_users_that_i_should_have); do 
         gen_key_for_user_and_allows_hosts "$user" "$hostnames_in_cluster"
         for host in $(echo $hostnames_in_cluster | sed 's/ /\n/g' | grep -v '\-[0-9]*$' ); do 
