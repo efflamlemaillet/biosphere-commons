@@ -13,7 +13,7 @@ then
 	ss-display "$username has mail $user_mail"
 	EDUGAIN_EMAIL=$user_mail
 else
-	EDUGAIN_EMAIL=${EDUGAIN_EMAIL:-bryan.brancotte@france-bioinformatique.fr}
+	EDUGAIN_EMAIL=${EDUGAIN_EMAIL}
 fi
 
 
