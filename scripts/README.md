@@ -19,17 +19,17 @@ publish in pubkey variable of the vm the pubkey of every user that we can find
 apply the rules specified in allowed_components
 
 #### Example: 
-* Host **alice**
- * allowed_components="bob:root:root, vpn:edugain:visitor"
-* Host **bob**
+* Host **mars**
+ * allowed_components="saturn:root:root, vpn:edugain:visitor"
+* Host **saturn**
  * allowed_components="vpn:edugain:visitor"
 * Host **vpn**
  * allowed_components="none"
 
 With this configuration :
-* user **edugain** on host **vpn** can do `ssh visitor@alice`
-* user **edugain** on host **vpn** can do `ssh visitor@bob`
-* user **root** on host **bob** can do `ssh root@alice`
+* user **edugain** on host **vpn** can do `ssh visitor@mars`
+* user **edugain** on host **vpn** can do `ssh visitor@saturn`
+* user **root** on host **saturn** can do `ssh root@mars`
 
 
 ### auto_gen_users
@@ -38,7 +38,7 @@ generate id_rsa key for users that need to have one, when a user is mentionned s
 
 #### Example:
 
-From previously described cluster, vpn needs to have an `edugain` user, and alice a `visitor` user. If they are missing they will be created, and then their id_rsa key.
+From previously described cluster, vpn needs to have an `edugain` user, and mars a `visitor` user. If they are missing they will be created, and then their id_rsa key.
 
 ## complex.conf
 
@@ -82,8 +82,8 @@ used by other scripts
 populate file /etc/hosts with component name and ips to allow you to do `ssh visitor@my-component`
 
 #### example:
-* Component alice : Two of them
-* Component bob : one of them
+* Component mars : Two of them
+* Component saturn : one of them
 * Component vpn : one of them
 
 ```
@@ -92,10 +92,10 @@ populate_hosts_with_components_name_and_ips hostname
 ```
 content added in /etc/hosts : 
 ```
-134.158.74.135    bob
+134.158.74.135    saturn
 134.158.74.134    vpn
-134.158.74.132    alice-1
-134.158.74.133    alice-2
+134.158.74.132    mars-1
+134.158.74.133    mars-2
 ```
 
 ```
@@ -104,9 +104,8 @@ populate_hosts_with_components_name_and_ips vpn.address
 ```
 content added in /etc/hosts : 
 ```
-10.10.10.1    bob
+10.10.10.1    saturn
 10.10.10.2    vpn
-10.10.10.3    alice-1
-10.10.10.4    alice-2
+10.10.10.3    mars-1
+10.10.10.4    mars-2
 ```
-
