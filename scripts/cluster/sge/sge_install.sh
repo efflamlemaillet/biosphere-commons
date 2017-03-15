@@ -1,4 +1,4 @@
-initiate_variable_global()
+check_if_vpn_or_not()
 {
     component_vpn_name=${component_vpn_name:-vpn}
     
@@ -18,6 +18,11 @@ initiate_variable_global()
         USER_NEW=sge-user
         IP_PARAMETER=hostname
     fi
+}
+
+initiate_variable_global()
+{
+    check_if_vpn_or_not
     
     WORKDIR=/root/mydisk
     HOMEDIR=/home/$USER_NEW
@@ -44,6 +49,14 @@ msg_info()
         echo -e "$@"
         ss-display "$@"
     fi
+}
+
+create_workdir()
+{
+    WORKDIR=/root/mydisk
+    mkdir -p $WORKDIR
+    chmod 750 /root
+    chmod 775 $WORKDIR
 }
 
 make_file_test()
@@ -374,6 +387,17 @@ Install_SGE_master()
     message_at_boot_master
 }
 
+SGE_ready(){
+    ss-get --timeout=3600 $MASTER_HOSTNAME:sge.ready
+    sge_ready=$(ss-get $MASTER_HOSTNAME:sge.ready)
+    msg_info "Waiting SGE to be ready."
+	while [ "$sge_ready" == "false" ]
+	do
+		sleep 10;
+		sge_ready=$(ss-get $MASTER_HOSTNAME:sge.ready)
+	done
+}
+
 Install_SGE_slave()
 {
     msg_info "Installing and Configuring SGE..."
@@ -615,6 +639,193 @@ Config_SGE_master()
 	msg_info "SGE is configured."
 }
 
+## ADD SLAVES
+UNSET_parameters(){
+    ss-set nfs.ready "false"
+    ss-set sge.ready "false"
+}
+
+#####
+# NFS
+#####
+msg_info "Configuring NFS..."
+
+# exporting NFS share from master
+NFS_export_pdisk_add()
+{
+    msg_info "Exporting NFS share of $WORKDIR..."
+	
+    EXPORTS_FILE=/etc/exports
+    if grep -q $WORKDIR $EXPORTS_FILE; then 
+		echo "$WORKDIR ready"
+	else 
+        echo -ne "$WORKDIR\t" >> $EXPORTS_FILE
+        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
+        echo "" >> $EXPORTS_FILE # last for a newline
+    fi
+    if grep -q $WORKDIR.*$SLAVE_IP $EXPORTS_FILE; then 
+	    echo "$SLAVE_IP ready"
+    else
+        WD=$(echo $WORKDIR | sed 's|\/|\\\/|g')
+        sed -ie '/'$WD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
+    fi
+	
+	msg_info "$WORKDIR is exported."
+}
+
+# exporting NFS share from master
+NFS_export_home_add()
+{
+    msg_info "Exporting NFS share of $HOMEDIR..."
+    
+    EXPORTS_FILE=/etc/exports
+    if grep -q $HOMEDIR $EXPORTS_FILE; then 
+		echo "$HOMEDIR ready"
+	else
+        echo -ne "$HOMEDIR\t" >> $EXPORTS_FILE
+        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
+        echo "" >> $EXPORTS_FILE # last for a newline
+    fi
+    if grep -q $HOMEDIR.*$SLAVE_IP $EXPORTS_FILE; then 
+	    echo "$SLAVE_IP ready"
+    else
+        HD=$(echo $HOMEDIR | sed 's|\/|\\\/|g')
+        sed -ie '/'$HD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
+    fi
+	
+	msg_info "$HOMEDIR is exported."
+}
+
+NFS_start_add()
+{
+	msg_info "Starting NFS..."
+	service nfs-kernel-server start
+    service nfs-kernel-server reload
+    exportfs -av
+    msg_info "NFS is started."
+}
+
+add_nodes() {
+    MASTER_ID=1
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        HOSTNAME=$(ss-get nodename)-$MASTER_ID
+    else
+        HOSTNAME=machine-$MASTER_ID
+    fi
+    echo "$HOSTNAME" > /etc/hostname
+    hostname $HOSTNAME
+    
+    ss-display "ADD slave..."
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+        
+        echo "Processing $INSTANCE_NAME"
+        # Do something here. Example:
+        #ss-get $INSTANCE_NAME:ready
+        
+        if [ $IP_PARAMETER == "hostname" ]; then
+            ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
+            PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+        else
+            PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:hostname)
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+        fi
+        sed -i "s|$PUBLIC_SLAVE_IP|$SLAVE_IP|g" /etc/hosts
+        echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME_SAFE, $SLAVE_IP"
+        
+        NFS_export_pdisk_add
+        NFS_export_home_add
+        NFS_start_add
+       
+       if grep -q $SLAVE_IP /etc/hosts; then
+            echo "$SLAVE_IP ready"
+        else
+            echo "$SLAVE_IP $INSTANCE_NAME_SAFE" >> /etc/hosts
+        fi
+        
+        QUEUE=all.q
+        SLOTS=$(ssh root@$SLAVE_IP 'nproc')
+        
+        # add to the execution host list
+        TMPFILE=/tmp/sge.hostname-$SLAVE_IP
+        echo -e "hostname $INSTANCE_NAME_SAFE\nload_scaling NONE\ncomplex_values NONE\nuser_lists NONE\nxuser_lists NONE\nprojects NONE\nxprojects NONE\nusage_scaling NONE\nreport_variables NONE" > $TMPFILE
+        qconf -Ae $TMPFILE
+        rm $TMPFILE
+        
+        # add to the all hosts list
+        qconf -aattr hostgroup hostlist $INSTANCE_NAME_SAFE @allhosts
+        
+        # enable the host for the queue, in case it was disabled and not removed
+        qmod -e $QUEUE@$INSTANCE_NAME_SAFE
+        
+        if [ "$SLOTS" ]; then
+            qconf -aattr queue slots "[$INSTANCE_NAME_SAFE=$SLOTS]" $QUEUE
+        fi
+    done
+    ss-set nfs.ready "true"
+    ss-set sge.ready "true"
+    ss-display "Slave is added."
+}
+
+## Remove slaves
+rm_nodes() {
+    MASTER_ID=1
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        HOSTNAME=$(ss-get nodename)-$MASTER_ID
+    else
+        HOSTNAME=machine-$MASTER_ID
+    fi
+    echo "$HOSTNAME" > /etc/hostname
+    hostname $HOSTNAME
+    
+    ss-display "RM slave..."
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+    
+        echo "Processing $INSTANCE_NAME"
+        # Do something here. Example:
+        #ss-get $INSTANCE_NAME:ready
+        #SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+        
+        if [ $IP_PARAMETER == "hostname" ]; then
+            ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
+            PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+        else
+            PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:hostname)
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+        fi
+        sed -i "s|$SLAVE_IP.*||g" /etc/hosts
+        
+        #echo "$SLAVE_IP $INSTANCE_NAME_SAFE" >> /etc/hosts
+        
+        QUEUE=all.q
+        
+        # disable the host to avoid any jobs to be allocated to this host
+        qmod -d $QUEUE@$INSTANCE_NAME_SAFE
+        
+        # remove it from the all hosts list
+        qconf -dattr hostgroup hostlist $INSTANCE_NAME_SAFE @allhosts
+        
+        # remove it from the execution host list
+        qconf -de $INSTANCE_NAME_SAFE
+        
+        # reschedules all jobs currently running in this  queue
+        qmod -f -rq $QUEUE@$INSTANCE_NAME_SAFE
+        
+        # delete specific slot count for the host
+        #qconf -purge queue slots $QUEUE@$SLAVE_IP
+        
+        #remove nfs export
+        sed -i 's|'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)||' /etc/exports
+    done
+    ss-display "Slave is removed."
+}
+
+
 error(){ 
     echo "utilisez l'option -h pour en savoir plus" >&2 
 } 
@@ -632,7 +843,7 @@ master_help(){
     echo "    make_file_test"
     echo "    #if not vpn"
     echo "    check_ip"
-    echo "    check_ip_slave"
+    echo "    check_ip_slave_for_master"
     echo "    #Endif"
     echo "    user_add"
     echo "    #If one or several slaves "
@@ -650,7 +861,7 @@ slave_help(){
     echo "    make_file_test"
     echo "    #if not vpn"
     echo "    check_ip"
-    echo "    check_ip_slave"
+    echo "    check_ip_master_for_slave"
     echo "    #Endif"
     echo "    user_add"
     echo "    #If one or several slaves "
