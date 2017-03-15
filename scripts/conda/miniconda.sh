@@ -1,4 +1,4 @@
-MINICONDA_VERSION=${MINICONDA_VERSION:-"2"}
+MINICONDA_VERSION=${MINICONDA_VERSION:-"3"}
 MINICONDA_SUBVERSION=${MINICONDA_SUBVERSION:-"latest"}
 
 #------------miniconda install----------------
@@ -19,8 +19,9 @@ miniconda_pkg()
     msg_info ""    
     msg_info "Installing MiniConda..."
     miniconda_dir=/opt/miniconda
-    miniconda_bin=$miniconda_dir/miniconda$MINICONDA_VERSION-$MINICONDA_SUBVERSION/bin
-    miniconda_script=Miniconda$MINICONDA_VERSION-$MINICONDA_SUBVERSION miniconda_subversion-Linux-x86_64.sh
+    miniconda_name=miniconda$MINICONDA_VERSION-$MINICONDA_SUBVERSION
+    miniconda_bin=$miniconda_dir/$miniconda_name/bin
+    miniconda_script=${miniconda_name}-Linux-x86_64.sh
 
     mkdir $miniconda_dir && cd $_
     wget -O $miniconda_script https://repo.continuum.io/miniconda/$miniconda_script
@@ -36,7 +37,7 @@ miniconda_pkg()
     $miniconda_bin/conda update conda
     $miniconda_bin/conda install -y anaconda-client
     msg_info ""
-    msg_info "MiniConda (v $MINICONDA_VERSION:$MINICONDA_SUBVERSION)' is installed and updated."
+    msg_info "MiniConda (v $miniconda_name)' is installed and updated."
 }
 
 conda_install()
