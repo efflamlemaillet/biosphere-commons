@@ -1,3 +1,6 @@
+MINICONDA_VERSION=${MINICONDA_VERSION:-"2"}
+MINICONDA_SUBVERSION=${MINICONDA_SUBVERSION:-"latest"}
+
 #------------miniconda install----------------
 msg_info()
 {
@@ -16,14 +19,13 @@ miniconda_pkg()
     msg_info ""    
     msg_info "Installing MiniConda..."
     miniconda_dir=/opt/miniconda
-    miniconda_version="3"
-    miniconda_subversion="4.2.12"
-    miniconda_bin=$miniconda_dir/miniconda$miniconda_version-$miniconda_subversion/bin
-    
-    mkdir $miniconda_dir
-    wget -O $miniconda_dir/Miniconda$miniconda_version-$miniconda_subversion-Linux-x86_64.sh https://repo.continuum.io/miniconda/Miniconda$miniconda_version-$miniconda_subversion-Linux-x86_64.sh
-    bash $miniconda_dir/Miniconda$miniconda_version-$miniconda_subversion-Linux-x86_64.sh -b -p  $miniconda_dir/miniconda$miniconda_version-$miniconda_subversion
-    rm -rf $miniconda_dir/Miniconda$miniconda_version-$miniconda_subversion-Linux-x86_64.sh
+    miniconda_bin=$miniconda_dir/miniconda$MINICONDA_VERSION-$MINICONDA_SUBVERSION/bin
+    miniconda_script=Miniconda$MINICONDA_VERSION-$MINICONDA_SUBVERSION miniconda_subversion-Linux-x86_64.sh
+
+    mkdir $miniconda_dir && cd $_
+    wget -O $miniconda_script https://repo.continuum.io/miniconda/$miniconda_script
+    bash $miniconda_script -b -p  $miniconda_dir/${miniconda_script::-3}
+    rm -rf $miniconda_script
     
     ln -s $miniconda_bin/conda $miniconda_dir/conda
     echo "export PATH=$miniconda_bin:\$PATH" > /etc/profile.d/miniconda.sh
@@ -34,7 +36,7 @@ miniconda_pkg()
     $miniconda_bin/conda update conda
     $miniconda_bin/conda install -y anaconda-client
     msg_info ""
-    msg_info "MiniConda is installed and updated."
+    msg_info "MiniConda (v $MINICONDA_VERSION:$MINICONDA_SUBVERSION)' is installed and updated."
 }
 
 conda_install()
