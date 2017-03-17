@@ -13,7 +13,9 @@ check_if_vpn_or_not()
                 IP_PARAMETER=hostname
             fi
         else
-            
+            USER_NEW=sge-user
+            IP_PARAMETER=hostname
+        fi
     else
         USER_NEW=sge-user
         IP_PARAMETER=hostname
