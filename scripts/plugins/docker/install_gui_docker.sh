@@ -5,7 +5,7 @@
 SCRIPT=`basename "$0"`
 NAME_GUI=$1
 CONTAINER_NAME=frontend_$NAME_GUI
-PORT=${PORT:-9000}
+PORT=${PORT:-8080}
 DIR=/ifb
 DIR_DATA=/ifb/$NAME_GUI-data
 DIR_CERTS=/ifb/$NAME_GUI-certs
@@ -24,6 +24,11 @@ msg_err(){
     if [ $SLIPSTREAM_CONTEXT -eq 0 ] ; then ss-abort "ERROR: $@" ; fi
 }
 
+function clean()
+{
+    docker stop $CONTAINER_NAME
+    docker rm -v $CONTAINER_NAME
+}
 
 ################################
 ## Install frontend           ##
@@ -32,9 +37,11 @@ msg_err(){
 
 function portainer()
 {
-    
-    mkdir -p $DIR_DATA $DIR_CERTS
-    docker run -d --name $ONTAINER_NAME \
+ 
+    clean $CONTAINER_NAME
+    mkdir -p $DIR_DATA $DIR_CERTS 2> /dev/null
+ 
+   docker run -d \
             -p $PORT:9000 \
             -v $DIR_CERTS:/certs \
             -v $DIR_DATA:/data \
@@ -52,17 +59,17 @@ function portainer()
 
 function usage()
 {
-    echo -e "Script to install frontend manager Docker"
-    echo -e "$SCRIPT frontend-name-available <options>"
-    echo -e "To change port : export PORT:8080."
-    echo -e "List available"
-    echo -e "\t portainer : install portainer, no yet implemented to access on docker swarm manager"
+    echo -e "Script to install frontend manager Docker\n"
+    echo -e "\t$SCRIPT frontend-name-available <options>"
+    echo -e "\tTo change port : export PORT:8080."
+    echo -e "\n\tList available"
+    echo -e "\t\t portainer : install portainer, no yet implemented to access on docker swarm manager.\n"
 
 }
 
 
 # Pas de paramètre
-[[ $# -lt 1 ]] && ( echo "Fail to run script"; usage)
+# [[ $# -lt 1 ]] && ( echo "Fail to run script"; usage)
 
 # -o : options courtes
 # -l : options longues
@@ -70,8 +77,9 @@ function usage()
 # set -- $options
 
 case "$1" in
-   portainer) portainer
-        break;;
+   portainer) 
+	portainer
+        ;;
    *) usage
-	break;;
+	;;
 esac
