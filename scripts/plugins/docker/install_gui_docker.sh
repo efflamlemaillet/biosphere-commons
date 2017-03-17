@@ -46,7 +46,7 @@ function portainer()
             -v $DIR_CERTS:/certs \
             -v $DIR_DATA:/data \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            --name $CONTAINER_NAME \ 
+            --name $CONTAINER_NAME \
             portainer/portainer
     
     msg_info "Running Containers $NAME_GUI"
