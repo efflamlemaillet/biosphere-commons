@@ -38,7 +38,7 @@ check_if_vpn_or_not()
     if [ "$category" == "Deployment" ]; then
         check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
         if [ "$check_vpn" != "0" ]; then
-            vpn_multiplicity=$(ss-get $SLAVE_NAME:multiplicity)
+            vpn_multiplicity=$(ss-get $component_vpn_name:multiplicity)
             if [ "$vpn_multiplicity" != "0" ]; then
                 USER_NEW=$(ss-get $component_vpn_name:edugain_username)
                 if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
@@ -140,6 +140,9 @@ initiate_master()
             chown $USER_NEW:$USER_NEW $ssh_user/authorized_keys
         fi
         cat $ssh_root/authorized_keys >> $ssh_user/authorized_keys
+        
+        initiate_install_edugain
+        install_edugain
     fi
         
     echo "$HOSTNAME" > /etc/hostname
