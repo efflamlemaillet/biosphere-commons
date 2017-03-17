@@ -11,7 +11,7 @@ DIR_DATA=/ifb/$NAME_GUI-data
 DIR_CERTS=/ifb/$NAME_GUI-certs
 LOG=/var/log/$NAME_GUI.log
 
-SLIPSTREAM_CONTEXT=$( which ss-display &> /dev/null; echo $?)
+SLIPSTREAM_CONTEXT=$( which ss-display &> /dev/null; echo $? )
 
 msg_info(){
     echo -e "$@"
@@ -62,7 +62,7 @@ function usage()
 
 
 # Pas de paramètre
-[[ $# -lt 1 ]] && error
+[[ $# -lt 1 ]] && ( echo "Fail to run script"; usage)
 
 # -o : options courtes
 # -l : options longues
@@ -73,5 +73,5 @@ case "$1" in
    portainer) portainer
         break;;
    *) usage
-	beak;;
+	break;;
 esac
