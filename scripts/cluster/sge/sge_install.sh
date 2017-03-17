@@ -70,7 +70,7 @@ initiate_variable_global()
     ID=1    
     
     if [ $IP_PARAMETER == "vpn.address" ]; then
-        MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
+        #MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
         IP_VPN=$(ss-get $component_vpn_name:hostname)
         url="ssh://$USER_NEW@$IP_VPN"
         #ss-set url.ssh "${url}"
@@ -166,14 +166,11 @@ initiate_slave()
     SLAVE_HOSTNAME_SAFE=$(ss-get nodename)-$(ss-get id)
 
     SLAVE_IP=$(ss-get $SLAVE_HOSTNAME:$IP_PARAMETER)
-    
-    MASTER_HOSTNAME=$(ss-get master.nodename)
 
+    MASTER_HOSTNAME=$(ss-get master.nodename)
     MASTER_HOSTNAME_SAFE=$MASTER_HOSTNAME-$ID
 
-    if [ $IP_PARAMETER == "vpn.address" ]; then
-        MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
-    fi
+    MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
     
     hostname $SLAVE_HOSTNAME_SAFE
     
