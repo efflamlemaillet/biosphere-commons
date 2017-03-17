@@ -105,7 +105,6 @@ make_file_test()
     mkdir -p $WORKDIR
     chmod 750 /root
     chmod 775 $WORKDIR
-    mkdir -p $SGE_ROOT_DIR
     echo "for i in {1..50}" > $WORKDIR/qsub_test.sh
     echo "    do" >> $WORKDIR/qsub_test.sh
     echo "        len=\$(shuf -i 1-10 -n 1)" >> $WORKDIR/qsub_test.sh
@@ -119,6 +118,8 @@ make_file_test()
 initiate_master()
 {
     initiate_variable_global
+    
+    mkdir -p $SGE_ROOT_DIR
     
     HOSTIP=$(ss-get $IP_PARAMETER)
 
