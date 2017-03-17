@@ -24,9 +24,9 @@ install_edugain()
     source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
     populate_hosts_with_components_name_and_ips $IP_PARAMETER
 
-    echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
+    #echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
 
-    hostname -F /etc/hostname
+    #hostname -F /etc/hostname
     echo "FederatedEntryPoint overlay deploy done"
 }
 
@@ -141,9 +141,6 @@ initiate_master()
             chown $USER_NEW:$USER_NEW $ssh_user/authorized_keys
         fi
         cat $ssh_root/authorized_keys >> $ssh_user/authorized_keys
-        
-        initiate_install_edugain
-        install_edugain
     fi
         
     echo "$HOSTNAME" > /etc/hostname
