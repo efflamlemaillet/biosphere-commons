@@ -1,3 +1,35 @@
+initiate_install_edugain()
+{
+    pip install scriptine
+    wget -O - https://raw.githubusercontent.com/cyclone-project/cyclone-python-pam/master/setup.sh | sed 's/~/\/tmp\//g' | sh
+    wget -O /lib/security/cyclone_pam.py https://raw.githubusercontent.com/bryan-brancotte/cyclone-python-pam/patch-5/lib/security/cyclone_pam.py
+    echo "{
+      \"ports\":[20000 ]
+    }" > /lib/security/cyclone_config
+    cp /etc/pam.d/sshd /etc/pam.d/sshd.bak
+    cat /etc/pam.d/sshd.bak | sed 's/ auth /auth /g' | sed 's/auth /#auth /g' | sed 's/##auth /auth /g' > /etc/pam.d/sshd
+    service ssh restart
+}
+
+install_edugain()
+{
+    source /scripts/edugain_access_tool_shed.sh --dry-run
+    source /scripts/allows_other_to_access_me.sh --dry-run
+    auto_gen_users
+    gen_key_for_user $USER_NEW
+    init_edugain_acces_to_user $USER_NEW
+    add_email_for_edugain_acces_to_user $(echo_owner_email) $USER_NEW
+    publish_pubkey
+    allow_others
+    source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+    populate_hosts_with_components_name_and_ips $IP_PARAMETER
+
+    echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
+
+    hostname -F /etc/hostname
+    echo "FederatedEntryPoint overlay deploy done"
+}
+
 check_if_vpn_or_not()
 {
     component_vpn_name=${component_vpn_name:-vpn}
@@ -6,10 +38,16 @@ check_if_vpn_or_not()
     if [ "$category" == "Deployment" ]; then
         check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
         if [ "$check_vpn" != "0" ]; then
-            USER_NEW=$(ss-get $component_vpn_name:edugain_username)
-            if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
-                IP_PARAMETER=vpn.address
+            vpn_multiplicity=$(ss-get $SLAVE_NAME:multiplicity)
+            if [ "$vpn_multiplicity" != "0" ]; then
+                USER_NEW=$(ss-get $component_vpn_name:edugain_username)
+                if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
+                    IP_PARAMETER=vpn.address
+                else
+                    IP_PARAMETER=hostname
+                fi
             else
+                USER_NEW=sge-user
                 IP_PARAMETER=hostname
             fi
         else
