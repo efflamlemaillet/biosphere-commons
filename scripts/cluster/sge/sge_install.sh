@@ -427,17 +427,6 @@ Install_SGE_master()
     message_at_boot_master
 }
 
-SGE_ready(){
-    ss-get --timeout=3600 $MASTER_HOSTNAME:sge.ready
-    sge_ready=$(ss-get $MASTER_HOSTNAME:sge.ready)
-    msg_info "Waiting SGE to be ready."
-	while [ "$sge_ready" == "false" ]
-	do
-		sleep 10;
-		sge_ready=$(ss-get $MASTER_HOSTNAME:sge.ready)
-	done
-}
-
 Install_SGE_slave()
 {
     msg_info "Installing and Configuring SGE..."
