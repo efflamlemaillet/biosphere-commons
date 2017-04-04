@@ -20,12 +20,13 @@ miniconda_pkg()
     msg_info "Installing MiniConda..."
     miniconda_dir=/opt/miniconda
     miniconda_name=miniconda$MINICONDA_VERSION-$MINICONDA_SUBVERSION
-    miniconda_bin=$miniconda_dir/$miniconda_name/bin
     miniconda_script=${miniconda_name}-Linux-x86_64.sh
+    miniconda_prefix=$miniconda_dir/$miniconda_name
+    miniconda_bin=$miniconda_prefix/bin
 
     mkdir $miniconda_dir && cd $_
-    wget -O $miniconda_script https://repo.continuum.io/miniconda/$miniconda_script
-    bash $miniconda_script -b -p  $miniconda_dir/${miniconda_script::-3}
+    wget -O $miniconda_script https://repo.continuum.io/miniconda/M${miniconda_script:1}
+    bash $miniconda_script -b -p  $miniconda_prefix
     rm -rf $miniconda_script
     
     ln -s $miniconda_bin/conda $miniconda_dir/conda
