@@ -31,14 +31,14 @@ initiate_install_edugain_ubuntu16()
     sed -ie 's|host_ip = .*|host_ip = s\.getsockname()[0]|' /usr/local/bin/cyclone_pam.py
 
     mkdir /etc/cyclone
-    cp etc/cyclone/cyclone.conf /etc/cyclone/cyclone.conf
-    cp etc/cyclone/key.pem /etc/cyclone/key.pem
+    cp -f etc/cyclone/cyclone.conf /etc/cyclone/cyclone.conf
+    cp -f etc/cyclone/key.pem /etc/cyclone/key.pem
 
     # Update ssh PAM config
-    cp etc/pam.d/sshd /etc/pam.d/sshd
+    cp -f etc/pam.d/sshd /etc/pam.d/sshd
 
     # Update sshd configuration and restart service
-    cp etc/ssh/sshd_config /etc/ssh/sshd_config
+    cp -f etc/ssh/sshd_config /etc/ssh/sshd_config
     service ssh restart
 
     # Load default ports
@@ -67,7 +67,7 @@ initiate_install_edugain_ubuntu16()
     apt-get install -y xfce4
 
     # Start xPra at start and execute it now (need to update to use random local internal port!)
-    cp etc/rc.local /etc/rc.local
+    cp -f etc/rc.local /etc/rc.local
     chmod +x /etc/rc.local
     
     # Clean up installation files
