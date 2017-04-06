@@ -64,7 +64,7 @@ gen_key_for_user_and_allows_hosts(){
     fi
     # getent passwd $1 > /dev/null
     user_missing=$(grep -c "^$1:" /etc/passwd)
-    if [ "$user_missing" = "0" ]; then
+    if [ "$user_missing" == "0" ]; then
         useradd --shell /bin/bash --create-home $1
     else
         mkhomedir_helper $1
