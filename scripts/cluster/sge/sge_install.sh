@@ -121,6 +121,12 @@ install_edugain()
     #echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
     
     #hostname -F /etc/hostname
+    
+    url="ssh://$USER_NEW@$(ss-get hostname)"
+    ss-set url.ssh "${url}"
+    ss-set url.service "${url}"
+    ss-set ss:url.service "${url}"
+    
     echo "FederatedEntryPoint overlay deploy done"
 }
 
