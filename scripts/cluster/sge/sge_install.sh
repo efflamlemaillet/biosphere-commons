@@ -108,37 +108,19 @@ install_edugain()
 {
     source /scripts/edugain_access_tool_shed.sh --dry-run
     source /scripts/allows_other_to_access_me.sh --dry-run
-    auto_gen_users
+    #auto_gen_users
     gen_key_for_user $USER_NEW
     init_edugain_acces_to_user $USER_NEW
     add_email_for_edugain_acces_to_user $(echo_owner_email) $USER_NEW
-    publish_pubkey
-    allow_others
-    source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
-    populate_hosts_with_components_name_and_ips $IP_PARAMETER
+    #publish_pubkey
+    #allow_others
+    #source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+    #populate_hosts_with_components_name_and_ips $IP_PARAMETER
     
     service ssh restart
     #echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
     
     #hostname -F /etc/hostname
-    echo "FederatedEntryPoint overlay deploy done"
-}
-
-install_edugain_ubuntu16()
-{
-    source /scripts/edugain_access_tool_shed.sh --dry-run
-    source /scripts/allows_other_to_access_me.sh --dry-run
-    # auto_gen_users
-    gen_key_for_user $USER_NEW
-    init_edugain_acces_to_user $USER_NEW
-    add_email_for_edugain_acces_to_user $(echo_owner_email) $USER_NEW
-    publish_pubkey
-
-    echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
-
-    hostname -F /etc/hostname
-    su - $USER_NEW /etc/rc.local
-    
     echo "FederatedEntryPoint overlay deploy done"
 }
 
