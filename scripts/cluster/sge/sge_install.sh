@@ -124,6 +124,24 @@ install_edugain()
     echo "FederatedEntryPoint overlay deploy done"
 }
 
+install_edugain_ubuntu16()
+{
+    source /scripts/edugain_access_tool_shed.sh --dry-run
+    source /scripts/allows_other_to_access_me.sh --dry-run
+    # auto_gen_users
+    gen_key_for_user $USER_NEW
+    init_edugain_acces_to_user $USER_NEW
+    add_email_for_edugain_acces_to_user $(echo_owner_email) $USER_NEW
+    publish_pubkey
+
+    echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
+
+    hostname -F /etc/hostname
+    su - $USER_NEW /etc/rc.local
+    
+    echo "FederatedEntryPoint overlay deploy done"
+}
+
 initiate_variable_global()
 {
     check_if_vpn_or_not
