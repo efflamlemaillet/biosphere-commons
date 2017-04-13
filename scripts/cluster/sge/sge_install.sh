@@ -97,8 +97,8 @@ initiate_install_edugain_ubuntu16()
     #apt-get install -y xfce4
 
     # Start xPra at start and execute it now (need to update to use random local internal port!)
-    cp -f etc/rc.local /etc/rc.local
-    chmod +x /etc/rc.local
+    #cp -f etc/rc.local /etc/rc.local
+    #chmod +x /etc/rc.local
     
     # Clean up installation files
     cd ~ && rm -rf cyclone-pam    
