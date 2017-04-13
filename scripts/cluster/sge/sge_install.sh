@@ -112,7 +112,7 @@ install_edugain()
     gen_key_for_user $USER_NEW
     init_edugain_acces_to_user $USER_NEW
     add_email_for_edugain_acces_to_user $(echo_owner_email) $USER_NEW
-    #publish_pubkey
+    publish_pubkey
     #allow_others
     #source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
     #populate_hosts_with_components_name_and_ips $IP_PARAMETER
