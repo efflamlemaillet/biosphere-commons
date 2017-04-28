@@ -11,19 +11,24 @@ check_if_vpn_or_not()
                 USER_NEW=$(ss-get $component_vpn_name:edugain_username)
                 if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
                     IP_PARAMETER=vpn.address
+                    ss-set net.services.enable "[\"vpn\"]"
                 else
+                    ss-set net.services.enable "[]"
                     IP_PARAMETER=hostname
                 fi
             else
                 USER_NEW=${USER_NEW:-sge-user}
+                ss-set net.services.enable "[]"
                 IP_PARAMETER=hostname
             fi
         else
             USER_NEW=${USER_NEW:-sge-user}
+            ss-set net.services.enable "[]"
             IP_PARAMETER=hostname
         fi
     else
         USER_NEW=${USER_NEW:-sge-user}
+        ss-set net.services.enable "[]"
         IP_PARAMETER=hostname
     fi
 }
