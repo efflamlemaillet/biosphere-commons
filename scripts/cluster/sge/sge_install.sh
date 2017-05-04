@@ -2,17 +2,28 @@ check_if_vpn_or_not()
 {
     component_vpn_name=${component_vpn_name:-vpn}
     
-    category=$(ss-get ss:category)
-    if [ "$category" == "Deployment" ]; then
-        check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
-        if [ "$check_vpn" != "0" ]; then
-            vpn_multiplicity=$(ss-get $component_vpn_name:multiplicity)
-            if [ "$vpn_multiplicity" != "0" ]; then
-                USER_NEW=$(ss-get $component_vpn_name:edugain_username)
-                if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
-                    IP_PARAMETER=vpn.address
-                    ss-set net.services.enable "[\"vpn\"]"
+    ss-display "test" 1>/dev/null 2>/dev/null
+    ret=$?
+    if [ $ret -ne 0 ]; then
+        export USER_NEW=${USER_NEW:-sge-user}
+        export IP_PARAMETER=${IP_PARAMETER:-hostname}
+    else
+        category=$(ss-get ss:category)
+        if [ "$category" == "Deployment" ]; then
+            check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
+            if [ "$check_vpn" != "0" ]; then
+                vpn_multiplicity=$(ss-get $component_vpn_name:multiplicity)
+                if [ "$vpn_multiplicity" != "0" ]; then
+                    USER_NEW=$(ss-get $component_vpn_name:edugain_username)
+                    if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
+                        IP_PARAMETER=vpn.address
+                        ss-set net.services.enable "[\"vpn\"]"
+                    else
+                        ss-set net.services.enable "[]"
+                        IP_PARAMETER=hostname
+                    fi
                 else
+                    USER_NEW=${USER_NEW:-sge-user}
                     ss-set net.services.enable "[]"
                     IP_PARAMETER=hostname
                 fi
@@ -26,10 +37,6 @@ check_if_vpn_or_not()
             ss-set net.services.enable "[]"
             IP_PARAMETER=hostname
         fi
-    else
-        USER_NEW=${USER_NEW:-sge-user}
-        ss-set net.services.enable "[]"
-        IP_PARAMETER=hostname
     fi
 }
 
