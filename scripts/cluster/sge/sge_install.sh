@@ -58,11 +58,11 @@ initiate_install_edugain_ubuntu16()
     # Install python script and config
     cp usr/local/bin/cyclone_pam.py /usr/local/bin/cyclone_pam.py
 
-    sed -ie '/BASE_URI =/i\
-    global s\
-    s = socket\.socket(socket\.AF_INET, socket\.SOCK_DGRAM)\
-    s\.connect(("8\.8\.8\.8", 80))\
-    ' /usr/local/bin/cyclone_pam.py
+sed -ie '/BASE_URI =/i\
+global s\
+s = socket\.socket(socket\.AF_INET, socket\.SOCK_DGRAM)\
+s\.connect(("8\.8\.8\.8", 80))\
+' /usr/local/bin/cyclone_pam.py
     sed -ie 's|host_ip = .*|host_ip = s\.getsockname()[0]|' /usr/local/bin/cyclone_pam.py
 
     mkdir /etc/cyclone
