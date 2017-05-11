@@ -227,10 +227,12 @@ initiate_master()
     echo "$HOSTNAME" > /etc/hostname
     hostname $HOSTNAME
     
-    if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
-        sed -i "s|myhostname = .*|myhostname = $HOSTNAME|" /etc/postfix/main.cf
-        /etc/init.d/postfix reload
-    fi
+    if isubuntu; then
+        if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
+            sed -i "s|myhostname = .*|myhostname = $HOSTNAME|" /etc/postfix/main.cf
+            /etc/init.d/postfix reload
+        fi
+    fi    
 }
 
 initiate_slave()
@@ -253,9 +255,11 @@ initiate_slave()
     
     hostname $SLAVE_HOSTNAME_SAFE
     
-    if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
-        sed -i "s|myhostname = .*|myhostname = $SLAVE_HOSTNAME_SAFE|" /etc/postfix/main.cf
-        /etc/init.d/postfix reload
+    if isubuntu; then
+        if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
+            sed -i "s|myhostname = .*|myhostname = $SLAVE_HOSTNAME_SAFE|" /etc/postfix/main.cf
+            /etc/init.d/postfix reload
+        fi
     fi
 }
 
