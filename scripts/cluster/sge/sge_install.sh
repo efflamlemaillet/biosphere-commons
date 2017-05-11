@@ -9,8 +9,8 @@ check_if_vpn_or_not()
         export IP_PARAMETER=${IP_PARAMETER:-hostname}
     else
         check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
-        if [ "$check_vpn" != "0" ]; then
-            category=$(ss-get ss:category)
+        category=$(ss-get ss:category)
+        if [ "$check_vpn" != "0" ]; then            
             if [ "$category" == "Deployment" ]; then
                 vpn_multiplicity=$(ss-get $component_vpn_name:multiplicity)
                 if [ "$vpn_multiplicity" != "0" ]; then
