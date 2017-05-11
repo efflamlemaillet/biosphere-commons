@@ -147,7 +147,7 @@ initiate_variable_global()
     
     WORKDIR=/root/mydisk
     HOMEDIR=/home/$USER_NEW
-    SGE_ROOT_DIR=/opt/sge
+    SGE_ROOT_DIR=/tmp/sge
     ID=1    
     
     if [ $IP_PARAMETER == "vpn.address" ]; then
@@ -398,6 +398,33 @@ NFS_export_home()
 	msg_info "$HOMEDIR is exported."
 }
 
+NFS_export_sge()
+{
+    msg_info "Exporting NFS share of $HOMEDIR..."
+    
+    EXPORTS_FILE=/etc/exports
+    if grep -q /opt/sge $EXPORTS_FILE; then 
+		echo "/opt/sge ready"
+	else
+        echo -ne "/opt/sge\t" >> $EXPORTS_FILE
+    fi
+    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
+        if [ $IP_PARAMETER == "hostname" ]; then
+            node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
+        else
+            node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
+        fi
+        if grep -q /opt/sge.*$node_host $EXPORTS_FILE; then 
+		    echo "$node_host ready"
+	    else
+            echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
+        fi
+    done
+    echo "" >> $EXPORTS_FILE # last for a newline
+	
+	msg_info "/opt/sge is exported."
+}
+
 NFS_start()
 {
 	msg_info "Starting NFS..."
@@ -451,6 +478,21 @@ NFS_mount_home()
     fi
 }
 
+NFS_mount_sge())
+{
+    msg_info "Mounting /opt/sge..."
+    umount /opt/sge
+    mount $MASTER_IP:/opt/sge /opt/sge 2>>/tmp/mount_error_message.txt
+    ret=$?
+    msg_info "$(/tmp/mount_error_message.txt)"
+     
+    if [ $ret -ne 0 ]; then
+        ss-abort "$(cat /tmp/mount_error_message.txt)"
+    else
+         msg_info "/opt/sge is mounted"
+    fi
+}
+
 #####
 # Install SGE
 #####
@@ -470,71 +512,102 @@ Install_SGE_master()
 {
     msg_info "Installing SGE..."
     
-    # Configure the master hostname for Grid Engine
-    echo "gridengine-master       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-master       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-master       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
-    # Postfix mail server is also installed as a dependency
-    echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
+    if iscentos; then
+        sge_version="8.1.9"
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmaster-$sge_version-1.el6.x86_64.rpm
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmon-$sge_version-1.el6.x86_64.rpm
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-guiinst-$sge_version-1.el6.noarch.rpm
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-execd-$sge_version-1.el6.x86_64.rpm
+        
+        wget -O /opt/sge/util/install_modules/inst_ifb.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/inst_ifb.conf
+        
+    	cd /opt/sge
+    	./inst_sge -m -auto util/install_modules/inst_ifb.conf
+    	. /opt/sge/default/common/settings.sh
+        
+        msg_info "SGE is installed."
+        message_at_boot_master
+        
+    elif isubuntu; then
+        # Configure the master hostname for Grid Engine
+        echo "gridengine-master       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-master       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-master       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
+        # Postfix mail server is also installed as a dependency
+        echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
     
-    # Install Grid Engine
-    DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-master gridengine-client
+        # Install Grid Engine
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-master gridengine-client
     
-    # Set up Grid Engine
-    su - sgeadmin -s/bin/bash -c '/usr/share/gridengine/scripts/init_cluster /var/lib/gridengine default /var/spool/gridengine/spooldb sgeadmin'
+        # Set up Grid Engine
+        su - sgeadmin -s/bin/bash -c '/usr/share/gridengine/scripts/init_cluster /var/lib/gridengine default /var/spool/gridengine/spooldb sgeadmin'
 
-    service gridengine-master restart 2> /opt/sge_error_message.log
-    ret=$?
-    if [ $ret -ne 0 ]; then
-    	msg_info ""
-    	msg_info "Install SGE aborted."
-        msg_info ""
-        ss-abort "$(cat /opt/sge_error_message.log)"
+        service gridengine-master restart 2> /opt/sge_error_message.log
+        ret=$?
+        if [ $ret -ne 0 ]; then
+        	msg_info ""
+        	msg_info "Install SGE aborted."
+            msg_info ""
+            ss-abort "$(cat /opt/sge_error_message.log)"
+        fi
+    
+        # Disable Postfix
+        service postfix stop
+        update-rc.d postfix disable
+    
+        msg_info "SGE is installed."
+        message_at_boot_master
+        
+    else
+        echo "Unsupported osfamily"
     fi
     
-    # Disable Postfix
-    service postfix stop
-    update-rc.d postfix disable
-    
-    msg_info "SGE is installed."
-    message_at_boot_master
 }
 
 Install_SGE_slave()
 {
     msg_info "Installing and Configuring SGE..."
     
-    echo "gridengine-common       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
-    echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
+    if iscentos; then
+        cd /opt/sge
+        . /opt/sge/default/common/settings.sh        
+        ./inst_sge -x -auto util/install_modules/inst_ifb.conf
+    elif isubuntu; then   
+        echo "gridengine-common       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
+        echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
     
-    DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-exec gridengine-client
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-exec gridengine-client
     
-    service postfix stop
-    update-rc.d postfix disable
+        service postfix stop
+        update-rc.d postfix disable
     
-    echo $MASTER_HOSTNAME_SAFE |  tee /var/lib/gridengine/default/common/act_qmaster
-    service gridengine-exec restart 2> /opt/sge_error_message.log
-    ret=$?
-    if [ $ret -ne 0 ]; then
-    	msg_info ""
-    	msg_info "Install SGE aborted."
-        msg_info ""
-        ss-abort "$(cat /opt/sge_error_message.log)"
+        echo $MASTER_HOSTNAME_SAFE |  tee /var/lib/gridengine/default/common/act_qmaster
+        service gridengine-exec restart 2> /opt/sge_error_message.log
+        ret=$?
+        if [ $ret -ne 0 ]; then
+        	msg_info ""
+        	msg_info "Install SGE aborted."
+            msg_info ""
+            ss-abort "$(cat /opt/sge_error_message.log)"
+        fi
+    
+        msg_info "SGE is installed and configured."
+        message_at_boot_slave
+    else
+        echo "Unsupported osfamily"
     fi
-    
-    msg_info "SGE is installed and configured."
-    message_at_boot_slave
 }
 
 Install_EXEC()
@@ -558,27 +631,35 @@ Install_EXEC()
         qconf -aattr queue slots "[$HOSTNAME=$SLOTS]" $QUEUE
     fi
     
-    echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
+    if iscentos; then
+        cd /opt/sge
+        . /opt/sge/default/common/settings.sh        
+        ./inst_sge -x -auto util/install_modules/inst_ifb.conf
+    elif isubuntu; then
+        echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
     
-    DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-exec gridengine-client
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-exec gridengine-client
     
-    service postfix stop
-    update-rc.d postfix disable
+        service postfix stop
+        update-rc.d postfix disable
     
-    echo $HOSTNAME |  tee /var/lib/gridengine/default/common/act_qmaster
-    service gridengine-exec restart 2> /opt/sge_error_message.log
-    ret=$?
-    if [ $ret -ne 0 ]; then
-    	msg_info ""
-    	msg_info "Install SGE aborted."
-        msg_info ""
-        ss-abort "$(cat /opt/sge_error_message.log)"
+        echo $HOSTNAME |  tee /var/lib/gridengine/default/common/act_qmaster
+        service gridengine-exec restart 2> /opt/sge_error_message.log
+        ret=$?
+        if [ $ret -ne 0 ]; then
+        	msg_info ""
+        	msg_info "Install SGE aborted."
+            msg_info ""
+            ss-abort "$(cat /opt/sge_error_message.log)"
+        fi
+    else
+        echo "Unsupported osfamily"
     fi
 }
  
@@ -629,7 +710,7 @@ Config_SGE_master()
     qconf -Msconf $SGE_ROOT_DIR/grid
     rm $SGE_ROOT_DIR/grid
     
-    wget -O $SGE_ROOT_DIR/complex.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/complex.conf
+    wget -O $SGE_ROOT_DIR/complex.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/complex.conf
 	qconf -Mc $SGE_ROOT_DIR/complex.conf
     
     # create a host list
@@ -802,6 +883,28 @@ NFS_export_home_add()
 	msg_info "$HOMEDIR is exported."
 }
 
+NFS_export_sge_add()
+{
+    msg_info "Exporting NFS share of /opt/sge..."
+    
+    EXPORTS_FILE=/etc/exports
+    if grep -q /opt/sge $EXPORTS_FILE; then 
+		echo "/opt/sge ready"
+	else
+        echo -ne "/opt/sge\t" >> $EXPORTS_FILE
+        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
+        echo "" >> $EXPORTS_FILE # last for a newline
+    fi
+    if grep -q /opt/sge.*$SLAVE_IP $EXPORTS_FILE; then 
+	    echo "$SLAVE_IP ready"
+    else
+        HD=$(echo /opt/sge | sed 's|\/|\\\/|g')
+        sed -ie '/'$HD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
+    fi
+	
+	msg_info "/opt/sge is exported."
+}
+
 NFS_start_add()
 {
 	msg_info "Starting NFS..."
@@ -845,6 +948,9 @@ add_nodes() {
         
         NFS_export_pdisk_add
         NFS_export_home_add
+        if iscentos; then
+            NFS_export_sge_add
+        fi
         NFS_start_add
        
        if grep -q $SLAVE_IP /etc/hosts; then
