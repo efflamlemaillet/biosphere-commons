@@ -8,10 +8,10 @@ check_if_vpn_or_not()
         export USER_NEW=${USER_NEW:-sge-user}
         export IP_PARAMETER=${IP_PARAMETER:-hostname}
     else
-        category=$(ss-get ss:category)
-        if [ "$category" == "Deployment" ]; then
-            check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
-            if [ "$check_vpn" != "0" ]; then
+        check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
+        if [ "$check_vpn" != "0" ]; then
+            category=$(ss-get ss:category)
+            if [ "$category" == "Deployment" ]; then
                 vpn_multiplicity=$(ss-get $component_vpn_name:multiplicity)
                 if [ "$vpn_multiplicity" != "0" ]; then
                     USER_NEW=$(ss-get $component_vpn_name:edugain_username)
@@ -34,7 +34,6 @@ check_if_vpn_or_not()
             fi
         else
             USER_NEW=${USER_NEW:-sge-user}
-            ss-set net.services.enable "[]"
             IP_PARAMETER=hostname
         fi
     fi
