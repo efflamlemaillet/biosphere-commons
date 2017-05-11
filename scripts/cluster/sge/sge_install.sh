@@ -478,7 +478,7 @@ NFS_mount_home()
     fi
 }
 
-NFS_mount_sge())
+NFS_mount_sge()
 {
     msg_info "Mounting /opt/sge..."
     umount /opt/sge
