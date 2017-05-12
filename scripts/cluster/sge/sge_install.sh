@@ -595,7 +595,7 @@ Install_SGE_slave()
     if iscentos; then
         cd /opt/sge
         . /opt/sge/default/common/settings.sh        
-        ./inst_sge -x -auto util/install_modules/inst_ifb.conf
+        ./inst_sge -x -auto util/install_modules/inst_template.conf
     elif isubuntu; then   
         echo "gridengine-common       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
         echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
@@ -651,7 +651,7 @@ Install_EXEC()
     if iscentos; then
         cd /opt/sge
         . /opt/sge/default/common/settings.sh        
-        ./inst_sge -x -auto util/install_modules/inst_ifb.conf
+        ./inst_sge -x -auto util/install_modules/inst_template.conf
     elif isubuntu; then
         echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
         echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
