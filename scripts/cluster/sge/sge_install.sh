@@ -438,7 +438,12 @@ NFS_export_sge()
 NFS_start()
 {
 	msg_info "Starting NFS..."
-    if iscentos; then
+    if iscentos 7; then
+        systemctl enable nfs-server
+        systemctl start nfs-server
+        systemctl reload nfs-server
+    elif iscentos 6; then
+        chkconfig nfs on 
 	    service nfs start
         service nfs reload
     fi
