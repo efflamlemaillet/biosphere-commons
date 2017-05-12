@@ -535,11 +535,12 @@ Install_SGE_master()
         yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmon-$sge_version-1.el6.x86_64.rpm
         yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-guiinst-$sge_version-1.el6.noarch.rpm
         yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-execd-$sge_version-1.el6.x86_64.rpm
+        #yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-debuginfo-$sge_version-1.el6.x86_64.rpm
         
-        wget -O /opt/sge/util/install_modules/inst_ifb.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/inst_ifb.conf
+        #wget -O /opt/sge/util/install_modules/inst_ifb.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/inst_ifb.conf
         
     	cd /opt/sge
-    	./inst_sge -m -auto util/install_modules/inst_ifb.conf
+    	./inst_sge -m -auto util/install_modules/inst_template.conf
     	. /opt/sge/default/common/settings.sh
         
         msg_info "SGE is installed."
