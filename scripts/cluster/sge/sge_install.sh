@@ -547,10 +547,9 @@ Install_SGE_master()
     	cd /opt/sge
     	./inst_sge -m -auto util/install_modules/inst_template.conf
     	. /opt/sge/default/common/settings.sh
-        
+        wget -O /etc/profile.d/sge_lib.sh https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/sge_lib.sh
         msg_info "SGE is installed."
-        message_at_boot_master
-        
+        message_at_boot_master        
     elif isubuntu; then
         # Configure the master hostname for Grid Engine
         echo "gridengine-master       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
@@ -601,6 +600,7 @@ Install_SGE_slave()
         cd /opt/sge
         . /opt/sge/default/common/settings.sh        
         ./inst_sge -x -auto util/install_modules/inst_template.conf
+        wget -O /etc/profile.d/sge_lib.sh https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/sge_lib.sh
     elif isubuntu; then   
         echo "gridengine-common       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
         echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
