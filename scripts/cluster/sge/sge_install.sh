@@ -178,6 +178,12 @@ create_workdir()
     mkdir -p $WORKDIR
     chmod 750 /root
     chmod 775 $WORKDIR
+    
+    if iscentos; then
+        SGEDIR=/opt/sge
+        mkdir -p $SGEDIR
+        chmod 775 $SGEDIR
+    fi
 }
 
 make_file_test()
@@ -207,7 +213,7 @@ initiate_master()
     if [ "$category" == "Deployment" ]; then
         HOSTNAME=$(ss-get nodename)-$ID
         SLAVE_NAME=$(ss-get slave.nodename)
-        echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
+        #echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
     else
         HOSTNAME=machine-$ID
     fi
@@ -432,8 +438,14 @@ NFS_export_sge()
 NFS_start()
 {
 	msg_info "Starting NFS..."
-	service nfs-kernel-server start
-    service nfs-kernel-server reload
+    if iscentos; then
+	    service nfs start
+        service nfs reload
+    fi
+    if isubuntu; then
+	    service nfs-kernel-server start
+        service nfs-kernel-server reload
+    fi
     exportfs -av
     ss-set nfs.ready "true"
     msg_info "NFS is started."
