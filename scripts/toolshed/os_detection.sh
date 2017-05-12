@@ -1,7 +1,6 @@
-arg_version=${1:-none}
-
 iscentos(){
-   if [ -f /etc/redhat-release ]; then
+    arg_version=${1:-none}
+    if [ -f /etc/redhat-release ]; then
       version=$(cat /etc/redhat-release | grep -oP "[0-9]+\.[0-9]+")
       version_min=$(cat /etc/redhat-release | grep -oP "[0-9]+" | head -1 )
       RELEASE=centos$version
@@ -13,12 +12,13 @@ iscentos(){
         echo "wrong version"
         false
       fi
-   fi
-   false
+    fi
+    false
 }
 
 isubuntu(){
-   if [ -n $(which lsb_release 2> /dev/null) ] && lsb_release -d | grep -q "Ubuntu"; then
+    arg_version=${1:-none}
+    if [ -n $(which lsb_release 2> /dev/null) ] && lsb_release -d | grep -q "Ubuntu"; then
       version=$(lsb_release -d | grep -oP "[0-9]+\.[0-9]+")
       version_min=$(lsb_release -d | grep -oP "[0-9]+" | head -1)
       RELEASE=ubuntu$version
@@ -30,8 +30,8 @@ isubuntu(){
         echo "wrong version"
         false
       fi
-   fi
-   false
+    fi
+    false
 }
 error(){
     echo "use the option -h to learn more" >&2         
