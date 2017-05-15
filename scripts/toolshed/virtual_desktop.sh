@@ -23,5 +23,4 @@ install_x2go(){
         echo "unsupported os"
         exit
     fi
-    sed -i 's|\(.* name=\"&lt;Super&gt;Tab\" type=\"\)string\(\" .*\)| \1empty\"/> |' /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml
 }
