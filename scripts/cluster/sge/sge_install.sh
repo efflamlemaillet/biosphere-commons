@@ -1,3 +1,5 @@
+source /scripts/toolshed/os_detection.sh
+
 check_if_vpn_or_not()
 {
     component_vpn_name=${component_vpn_name:-vpn}
