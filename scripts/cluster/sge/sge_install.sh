@@ -602,7 +602,7 @@ Install_SGE_slave()
         sge_version="8.1.9"
         yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
         cd /opt/sge
-        . /opt/sge/default/common/settings.sh        
+        . /opt/sge/default/common/settings.sh         
         ./inst_sge -x -auto util/install_modules/inst_template.conf
         wget -O /etc/profile.d/sge_lib.sh https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/sge_lib.sh
     elif isubuntu; then   
@@ -844,6 +844,7 @@ Config_SGE_master()
                 if [ "$SLOTS" ]; then
                     qconf -aattr queue slots "[$node_name=$SLOTS]" $QUEUE
                 fi
+                qconf -ah $node_name
             done
         fi
     else
