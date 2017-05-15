@@ -599,6 +599,8 @@ Install_SGE_slave()
     msg_info "Installing and Configuring SGE..."
     
     if iscentos; then
+        sge_version="8.1.9"
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
         cd /opt/sge
         . /opt/sge/default/common/settings.sh        
         ./inst_sge -x -auto util/install_modules/inst_template.conf
