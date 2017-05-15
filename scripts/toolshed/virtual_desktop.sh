@@ -2,10 +2,9 @@ source /scripts/toolshed/os_detection.sh
 
 install_x2go(){
     if iscentos 7; then
+        rpm -ivh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-1.noarch.rpm
         yum -y install x2goserver-xsession
-        yum -y install epel-release
-        yum -y groupinstall "X Window system"
-        yum -y groupinstall xfce
+        yum -y groupinstall "Xfce"
         
     elif iscentos 6; then
         yum -y install wget
