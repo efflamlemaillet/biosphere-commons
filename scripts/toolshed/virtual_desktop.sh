@@ -7,7 +7,6 @@ install_x2go(){
         yum -y groupinstall "Xfce"
         
     elif iscentos 6; then
-        yum -y install wget
         wget http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
         rpm -ivh epel-release-6-8.noarch.rpm
         yum -y groupinstall Xfce
