@@ -1004,6 +1004,7 @@ add_nodes() {
         if [ "$SLOTS" ]; then
             qconf -aattr queue slots "[$INSTANCE_NAME_SAFE=$SLOTS]" $QUEUE
         fi
+        qconf -ah $INSTANCE_NAME_SAFE
     done
     ss-set nfs.ready "true"
     ss-set sge.ready "true"
