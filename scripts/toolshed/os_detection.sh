@@ -9,7 +9,6 @@ iscentos(){
       elif [[ $arg_version == $version || $arg_version == $version_min ]];then
         return
       else
-        echo "wrong version"
         false
       fi
     fi
@@ -27,7 +26,6 @@ isubuntu(){
       elif [[ $arg_version == $version || $arg_version == $version_min ]];then
         return
       else
-        echo "wrong version"
         false
       fi
     fi
