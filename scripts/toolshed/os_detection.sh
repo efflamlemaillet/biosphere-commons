@@ -17,7 +17,7 @@ iscentos(){
 
 isubuntu(){
     arg_version=${1:-none}
-    if [ -n $(which lsb_release 2> /dev/null) ] && lsb_release -d | grep -q "Ubuntu"; then
+    if [ -n $(which lsb_release 2> /dev/null) ] && lsb_release -d 2>/dev/null | grep -q "Ubuntu"; then
       version=$(lsb_release -d | grep -oP "[0-9]+\.[0-9]+")
       version_min=$(lsb_release -d | grep -oP "[0-9]+" | head -1)
       RELEASE=ubuntu$version
