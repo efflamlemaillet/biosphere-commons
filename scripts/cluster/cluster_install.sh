@@ -154,3 +154,65 @@ msg_info()
         ss-display "$@"
     fi
 }
+
+user_add()
+{
+    getent passwd $1 > /dev/null
+    user_missing=$?
+    if [ "$user_missing" != "0" ]; then
+        useradd --create-home -u 666 $USER_NEW --shell /bin/bash
+    else
+        usermod -u 666 $USER_NEW
+    fi
+    ln -s /root/mydisk/ /home/$USER_NEW/work
+    usermod -aG root $USER_NEW
+    
+    msg_info ""
+    msg_info "$USER_NEW created for launch job"
+}
+
+check_ip()
+{
+    NETWORK_MODE=$(ss-get network)
+    if [ "$NETWORK_MODE" == "Public" ]; then
+        PUBLIC_IP=$(ss-get $IP_PARAMETER)
+        #ss-set hostname "${PRIVATE_IP}"
+        HOSTIP=$(echo $(hostname -I | sed 's/ /\n/g' | head -n 1))
+        SLAVE_IP=$HOSTIP
+        sed -i "s|$PUBLIC_IP|$HOSTIP|g" /etc/hosts
+    else
+        PUBLIC_IP=$(ss-get $IP_PARAMETER)
+        HOSTIP=$(ss-get $IP_PARAMETER)
+        SLAVE_IP=$HOSTIP
+    fi
+    ss-set ip.ready "$HOSTIP"
+}
+
+check_ip_slave_for_master()
+{
+    url="ssh://$USER_NEW@$PUBLIC_IP"
+    #ss-set url.ssh "${url}"
+    ss-set url.service "${url}"
+    ss-set ss:url.service "${url}"
+    
+    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
+        ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
+        #url=$(ss-get $SLAVE_NAME.$i:url.ssh)
+        #PUBLIC_SLAVE_IP=$(echo $url | cut -d "@" -f2)
+        PUBLIC_SLAVE_IP=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
+        SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
+        sed -i "s|$PUBLIC_SLAVE_IP|$SLAVE_IP|g" /etc/hosts
+    done
+}
+
+check_ip_master_for_slave()
+{
+    ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
+    url=$(ss-get $MASTER_HOSTNAME:url.service)
+    #PUBLIC_IP_MASTER=$(echo $url | cut -d "@" -f2)
+    PUBLIC_IP_MASTER=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
+    MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
+    sed -i "s|$PUBLIC_IP_MASTER|$MASTER_IP|g" /etc/hosts
+    ss-set url.service "${url}"
+    ss-set ss:url.service "${url}"    
+}
