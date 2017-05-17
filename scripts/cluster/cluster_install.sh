@@ -216,3 +216,142 @@ check_ip_master_for_slave()
     ss-set url.service "${url}"
     ss-set ss:url.service "${url}"    
 }
+
+#####
+# NFS
+#####
+
+NFS_start()
+{
+	msg_info "Starting NFS..."
+    if iscentos 7; then
+        systemctl enable nfs-server
+        systemctl start nfs-server
+        systemctl reload nfs-server
+    elif iscentos 6; then
+        chkconfig nfs on 
+	    service nfs start
+        service nfs reload
+    fi
+    if isubuntu; then
+	    service nfs-kernel-server start
+        service nfs-kernel-server reload
+    fi
+    exportfs -av
+    ss-set nfs.ready "true"
+    msg_info "NFS is started."
+}
+
+NFS_ready(){
+    ss-get --timeout=3600 $MASTER_HOSTNAME:nfs.ready
+    nfs_ready=$(ss-get $MASTER_HOSTNAME:nfs.ready)
+    msg_info "Waiting NFS to be ready."
+	while [ "$nfs_ready" == "false" ]
+	do
+		sleep 10;
+		nfs_ready=$(ss-get $MASTER_HOSTNAME:nfs.ready)
+	done
+}
+
+# exporting NFS share from master
+NFS_export()
+{
+    # Pas de paramètre 
+    [[ $# -lt 1 ]] && echo "This function expects a directory in argument !" && exit
+    
+    EXPORT_DIR=$1
+
+    if [ ! -d "$EXPORT_DIR" ]; then
+        msg_info "$EXPORT_DIR doesn't exist !"
+        exit
+    fi
+    
+    msg_info "Exporting NFS share of $EXPORT_DIR..."
+	
+    EXPORTS_FILE=/etc/exports
+    if grep -q $EXPORT_DIR $EXPORTS_FILE; then 
+		echo "$EXPORT_DIR ready"
+	else 
+        echo -ne "$EXPORT_DIR\t" >> $EXPORTS_FILE
+    fi
+    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
+        if [ $IP_PARAMETER == "hostname" ]; then
+            node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
+        else
+            node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
+        fi
+        if grep -q $EXPORT_DIR.*$node_host $EXPORTS_FILE; then 
+		    echo "$node_host ready"
+	    else
+            echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
+        fi
+    done
+    echo "" >> $EXPORTS_FILE # last for a newline
+	
+	msg_info "$EXPORT_DIR is exported."
+}
+
+# Mounting directory
+NFS_mount()
+{
+    # Pas de paramètre 
+    [[ $# -lt 1 ]] && echo "This function expects a directory in argument !" && exit
+    
+    MOUNT_DIR=$1
+    
+    if [ ! -d "$MOUNT_DIR" ]; then
+        msg_info "$MOUNT_DIR doesn't exist !"
+        exit
+    fi
+    
+    msg_info "Mounting $MOUNT_DIR..."
+    
+    umount $MOUNT_DIR
+    mount $MASTER_IP:$MOUNT_DIR $MOUNT_DIR 2>/tmp/mount_error_message.txt
+    ret=$?
+    msg_info "$(/tmp/mount_error_message.txt)"
+     
+    if [ $ret -ne 0 ]; then
+        ss-abort "$(cat /tmp/mount_error_message.txt)"
+    else
+         msg_info "$MOUNT_DIR is mounted"
+    fi
+}
+
+## ADD SLAVES
+UNSET_parameters(){
+    ss-set nfs.ready "false"
+    ss-set sge.ready "false"
+}
+
+NFS_export_add()
+{
+    # Pas de paramètre 
+    [[ $# -lt 1 ]] && echo "This function expects a directory in argument !" && exit
+    
+    EXPORT_DIR=$1
+
+    if [ ! -d "$EXPORT_DIR" ]; then
+        msg_info "$EXPORT_DIR doesn't exist !"
+        exit
+    fi
+    
+    msg_info "Exporting NFS share of $EXPORT_DIR..."
+	
+    EXPORTS_FILE=/etc/exports
+    if grep -q $EXPORT_DIR $EXPORTS_FILE; then 
+		echo "$EXPORT_DIR ready"
+	else 
+        echo -ne "$EXPORT_DIR\t" >> $EXPORTS_FILE
+        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
+        echo "" >> $EXPORTS_FILE # last for a newline
+    fi
+    if grep -q $EXPORT_DIR.*$SLAVE_IP $EXPORTS_FILE; then 
+	    echo "$SLAVE_IP ready"
+    else
+        WD=$(echo $EXPORT_DIR | sed 's|\/|\\\/|g')
+        sed -ie '/'$WD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
+    fi
+	
+	msg_info "$EXPORT_DIR is exported."
+}
