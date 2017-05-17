@@ -135,171 +135,6 @@ message_at_boot_slave()
 }
 
 #####
-# NFS
-#####
-# exporting NFS share from master
-NFS_export_pdisk()
-{
-    msg_info "Exporting NFS share of $WORKDIR..."
-	
-    EXPORTS_FILE=/etc/exports
-    if grep -q $WORKDIR $EXPORTS_FILE; then 
-		echo "$WORKDIR ready"
-	else 
-        echo -ne "$WORKDIR\t" >> $EXPORTS_FILE
-    fi
-    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
-        if [ $IP_PARAMETER == "hostname" ]; then
-            node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        else
-            node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
-        fi
-        if grep -q $WORKDIR.*$node_host $EXPORTS_FILE; then 
-		    echo "$node_host ready"
-	    else
-            echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        fi
-    done
-    echo "" >> $EXPORTS_FILE # last for a newline
-	
-	msg_info "$WORKDIR is exported."
-}
-
-# exporting NFS share from master
-NFS_export_home()
-{
-    msg_info "Exporting NFS share of $HOMEDIR..."
-    
-    EXPORTS_FILE=/etc/exports
-    if grep -q $HOMEDIR $EXPORTS_FILE; then 
-		echo "$HOMEDIR ready"
-	else
-        echo -ne "$HOMEDIR\t" >> $EXPORTS_FILE
-    fi
-    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
-        if [ $IP_PARAMETER == "hostname" ]; then
-            node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        else
-            node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
-        fi
-        if grep -q $HOMEDIR.*$node_host $EXPORTS_FILE; then 
-		    echo "$node_host ready"
-	    else
-            echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        fi
-    done
-    echo "" >> $EXPORTS_FILE # last for a newline
-	
-	msg_info "$HOMEDIR is exported."
-}
-
-NFS_export_sge()
-{
-    msg_info "Exporting NFS share of $HOMEDIR..."
-    
-    EXPORTS_FILE=/etc/exports
-    if grep -q /opt/sge $EXPORTS_FILE; then 
-		echo "/opt/sge ready"
-	else
-        echo -ne "/opt/sge\t" >> $EXPORTS_FILE
-    fi
-    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
-        if [ $IP_PARAMETER == "hostname" ]; then
-            node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        else
-            node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
-        fi
-        if grep -q /opt/sge.*$node_host $EXPORTS_FILE; then 
-		    echo "$node_host ready"
-	    else
-            echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        fi
-    done
-    echo "" >> $EXPORTS_FILE # last for a newline
-	
-	msg_info "/opt/sge is exported."
-}
-
-NFS_start()
-{
-	msg_info "Starting NFS..."
-    if iscentos 7; then
-        systemctl enable nfs-server
-        systemctl start nfs-server
-        systemctl reload nfs-server
-    elif iscentos 6; then
-        chkconfig nfs on 
-	    service nfs start
-        service nfs reload
-    fi
-    if isubuntu; then
-	    service nfs-kernel-server start
-        service nfs-kernel-server reload
-    fi
-    exportfs -av
-    ss-set nfs.ready "true"
-    msg_info "NFS is started."
-}
-
-NFS_ready(){
-    ss-get --timeout=3600 $MASTER_HOSTNAME:nfs.ready
-    nfs_ready=$(ss-get $MASTER_HOSTNAME:nfs.ready)
-    msg_info "Waiting NFS to be ready."
-	while [ "$nfs_ready" == "false" ]
-	do
-		sleep 10;
-		nfs_ready=$(ss-get $MASTER_HOSTNAME:nfs.ready)
-	done
-}
-
-# Mounting pdisk directory
-NFS_mount_pdisk()
-{
-    msg_info "Mounting $WORKDIR..."
-    umount $WORKDIR
-    mount $MASTER_IP:$WORKDIR $WORKDIR 2>/tmp/mount_error_message.txt
-    ret=$?
-    msg_info "$(/tmp/mount_error_message.txt)"
-     
-    if [ $ret -ne 0 ]; then
-        ss-abort "$(cat /tmp/mount_error_message.txt)"
-    else
-         msg_info "$WORKDIR is mounted"
-    fi
-}
-
-# Mounting NFS share on nodes
-NFS_mount_home()
-{
-    msg_info "Mounting $HOMEDIR..."
-    umount $HOMEDIR
-    mount $MASTER_IP:$HOMEDIR $HOMEDIR 2>>/tmp/mount_error_message.txt
-    ret=$?
-    msg_info "$(/tmp/mount_error_message.txt)"
-     
-    if [ $ret -ne 0 ]; then
-        ss-abort "$(cat /tmp/mount_error_message.txt)"
-    else
-         msg_info "$HOMEDIR is mounted"
-    fi
-}
-
-NFS_mount_sge()
-{
-    msg_info "Mounting /opt/sge..."
-    umount /opt/sge
-    mount $MASTER_IP:/opt/sge /opt/sge 2>>/tmp/mount_error_message.txt
-    ret=$?
-    msg_info "$(/tmp/mount_error_message.txt)"
-     
-    if [ $ret -ne 0 ]; then
-        ss-abort "$(cat /tmp/mount_error_message.txt)"
-    else
-         msg_info "/opt/sge is mounted"
-    fi
-}
-
-#####
 # Install SGE
 #####
 
@@ -638,83 +473,6 @@ Config_SGE_master()
 	msg_info "SGE is configured."
 }
 
-## ADD SLAVES
-UNSET_parameters(){
-    ss-set nfs.ready "false"
-    ss-set sge.ready "false"
-}
-
-#####
-# NFS
-#####
-# exporting NFS share from master
-NFS_export_pdisk_add()
-{
-    msg_info "Exporting NFS share of $WORKDIR..."
-	
-    EXPORTS_FILE=/etc/exports
-    if grep -q $WORKDIR $EXPORTS_FILE; then 
-		echo "$WORKDIR ready"
-	else 
-        echo -ne "$WORKDIR\t" >> $EXPORTS_FILE
-        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        echo "" >> $EXPORTS_FILE # last for a newline
-    fi
-    if grep -q $WORKDIR.*$SLAVE_IP $EXPORTS_FILE; then 
-	    echo "$SLAVE_IP ready"
-    else
-        WD=$(echo $WORKDIR | sed 's|\/|\\\/|g')
-        sed -ie '/'$WD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
-    fi
-	
-	msg_info "$WORKDIR is exported."
-}
-
-# exporting NFS share from master
-NFS_export_home_add()
-{
-    msg_info "Exporting NFS share of $HOMEDIR..."
-    
-    EXPORTS_FILE=/etc/exports
-    if grep -q $HOMEDIR $EXPORTS_FILE; then 
-		echo "$HOMEDIR ready"
-	else
-        echo -ne "$HOMEDIR\t" >> $EXPORTS_FILE
-        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        echo "" >> $EXPORTS_FILE # last for a newline
-    fi
-    if grep -q $HOMEDIR.*$SLAVE_IP $EXPORTS_FILE; then 
-	    echo "$SLAVE_IP ready"
-    else
-        HD=$(echo $HOMEDIR | sed 's|\/|\\\/|g')
-        sed -ie '/'$HD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
-    fi
-	
-	msg_info "$HOMEDIR is exported."
-}
-
-NFS_export_sge_add()
-{
-    msg_info "Exporting NFS share of /opt/sge..."
-    
-    EXPORTS_FILE=/etc/exports
-    if grep -q /opt/sge $EXPORTS_FILE; then 
-		echo "/opt/sge ready"
-	else
-        echo -ne "/opt/sge\t" >> $EXPORTS_FILE
-        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        echo "" >> $EXPORTS_FILE # last for a newline
-    fi
-    if grep -q /opt/sge.*$SLAVE_IP $EXPORTS_FILE; then 
-	    echo "$SLAVE_IP ready"
-    else
-        HD=$(echo /opt/sge | sed 's|\/|\\\/|g')
-        sed -ie '/'$HD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
-    fi
-	
-	msg_info "/opt/sge is exported."
-}
-
 NFS_start_add()
 {
 	msg_info "Starting NFS..."
@@ -756,12 +514,12 @@ add_nodes() {
         sed -i "s|$PUBLIC_SLAVE_IP|$SLAVE_IP|g" /etc/hosts
         echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME_SAFE, $SLAVE_IP"
         
-        NFS_export_pdisk_add
-        NFS_export_home_add
+        NFS_export_add /root/mydisk
+        NFS_export_add /home/$USER_NEW
         if iscentos; then
-            NFS_export_sge_add
+            NFS_export_add /opt/sge
         fi
-        NFS_start_add
+        NFS_start
        
        if grep -q $SLAVE_IP /etc/hosts; then
             echo "$SLAVE_IP ready"
@@ -789,7 +547,6 @@ add_nodes() {
         fi
         qconf -ah $INSTANCE_NAME_SAFE
     done
-    ss-set nfs.ready "true"
     ss-set sge.ready "true"
     ss-display "Slave is added."
 }
