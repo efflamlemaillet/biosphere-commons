@@ -4,8 +4,6 @@ initiate_variable_global()
 {
     check_if_vpn_or_not
     
-    WORKDIR=/root/mydisk
-    HOMEDIR=/home/$USER_NEW
     SGE_ROOT_DIR=/tmp/sge
     ID=1    
     
@@ -19,23 +17,12 @@ initiate_variable_global()
     fi
 }
 
-create_workdir()
+make_file_test_sge()
 {
-    WORKDIR=/root/mydisk
-    mkdir -p $WORKDIR
-    chmod 750 /root
-    chmod 775 $WORKDIR
+    # Pas de paramètre 
+    [[ $# -lt 1 ]] && echo "This function expects a directory in argument !" && exit
     
-    if iscentos; then
-        SGEDIR=/opt/sge
-        mkdir -p $SGEDIR
-        chmod 775 $SGEDIR
-    fi
-}
-
-make_file_test()
-{
-    WORKDIR=/root/mydisk
+    WORKDIR=$1
     mkdir -p $WORKDIR
     chmod 750 /root
     chmod 775 $WORKDIR
@@ -154,6 +141,10 @@ Install_SGE_master()
     msg_info "Installing SGE..."
     
     if iscentos; then
+        SGEDIR=/opt/sge
+        mkdir -p $SGEDIR
+        chmod 775 $SGEDIR
+        
         sge_version="8.1.9"
         yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
         yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmaster-$sge_version-1.el6.x86_64.rpm
@@ -217,6 +208,10 @@ Install_SGE_slave()
     msg_info "Installing and Configuring SGE..."
     
     if iscentos; then
+        SGEDIR=/opt/sge
+        mkdir -p $SGEDIR
+        chmod 775 $SGEDIR
+        
         sge_version="8.1.9"
         yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
         cd /opt/sge
@@ -617,42 +612,96 @@ usage(){
     echo "--help ou -h : afficher l'aide"
     echo "-m : Install sge master" 
     echo "-s : Install sge slave"
+    echo "-a : add nodes"
+    echo "-r : remove nodes"
 } 
 
 master_help(){
     echo "You can do:"
-    echo "    initiate_master"
-    echo "    make_file_test"
-    echo "    #if not vpn"
-    echo "    check_ip"
-    echo "    check_ip_slave_for_master"
-    echo "    #Endif"
+    echo "    #Post-install part:"
+    echo "    make_file_test_sge /root/mydisk"
+    echo "    check_if_vpn_or_not"
+    echo "    if [ \$IP_PARAMETER == 'hostname' ]; then"
+    echo "        if isubuntu 14; then"
+    echo "            initiate_install_edugain"
+    echo "        elif isubuntu 16; then"
+    echo "            initiate_install_edugain_ubuntu16"
+    echo "        fi"
+    echo "    fi"
+    echo "    "
+    echo "    #Deployment part:"
+    echo "    check_if_vpn_or_not"
     echo "    user_add"
-    echo "    #If one or several slaves "
-    echo "    NFS_export_pdisk"
-    echo "    NFS_export_home"
-    echo "    NFS_start"
-    echo "    #Endif"
+    echo "    initiate_master"
+    echo "    if [ \$IP_PARAMETER == 'hostname' ]; then"
+    echo "        if $(isubuntu 14) || $(isubuntu 16); then"
+    echo "            install_edugain"
+    echo "        fi"
+    echo "        check_ip"
+    echo "        if [ '\$category' == 'Deployment' ]; then"
+    echo "            check_ip_slave_for_master"
+    echo "        fi"
+    echo "    fi"
+    echo "    if [ '\$category' == 'Deployment' ]; then"
+    echo "        node_multiplicity=$(ss-get \$SLAVE_NAME:multiplicity)"
+    echo "        if [ '\$node_multiplicity '!= '0' ]; then"
+    echo "            NFS_export /root/mydisk"
+    echo "            NFS_export /home/\$USER_NEW"
+    echo "            if iscentos; then"
+    echo "                NFS_export /opt/sge"
+    echo "            fi"
+    echo "            NFS_start"
+    echo "        fi"
+    echo "    fi"
     echo "    Install_SGE_master"
-    echo "    Config_SGE"
-} 
+    echo "    Config_SGE_master"
+}
+
+add_nodes_help(){
+    echo "You can do:"
+    echo "    check_if_vpn_or_not"
+    echo "    UNSET_parameters"
+    echo "    if [ '\$SLIPSTREAM_SCALING_NODE' == 'slave' ]; then"
+    echo "        add_nodes"
+    echo "    else"
+    echo "        ss-abort 'Only slave can be added'"
+    echo "    fi"
+}
+
+rm_nodes_help(){
+    echo "You can do:"
+    echo "    check_if_vpn_or_not"
+    echo "    if [ '\$SLIPSTREAM_SCALING_NODE' == 'slave' ]; then"
+    echo "        rm_nodes"
+    echo "    else"
+    echo "        ss-abort 'Only slave can be removed'"
+    echo "    fi"
+}
 
 slave_help(){
-    echo "You can do:" 
-    echo "    initiate_slave"
-    echo "    make_file_test"
-    echo "    #if not vpn"
-    echo "    check_ip"
-    echo "    check_ip_master_for_slave"
-    echo "    #Endif"
+    echo "You can do:"
+    echo "    #Post-install part:"
+    echo "    check_if_vpn_or_not"
+    echo "    "
+    echo "    #Deployment part:"
+    echo "    check_if_vpn_or_not"
     echo "    user_add"
-    echo "    #If one or several slaves "
-    echo "    NFS_export_pdisk"
-    echo "    NFS_export_home"
-    echo "    NFS_start"
-    echo "    #Endif"
-    echo "    Install_SGE_master"
-    echo "    Config_SGE"
+    echo "    initiate_slave"
+    echo "    if [ \$IP_PARAMETER == 'hostname' ]; then"
+    echo "        check_ip"
+    echo "        if [ '\$category '== 'Deployment' ]; then"
+    echo "            check_ip_master_for_slave"
+    echo "        fi"
+    echo "    fi"
+    echo "    NFS_ready"
+    echo "    NFS_mount /root/mydisk"
+    echo "    NFS_mount /home/\$USER_NEW"
+    echo "    if iscentos; then"
+    echo "        mkdir -p /opt/sge"
+    echo "        NFS_mount /opt/sge"
+    echo "    fi"
+    echo "    check_if_sge_is_ready_on_master"
+    echo "    Install_SGE_slave"
 } 
 
 # Pas de paramètre 
@@ -660,7 +709,7 @@ slave_help(){
 
 # -o : options courtes 
 # -l : options longues 
-options=$(getopt -o h,m,s: -l help -- "$@") 
+options=$(getopt -o h,m,s,a,r: -l help -- "$@") 
 
 set -- $options 
 
@@ -669,6 +718,10 @@ while true; do
         -m) master_help
             shift;;
         -s) slave_help
+            shift;;
+        -a) add_nodes_help
+            shift;;
+        -r) rm_nodes_help
             shift;;
         -h|--help) usage 
             shift;;
