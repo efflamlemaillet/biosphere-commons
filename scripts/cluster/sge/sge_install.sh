@@ -468,15 +468,6 @@ Config_SGE_master()
 	msg_info "SGE is configured."
 }
 
-NFS_start_add()
-{
-	msg_info "Starting NFS..."
-	service nfs-kernel-server start
-    service nfs-kernel-server reload
-    exportfs -av
-    msg_info "NFS is started."
-}
-
 add_nodes() {
     MASTER_ID=1
     category=$(ss-get ss:category)
