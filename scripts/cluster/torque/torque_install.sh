@@ -7,16 +7,7 @@ initiate_variable_global_torque()
     PBS_TEMP_DIR=/tmp/torque
     MAUI_TEMP_DIR=/tmp/maui
     PBS_ROOT_DIR=/opt/torque
-    ID=1    
-    
-    if [ $IP_PARAMETER == "vpn.address" ]; then
-        #MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
-        IP_VPN=$(ss-get $component_vpn_name:hostname)
-        url="ssh://$USER_NEW@$IP_VPN"
-        #ss-set url.ssh "${url}"
-        ss-set url.service "${url}"
-        ss-set ss:url.service "${url}"
-    fi
+    ID=1
 }
 
 initiate_master_torque()
@@ -50,7 +41,7 @@ initiate_master_torque()
 }
 
 initiate_slave_torque()
-{
+{    
     initiate_variable_global_torque
     
     if [ "$category" != "Deployment" ]; then
