@@ -1,22 +1,5 @@
 source /scripts/cluster/cluster_install.sh
 
-initiate_variable_global()
-{
-    check_if_vpn_or_not
-    
-    SGE_ROOT_DIR=/tmp/sge
-    ID=1    
-    
-    if [ $IP_PARAMETER == "vpn.address" ]; then
-        #MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
-        IP_VPN=$(ss-get $component_vpn_name:hostname)
-        url="ssh://$USER_NEW@$IP_VPN"
-        #ss-set url.ssh "${url}"
-        ss-set url.service "${url}"
-        ss-set ss:url.service "${url}"
-    fi
-}
-
 make_file_test_sge()
 {
     # Pas de paramètre 
@@ -38,8 +21,10 @@ make_file_test_sge()
 
 initiate_master()
 {
-    initiate_variable_global
+    check_if_vpn_or_not
     
+    ID=1
+    SGE_ROOT_DIR=/tmp/sge
     mkdir -p $SGE_ROOT_DIR
     
     HOSTIP=$(ss-get $IP_PARAMETER)
@@ -77,7 +62,9 @@ initiate_master()
 
 initiate_slave()
 {
-    initiate_variable_global
+    check_if_vpn_or_not
+    
+    ID=1
     
     if [ "$category" != "Deployment" ]; then
         ss-abort "You need to deploy with a master!!!"

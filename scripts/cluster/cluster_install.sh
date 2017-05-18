@@ -39,6 +39,16 @@ check_if_vpn_or_not()
             IP_PARAMETER=hostname
         fi
     fi
+    
+    #url.service display when vpn is on
+    if [ $IP_PARAMETER == "vpn.address" ]; then
+        #MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
+        IP_VPN=$(ss-get $component_vpn_name:hostname)
+        url="ssh://$USER_NEW@$IP_VPN"
+        #ss-set url.ssh "${url}"
+        ss-set url.service "${url}"
+        ss-set ss:url.service "${url}"
+    fi
 }
 
 initiate_install_edugain()
