@@ -119,14 +119,6 @@ package_torque(){
     fi
 }
 
-user_sudoers(){
-	if grep -q $USER_NEW "/etc/sudoers"; then 
-		echo "$USER_NEW ready"
-	else 
-		echo -e "$USER_NEW\tALL=(ALL)\tALL" >> /etc/sudoers
-	fi
-}
-
 check_if_torque_is_ready_on_master(){
     ss-get --timeout=3600 $MASTER_HOSTNAME:pbs.ready
     pbs_ready=$(ss-get $MASTER_HOSTNAME:pbs.ready)

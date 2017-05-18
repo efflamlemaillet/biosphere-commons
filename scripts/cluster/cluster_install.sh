@@ -49,6 +49,11 @@ check_if_vpn_or_not()
         ss-set url.service "${url}"
         ss-set ss:url.service "${url}"
     fi
+    
+    WORKDIR=/root/mydisk
+    mkdir -p $WORKDIR
+    chmod 750 /root
+    chmod 775 $WORKDIR
 }
 
 initiate_install_edugain()
@@ -181,6 +186,14 @@ user_add()
     msg_info "$USER_NEW created for launch job"
 }
 
+user_sudoers(){
+	if grep -q $USER_NEW "/etc/sudoers"; then 
+		echo "$USER_NEW ready"
+	else 
+		echo -e "$USER_NEW\tALL=(ALL)\tALL" >> /etc/sudoers
+	fi
+}
+
 check_ip()
 {
     NETWORK_MODE=$(ss-get network)
@@ -267,64 +280,66 @@ NFS_ready(){
 NFS_export()
 {
     # Pas de paramètre 
-    [[ $# -lt 1 ]] && echo "This function expects a directory in argument !" && exit
-    
-    EXPORT_DIR=$1
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a directory in argument !"
+    else    
+        EXPORT_DIR=$1
 
-    if [ ! -d "$EXPORT_DIR" ]; then
-        msg_info "$EXPORT_DIR doesn't exist !"
-        exit
-    fi
-    
-    msg_info "Exporting NFS share of $EXPORT_DIR..."
+        if [ ! -d "$EXPORT_DIR" ]; then
+            msg_info "$EXPORT_DIR doesn't exist !"
+        else    
+            msg_info "Exporting NFS share of $EXPORT_DIR..."
 	
-    EXPORTS_FILE=/etc/exports
-    if grep -q $EXPORT_DIR $EXPORTS_FILE; then 
-		echo "$EXPORT_DIR ready"
-	else 
-        echo -ne "$EXPORT_DIR\t" >> $EXPORTS_FILE
-    fi
-    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
-        if [ $IP_PARAMETER == "hostname" ]; then
-            node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        else
-            node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
-        fi
-        if grep -q $EXPORT_DIR.*$node_host $EXPORTS_FILE; then 
-		    echo "$node_host ready"
-	    else
-            echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        fi
-    done
-    echo "" >> $EXPORTS_FILE # last for a newline
+            EXPORTS_FILE=/etc/exports
+            if grep -q $EXPORT_DIR $EXPORTS_FILE; then 
+        		echo "$EXPORT_DIR ready"
+        	else 
+                echo -ne "$EXPORT_DIR\t" >> $EXPORTS_FILE
+            fi
+            for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
+                if [ $IP_PARAMETER == "hostname" ]; then
+                    node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
+                else
+                    node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
+                fi
+                if grep -q $EXPORT_DIR.*$node_host $EXPORTS_FILE; then 
+        		    echo "$node_host ready"
+        	    else
+                    echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
+                fi
+            done
+            echo "" >> $EXPORTS_FILE # last for a newline
 	
-	msg_info "$EXPORT_DIR is exported."
+        	msg_info "$EXPORT_DIR is exported."
+        fi
+    fi
 }
 
 # Mounting directory
 NFS_mount()
 {
     # Pas de paramètre 
-    [[ $# -lt 1 ]] && echo "This function expects a directory in argument !" && exit
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a directory in argument !"
+    else    
+        MOUNT_DIR=$1
     
-    MOUNT_DIR=$1
+        if [ ! -d "$MOUNT_DIR" ]; then
+            msg_info "$MOUNT_DIR doesn't exist !"
+        else    
+            msg_info "Mounting $MOUNT_DIR..."
     
-    if [ ! -d "$MOUNT_DIR" ]; then
-        msg_info "$MOUNT_DIR doesn't exist !"
-        exit
-    fi
-    
-    msg_info "Mounting $MOUNT_DIR..."
-    
-    umount $MOUNT_DIR
-    mount $MASTER_IP:$MOUNT_DIR $MOUNT_DIR 2>/tmp/mount_error_message.txt
-    ret=$?
-    msg_info "$(/tmp/mount_error_message.txt)"
+            umount $MOUNT_DIR
+            mount $MASTER_IP:$MOUNT_DIR $MOUNT_DIR 2>/tmp/mount_error_message.txt
+            ret=$?
+            msg_info "$(/tmp/mount_error_message.txt)"
      
-    if [ $ret -ne 0 ]; then
-        ss-abort "$(cat /tmp/mount_error_message.txt)"
-    else
-         msg_info "$MOUNT_DIR is mounted"
+            if [ $ret -ne 0 ]; then
+                ss-abort "$(cat /tmp/mount_error_message.txt)"
+            else
+                 msg_info "$MOUNT_DIR is mounted"
+            fi
+        fi
     fi
 }
 
@@ -337,31 +352,32 @@ UNSET_parameters(){
 NFS_export_add()
 {
     # Pas de paramètre 
-    [[ $# -lt 1 ]] && echo "This function expects a directory in argument !" && exit
-    
-    EXPORT_DIR=$1
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a directory in argument !"
+    else    
+        EXPORT_DIR=$1
 
-    if [ ! -d "$EXPORT_DIR" ]; then
-        msg_info "$EXPORT_DIR doesn't exist !"
-        exit
-    fi
-    
-    msg_info "Exporting NFS share of $EXPORT_DIR..."
+        if [ ! -d "$EXPORT_DIR" ]; then
+            msg_info "$EXPORT_DIR doesn't exist !"
+        else    
+            msg_info "Exporting NFS share of $EXPORT_DIR..."
 	
-    EXPORTS_FILE=/etc/exports
-    if grep -q $EXPORT_DIR $EXPORTS_FILE; then 
-		echo "$EXPORT_DIR ready"
-	else 
-        echo -ne "$EXPORT_DIR\t" >> $EXPORTS_FILE
-        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        echo "" >> $EXPORTS_FILE # last for a newline
-    fi
-    if grep -q $EXPORT_DIR.*$SLAVE_IP $EXPORTS_FILE; then 
-	    echo "$SLAVE_IP ready"
-    else
-        WD=$(echo $EXPORT_DIR | sed 's|\/|\\\/|g')
-        sed -ie '/'$WD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
-    fi
+            EXPORTS_FILE=/etc/exports
+            if grep -q $EXPORT_DIR $EXPORTS_FILE; then 
+        		echo "$EXPORT_DIR ready"
+        	else 
+                echo -ne "$EXPORT_DIR\t" >> $EXPORTS_FILE
+                echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
+                echo "" >> $EXPORTS_FILE # last for a newline
+            fi
+            if grep -q $EXPORT_DIR.*$SLAVE_IP $EXPORTS_FILE; then 
+        	    echo "$SLAVE_IP ready"
+            else
+                WD=$(echo $EXPORT_DIR | sed 's|\/|\\\/|g')
+                sed -ie '/'$WD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
+            fi
 	
-	msg_info "$EXPORT_DIR is exported."
+        	msg_info "$EXPORT_DIR is exported."
+        fi
+    fi
 }

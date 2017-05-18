@@ -3,20 +3,21 @@ source /scripts/cluster/cluster_install.sh
 make_file_test_sge()
 {
     # Pas de paramètre 
-    [[ $# -lt 1 ]] && echo "This function expects a directory in argument !" && exit
-    
-    WORKDIR=$1
-    mkdir -p $WORKDIR
-    chmod 750 /root
-    chmod 775 $WORKDIR
-    echo "for i in {1..50}" > $WORKDIR/qsub_test.sh
-    echo "    do" >> $WORKDIR/qsub_test.sh
-    echo "        len=\$(shuf -i 1-10 -n 1)" >> $WORKDIR/qsub_test.sh
-    echo "        echo \"sleep \$len\" > /tmp/sleep\$i-\$len.sh" >> $WORKDIR/qsub_test.sh
-    echo "    qsub /tmp/sleep\$i-\$len.sh" >> $WORKDIR/qsub_test.sh
-    echo "done" >> $WORKDIR/qsub_test.sh
-    echo "echo \"run 'watch -n 1 qstat -f' to monitor the computation\"" >> $WORKDIR/qsub_test.sh
-    chmod 755 $WORKDIR/qsub_test.sh
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a directory in argument !"
+    else    
+        TESTDIR=$1
+        mkdir -p $TESTDIR
+        chmod 775 $TESTDIR
+        echo "for i in {1..50}" > $TESTDIR/qsub_test.sh
+        echo "    do" >> $TESTDIR/qsub_test.sh
+        echo "        len=\$(shuf -i 1-10 -n 1)" >> $TESTDIR/qsub_test.sh
+        echo "        echo \"sleep \$len\" > /tmp/sleep\$i-\$len.sh" >> $TESTDIR/qsub_test.sh
+        echo "    qsub /tmp/sleep\$i-\$len.sh" >> $TESTDIR/qsub_test.sh
+        echo "done" >> $TESTDIR/qsub_test.sh
+        echo "echo \"run 'watch -n 1 qstat -f' to monitor the computation\"" >> $TESTDIR/qsub_test.sh
+        chmod 755 $TESTDIR/qsub_test.sh
+    fi
 }
 
 initiate_master()
