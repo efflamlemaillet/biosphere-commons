@@ -1,188 +1,31 @@
-initiate_install_edugain()
+source /scripts/cluster/cluster_install.sh
+
+make_file_test_sge()
 {
-    pip install scriptine
-    wget -O - https://raw.githubusercontent.com/cyclone-project/cyclone-python-pam/master/setup.sh | sed 's/~/\/tmp\//g' | sh
-    wget -O /lib/security/cyclone_pam.py https://raw.githubusercontent.com/bryan-brancotte/cyclone-python-pam/patch-5/lib/security/cyclone_pam.py
-    echo "{
-      \"ports\":[20000 ]
-    }" > /lib/security/cyclone_config
-    cp /etc/pam.d/sshd /etc/pam.d/sshd.bak
-    cat /etc/pam.d/sshd.bak | sed 's/ auth /auth /g' | sed 's/auth /#auth /g' | sed 's/##auth /auth /g' > /etc/pam.d/sshd
-    service ssh restart
-}
-
-initiate_install_edugain_ubuntu16()
-{
-    # Clone and install python package dependencies
-    cd ~
-    mkdir cyclone-pam && cd cyclone-pam
-    git clone https://github.com/cyclone-project/cyclone-python-pam.git .
-    git checkout ubuntu1604
-    pip install -r requirements.pip
-
-    # Install python script and config
-    cp usr/local/bin/cyclone_pam.py /usr/local/bin/cyclone_pam.py
-
-    sed -ie '/BASE_URI =/i\
-    global s\
-    s = socket\.socket(socket\.AF_INET, socket\.SOCK_DGRAM)\
-    s\.connect(("8\.8\.8\.8", 80))\
-    ' /usr/local/bin/cyclone_pam.py
-    sed -ie 's|host_ip = .*|host_ip = s\.getsockname()[0]|' /usr/local/bin/cyclone_pam.py
-
-    mkdir /etc/cyclone
-    cp -f etc/cyclone/cyclone.conf /etc/cyclone/cyclone.conf
-    cp -f etc/cyclone/key.pem /etc/cyclone/key.pem
-
-    # Update ssh PAM config
-    cp -f etc/pam.d/sshd /etc/pam.d/sshd
-
-    # Update sshd configuration and restart service
-    cp -f etc/ssh/sshd_config /etc/ssh/sshd_config
-    service ssh restart
-
-    # Load default ports
-    echo "{
-      \"ports\":[[20000, 25000] ]
-    }" > /etc/cyclone/cyclone.conf
-
-    ## INSTALL SCRIPTS
-    if [ ! -e /scripts/ ]; then
-        git clone https://github.com/cyclone-project/usecases-hackathon-2016/ /tmp/usecases-hackathon-2016
-        #ln -s /tmp/usecases-hackathon-2016/scripts /scripts
-        cp -rf /tmp/usecases-hackathon-2016/scripts /scripts
-        chmod a+rx -R /scripts/
-        pip install -r /scripts/requirements.txt
+    # Pas de paramètre 
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a directory in argument !"
+    else    
+        TESTDIR=$1
+        mkdir -p $TESTDIR
+        chmod 775 $TESTDIR
+        echo "for i in {1..50}" > $TESTDIR/qsub_test.sh
+        echo "    do" >> $TESTDIR/qsub_test.sh
+        echo "        len=\$(shuf -i 1-10 -n 1)" >> $TESTDIR/qsub_test.sh
+        echo "        echo \"sleep \$len\" > /tmp/sleep\$i-\$len.sh" >> $TESTDIR/qsub_test.sh
+        echo "    qsub /tmp/sleep\$i-\$len.sh" >> $TESTDIR/qsub_test.sh
+        echo "done" >> $TESTDIR/qsub_test.sh
+        echo "echo \"run 'watch -n 1 qstat -f' to monitor the computation\"" >> $TESTDIR/qsub_test.sh
+        chmod 755 $TESTDIR/qsub_test.sh
     fi
-
-    ## INSTALL XPRA
-    # Install xPra latest version from WinSwitch repo
-    curl http://winswitch.org/gpg.asc | apt-key add -
-    echo "deb http://winswitch.org/ xenial main" > /etc/apt/sources.list.d/winswitch.list
-    apt-get install -y software-properties-common
-    add-apt-repository universe
-    apt-get update
-    apt-get install -y xpra
-    # Install xFce
-    apt-get install -y xfce4
-
-    # Start xPra at start and execute it now (need to update to use random local internal port!)
-    cp -f etc/rc.local /etc/rc.local
-    chmod +x /etc/rc.local
-    
-    # Clean up installation files
-    cd ~ && rm -rf cyclone-pam    
-}
-
-install_edugain()
-{
-    source /scripts/edugain_access_tool_shed.sh --dry-run
-    source /scripts/allows_other_to_access_me.sh --dry-run
-    auto_gen_users
-    gen_key_for_user $USER_NEW
-    init_edugain_acces_to_user $USER_NEW
-    add_email_for_edugain_acces_to_user $(echo_owner_email) $USER_NEW
-    publish_pubkey
-    allow_others
-    source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
-    populate_hosts_with_components_name_and_ips $IP_PARAMETER
-    
-    service ssh restart
-    #echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
-    
-    #hostname -F /etc/hostname
-    echo "FederatedEntryPoint overlay deploy done"
-}
-
-check_if_vpn_or_not()
-{
-    component_vpn_name=${component_vpn_name:-vpn}
-    
-    category=$(ss-get ss:category)
-    if [ "$category" == "Deployment" ]; then
-        check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
-        if [ "$check_vpn" != "0" ]; then
-            vpn_multiplicity=$(ss-get $component_vpn_name:multiplicity)
-            if [ "$vpn_multiplicity" != "0" ]; then
-                USER_NEW=$(ss-get $component_vpn_name:edugain_username)
-                if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
-                    IP_PARAMETER=vpn.address
-                else
-                    IP_PARAMETER=hostname
-                fi
-            else
-                USER_NEW=${USER_NEW:-sge-user}
-                IP_PARAMETER=hostname
-            fi
-        else
-            USER_NEW=${USER_NEW:-sge-user}
-            IP_PARAMETER=hostname
-        fi
-    else
-        USER_NEW=${USER_NEW:-sge-user}
-        IP_PARAMETER=hostname
-    fi
-}
-
-initiate_variable_global()
-{
-    check_if_vpn_or_not
-    
-    WORKDIR=/root/mydisk
-    HOMEDIR=/home/$USER_NEW
-    SGE_ROOT_DIR=/opt/sge
-    ID=1    
-    
-    if [ $IP_PARAMETER == "vpn.address" ]; then
-        #MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
-        IP_VPN=$(ss-get $component_vpn_name:hostname)
-        url="ssh://$USER_NEW@$IP_VPN"
-        #ss-set url.ssh "${url}"
-        ss-set url.service "${url}"
-        ss-set ss:url.service "${url}"
-    fi
-}
-
-msg_info()
-{
-    ss-display "test" 1>/dev/null 2>/dev/null
-    ret=$?
-    if [ $ret -ne 0 ]; then
-        echo -e "$@"
-    else
-        echo -e "$@"
-        ss-display "$@"
-    fi
-}
-
-create_workdir()
-{
-    WORKDIR=/root/mydisk
-    mkdir -p $WORKDIR
-    chmod 750 /root
-    chmod 775 $WORKDIR
-}
-
-make_file_test()
-{
-    WORKDIR=/root/mydisk
-    mkdir -p $WORKDIR
-    chmod 750 /root
-    chmod 775 $WORKDIR
-    echo "for i in {1..50}" > $WORKDIR/qsub_test.sh
-    echo "    do" >> $WORKDIR/qsub_test.sh
-    echo "        len=\$(shuf -i 1-10 -n 1)" >> $WORKDIR/qsub_test.sh
-    echo "        echo \"sleep \$len\" > /tmp/sleep\$i-\$len.sh" >> $WORKDIR/qsub_test.sh
-    echo "    qsub /tmp/sleep\$i-\$len.sh" >> $WORKDIR/qsub_test.sh
-    echo "done" >> $WORKDIR/qsub_test.sh
-    echo "echo \"run 'watch -n 1 qstat -f' to monitor the computation\"" >> $WORKDIR/qsub_test.sh
-    chmod 755 $WORKDIR/qsub_test.sh
 }
 
 initiate_master()
 {
-    initiate_variable_global
+    check_if_vpn_or_not
     
+    ID=1
+    SGE_ROOT_DIR=/tmp/sge
     mkdir -p $SGE_ROOT_DIR
     
     HOSTIP=$(ss-get $IP_PARAMETER)
@@ -190,7 +33,7 @@ initiate_master()
     if [ "$category" == "Deployment" ]; then
         HOSTNAME=$(ss-get nodename)-$ID
         SLAVE_NAME=$(ss-get slave.nodename)
-        echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
+        #echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
     else
         HOSTNAME=machine-$ID
     fi
@@ -210,15 +53,19 @@ initiate_master()
     echo "$HOSTNAME" > /etc/hostname
     hostname $HOSTNAME
     
-    if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
-        sed -i "s|myhostname = .*|myhostname = $HOSTNAME|" /etc/postfix/main.cf
-        /etc/init.d/postfix reload
-    fi
+    if isubuntu; then
+        if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
+            sed -i "s|myhostname = .*|myhostname = $HOSTNAME|" /etc/postfix/main.cf
+            /etc/init.d/postfix reload
+        fi
+    fi    
 }
 
 initiate_slave()
 {
-    initiate_variable_global
+    check_if_vpn_or_not
+    
+    ID=1
     
     if [ "$category" != "Deployment" ]; then
         ss-abort "You need to deploy with a master!!!"
@@ -236,75 +83,15 @@ initiate_slave()
     
     hostname $SLAVE_HOSTNAME_SAFE
     
-    if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
-        sed -i "s|myhostname = .*|myhostname = $SLAVE_HOSTNAME_SAFE|" /etc/postfix/main.cf
-        /etc/init.d/postfix reload
+    if isubuntu; then
+        if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
+            sed -i "s|myhostname = .*|myhostname = $SLAVE_HOSTNAME_SAFE|" /etc/postfix/main.cf
+            /etc/init.d/postfix reload
+        fi
     fi
 }
 
-check_ip()
-{
-    NETWORK_MODE=$(ss-get network)
-    if [ "$NETWORK_MODE" == "Public" ]; then
-        PUBLIC_IP=$(ss-get $IP_PARAMETER)
-        #ss-set hostname "${PRIVATE_IP}"
-        HOSTIP=$(echo $(hostname -I | sed 's/ /\n/g' | head -n 1))
-        SLAVE_IP=$HOSTIP
-        sed -i "s|$PUBLIC_IP|$HOSTIP|g" /etc/hosts
-    else
-        PUBLIC_IP=$(ss-get $IP_PARAMETER)
-        HOSTIP=$(ss-get $IP_PARAMETER)
-        SLAVE_IP=$HOSTIP
-    fi
-    ss-set ip.ready "$HOSTIP"
-}
-
-check_ip_slave_for_master()
-{
-    url="ssh://$USER_NEW@$PUBLIC_IP"
-    #ss-set url.ssh "${url}"
-    ss-set url.service "${url}"
-    ss-set ss:url.service "${url}"
-    
-    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
-        ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
-        #url=$(ss-get $SLAVE_NAME.$i:url.ssh)
-        #PUBLIC_SLAVE_IP=$(echo $url | cut -d "@" -f2)
-        PUBLIC_SLAVE_IP=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
-        SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        sed -i "s|$PUBLIC_SLAVE_IP|$SLAVE_IP|g" /etc/hosts
-    done
-}
-
-check_ip_master_for_slave()
-{
-    ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
-    url=$(ss-get $MASTER_HOSTNAME:url.service)
-    #PUBLIC_IP_MASTER=$(echo $url | cut -d "@" -f2)
-    PUBLIC_IP_MASTER=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
-    MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
-    sed -i "s|$PUBLIC_IP_MASTER|$MASTER_IP|g" /etc/hosts
-    ss-set url.service "${url}"
-    ss-set ss:url.service "${url}"    
-}
-
-user_add()
-{
-    getent passwd $1 > /dev/null
-    user_missing=$?
-    if [ "$user_missing" != "0" ]; then
-        useradd --create-home -u 666 $USER_NEW --shell /bin/bash
-    else
-        usermod -u 666 $USER_NEW
-    fi
-    ln -s /root/mydisk/ /home/$USER_NEW/work
-    usermod -aG root $USER_NEW
-    
-    msg_info ""
-    msg_info "$USER_NEW created for launch job"
-}
-
-message_at_boot_master()
+message_at_boot_master_sge()
 {
     echo "" > /etc/motd
     echo "$USER_NEW created for launch job" >> /etc/motd
@@ -320,118 +107,6 @@ message_at_boot_slave()
     echo "" > /etc/motd
     echo "$USER_NEW created for launch job" >> /etc/motd
     echo "" >> /etc/motd
-}
-
-#####
-# NFS
-#####
-# exporting NFS share from master
-NFS_export_pdisk()
-{
-    msg_info "Exporting NFS share of $WORKDIR..."
-	
-    EXPORTS_FILE=/etc/exports
-    if grep -q $WORKDIR $EXPORTS_FILE; then 
-		echo "$WORKDIR ready"
-	else 
-        echo -ne "$WORKDIR\t" >> $EXPORTS_FILE
-    fi
-    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
-        if [ $IP_PARAMETER == "hostname" ]; then
-            node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        else
-            node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
-        fi
-        if grep -q $WORKDIR.*$node_host $EXPORTS_FILE; then 
-		    echo "$node_host ready"
-	    else
-            echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        fi
-    done
-    echo "" >> $EXPORTS_FILE # last for a newline
-	
-	msg_info "$WORKDIR is exported."
-}
-
-# exporting NFS share from master
-NFS_export_home()
-{
-    msg_info "Exporting NFS share of $HOMEDIR..."
-    
-    EXPORTS_FILE=/etc/exports
-    if grep -q $HOMEDIR $EXPORTS_FILE; then 
-		echo "$HOMEDIR ready"
-	else
-        echo -ne "$HOMEDIR\t" >> $EXPORTS_FILE
-    fi
-    for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
-        if [ $IP_PARAMETER == "hostname" ]; then
-            node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        else
-            node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
-        fi
-        if grep -q $HOMEDIR.*$node_host $EXPORTS_FILE; then 
-		    echo "$node_host ready"
-	    else
-            echo -ne "$node_host(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        fi
-    done
-    echo "" >> $EXPORTS_FILE # last for a newline
-	
-	msg_info "$HOMEDIR is exported."
-}
-
-NFS_start()
-{
-	msg_info "Starting NFS..."
-	service nfs-kernel-server start
-    service nfs-kernel-server reload
-    exportfs -av
-    ss-set nfs.ready "true"
-    msg_info "NFS is started."
-}
-
-NFS_ready(){
-    ss-get --timeout=3600 $MASTER_HOSTNAME:nfs.ready
-    nfs_ready=$(ss-get $MASTER_HOSTNAME:nfs.ready)
-    msg_info "Waiting NFS to be ready."
-	while [ "$nfs_ready" == "false" ]
-	do
-		sleep 10;
-		nfs_ready=$(ss-get $MASTER_HOSTNAME:nfs.ready)
-	done
-}
-
-# Mounting pdisk directory
-NFS_mount_pdisk()
-{
-    msg_info "Mounting $WORKDIR..."
-    umount $WORKDIR
-    mount $MASTER_IP:$WORKDIR $WORKDIR 2>/tmp/mount_error_message.txt
-    ret=$?
-    msg_info "$(/tmp/mount_error_message.txt)"
-     
-    if [ $ret -ne 0 ]; then
-        ss-abort "$(cat /tmp/mount_error_message.txt)"
-    else
-         msg_info "$WORKDIR is mounted"
-    fi
-}
-
-# Mounting NFS share on nodes
-NFS_mount_home()
-{
-    msg_info "Mounting $HOMEDIR..."
-    umount $HOMEDIR
-    mount $MASTER_IP:$HOMEDIR $HOMEDIR 2>>/tmp/mount_error_message.txt
-    ret=$?
-    msg_info "$(/tmp/mount_error_message.txt)"
-     
-    if [ $ret -ne 0 ]; then
-        ss-abort "$(cat /tmp/mount_error_message.txt)"
-    else
-         msg_info "$HOMEDIR is mounted"
-    fi
 }
 
 #####
@@ -453,71 +128,113 @@ Install_SGE_master()
 {
     msg_info "Installing SGE..."
     
-    # Configure the master hostname for Grid Engine
-    echo "gridengine-master       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-master       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-master       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
-    # Postfix mail server is also installed as a dependency
-    echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
+    if iscentos; then
+        SGEDIR=/opt/sge
+        mkdir -p $SGEDIR
+        chmod 775 $SGEDIR
+        
+        sge_version="8.1.9"
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmaster-$sge_version-1.el6.x86_64.rpm
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmon-$sge_version-1.el6.x86_64.rpm
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-guiinst-$sge_version-1.el6.noarch.rpm
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-execd-$sge_version-1.el6.x86_64.rpm
+        #yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-debuginfo-$sge_version-1.el6.x86_64.rpm
+        
+        #wget -O /opt/sge/util/install_modules/inst_ifb.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/inst_ifb.conf
+        
+    	cd /opt/sge
+    	./inst_sge -m -auto util/install_modules/inst_template.conf
+    	. /opt/sge/default/common/settings.sh
+        wget -O /etc/profile.d/sge_lib.sh https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/sge_lib.sh
+        msg_info "SGE is installed."
+        message_at_boot_master_sge        
+    elif isubuntu; then
+        # Configure the master hostname for Grid Engine
+        echo "gridengine-master       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-master       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-master       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
+        # Postfix mail server is also installed as a dependency
+        echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
     
-    # Install Grid Engine
-    DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-master gridengine-client
+        # Install Grid Engine
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-master gridengine-client
     
-    # Set up Grid Engine
-    su - sgeadmin -s/bin/bash -c '/usr/share/gridengine/scripts/init_cluster /var/lib/gridengine default /var/spool/gridengine/spooldb sgeadmin'
+        # Set up Grid Engine
+        su - sgeadmin -s/bin/bash -c '/usr/share/gridengine/scripts/init_cluster /var/lib/gridengine default /var/spool/gridengine/spooldb sgeadmin'
 
-    service gridengine-master restart 2> /opt/sge_error_message.log
-    ret=$?
-    if [ $ret -ne 0 ]; then
-    	msg_info ""
-    	msg_info "Install SGE aborted."
-        msg_info ""
-        ss-abort "$(cat /opt/sge_error_message.log)"
+        service gridengine-master restart 2> /opt/sge_error_message.log
+        ret=$?
+        if [ $ret -ne 0 ]; then
+        	msg_info ""
+        	msg_info "Install SGE aborted."
+            msg_info ""
+            ss-abort "$(cat /opt/sge_error_message.log)"
+        fi
+    
+        # Disable Postfix
+        service postfix stop
+        update-rc.d postfix disable
+    
+        msg_info "SGE is installed."
+        message_at_boot_master_sge
+        
+    else
+        echo "Unsupported osfamily"
     fi
     
-    # Disable Postfix
-    service postfix stop
-    update-rc.d postfix disable
-    
-    msg_info "SGE is installed."
-    message_at_boot_master
 }
 
 Install_SGE_slave()
 {
     msg_info "Installing and Configuring SGE..."
     
-    echo "gridengine-common       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
-    echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
+    if iscentos; then
+        SGEDIR=/opt/sge
+        mkdir -p $SGEDIR
+        chmod 775 $SGEDIR
+        
+        sge_version="8.1.9"
+        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
+        cd /opt/sge
+        . /opt/sge/default/common/settings.sh         
+        ./inst_sge -x -auto util/install_modules/inst_template.conf
+        wget -O /etc/profile.d/sge_lib.sh https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/sge_lib.sh
+    elif isubuntu; then   
+        echo "gridengine-common       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
+        echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
     
-    DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-exec gridengine-client
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-exec gridengine-client
     
-    service postfix stop
-    update-rc.d postfix disable
+        service postfix stop
+        update-rc.d postfix disable
     
-    echo $MASTER_HOSTNAME_SAFE |  tee /var/lib/gridengine/default/common/act_qmaster
-    service gridengine-exec restart 2> /opt/sge_error_message.log
-    ret=$?
-    if [ $ret -ne 0 ]; then
-    	msg_info ""
-    	msg_info "Install SGE aborted."
-        msg_info ""
-        ss-abort "$(cat /opt/sge_error_message.log)"
+        echo $MASTER_HOSTNAME_SAFE |  tee /var/lib/gridengine/default/common/act_qmaster
+        service gridengine-exec restart 2> /opt/sge_error_message.log
+        ret=$?
+        if [ $ret -ne 0 ]; then
+        	msg_info ""
+        	msg_info "Install SGE aborted."
+            msg_info ""
+            ss-abort "$(cat /opt/sge_error_message.log)"
+        fi
+    
+        msg_info "SGE is installed and configured."
+        message_at_boot_slave
+    else
+        echo "Unsupported osfamily"
     fi
-    
-    msg_info "SGE is installed and configured."
-    message_at_boot_slave
 }
 
 Install_EXEC()
@@ -541,27 +258,35 @@ Install_EXEC()
         qconf -aattr queue slots "[$HOSTNAME=$SLOTS]" $QUEUE
     fi
     
-    echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
-    echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
-    echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
-    echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
+    if iscentos; then
+        cd /opt/sge
+        . /opt/sge/default/common/settings.sh        
+        ./inst_sge -x -auto util/install_modules/inst_template.conf
+    elif isubuntu; then
+        echo "gridengine-common       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-common       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginemaster string  $HOSTNAME" |  debconf-set-selections
+        echo "gridengine-client       shared/gridenginecell   string  default" |  debconf-set-selections
+        echo "gridengine-client       shared/gridengineconfig boolean false" |  debconf-set-selections
+        echo "postfix postfix/main_mailer_type        select  No configuration" |  debconf-set-selections
     
-    DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-exec gridengine-client
+        DEBIAN_FRONTEND=noninteractive apt-get install -y gridengine-exec gridengine-client
     
-    service postfix stop
-    update-rc.d postfix disable
+        service postfix stop
+        update-rc.d postfix disable
     
-    echo $HOSTNAME |  tee /var/lib/gridengine/default/common/act_qmaster
-    service gridengine-exec restart 2> /opt/sge_error_message.log
-    ret=$?
-    if [ $ret -ne 0 ]; then
-    	msg_info ""
-    	msg_info "Install SGE aborted."
-        msg_info ""
-        ss-abort "$(cat /opt/sge_error_message.log)"
+        echo $HOSTNAME |  tee /var/lib/gridengine/default/common/act_qmaster
+        service gridengine-exec restart 2> /opt/sge_error_message.log
+        ret=$?
+        if [ $ret -ne 0 ]; then
+        	msg_info ""
+        	msg_info "Install SGE aborted."
+            msg_info ""
+            ss-abort "$(cat /opt/sge_error_message.log)"
+        fi
+    else
+        echo "Unsupported osfamily"
     fi
 }
  
@@ -612,7 +337,7 @@ Config_SGE_master()
     qconf -Msconf $SGE_ROOT_DIR/grid
     rm $SGE_ROOT_DIR/grid
     
-    wget -O $SGE_ROOT_DIR/complex.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/complex.conf
+    wget -O $SGE_ROOT_DIR/complex.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/complex.conf
 	qconf -Mc $SGE_ROOT_DIR/complex.conf
     
     # create a host list
@@ -720,6 +445,7 @@ Config_SGE_master()
                 if [ "$SLOTS" ]; then
                     qconf -aattr queue slots "[$node_name=$SLOTS]" $QUEUE
                 fi
+                qconf -ah $node_name
             done
         fi
     else
@@ -728,72 +454,6 @@ Config_SGE_master()
 	ss-set sge.ready "true"
 	
 	msg_info "SGE is configured."
-}
-
-## ADD SLAVES
-UNSET_parameters(){
-    ss-set nfs.ready "false"
-    ss-set sge.ready "false"
-}
-
-#####
-# NFS
-#####
-msg_info "Configuring NFS..."
-
-# exporting NFS share from master
-NFS_export_pdisk_add()
-{
-    msg_info "Exporting NFS share of $WORKDIR..."
-	
-    EXPORTS_FILE=/etc/exports
-    if grep -q $WORKDIR $EXPORTS_FILE; then 
-		echo "$WORKDIR ready"
-	else 
-        echo -ne "$WORKDIR\t" >> $EXPORTS_FILE
-        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        echo "" >> $EXPORTS_FILE # last for a newline
-    fi
-    if grep -q $WORKDIR.*$SLAVE_IP $EXPORTS_FILE; then 
-	    echo "$SLAVE_IP ready"
-    else
-        WD=$(echo $WORKDIR | sed 's|\/|\\\/|g')
-        sed -ie '/'$WD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
-    fi
-	
-	msg_info "$WORKDIR is exported."
-}
-
-# exporting NFS share from master
-NFS_export_home_add()
-{
-    msg_info "Exporting NFS share of $HOMEDIR..."
-    
-    EXPORTS_FILE=/etc/exports
-    if grep -q $HOMEDIR $EXPORTS_FILE; then 
-		echo "$HOMEDIR ready"
-	else
-        echo -ne "$HOMEDIR\t" >> $EXPORTS_FILE
-        echo -ne "$SLAVE_IP(rw,sync,no_subtree_check,no_root_squash) " >> $EXPORTS_FILE
-        echo "" >> $EXPORTS_FILE # last for a newline
-    fi
-    if grep -q $HOMEDIR.*$SLAVE_IP $EXPORTS_FILE; then 
-	    echo "$SLAVE_IP ready"
-    else
-        HD=$(echo $HOMEDIR | sed 's|\/|\\\/|g')
-        sed -ie '/'$HD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
-    fi
-	
-	msg_info "$HOMEDIR is exported."
-}
-
-NFS_start_add()
-{
-	msg_info "Starting NFS..."
-	service nfs-kernel-server start
-    service nfs-kernel-server reload
-    exportfs -av
-    msg_info "NFS is started."
 }
 
 add_nodes() {
@@ -816,6 +476,8 @@ add_nodes() {
         #ss-get $INSTANCE_NAME:ready
         
         if [ $IP_PARAMETER == "hostname" ]; then
+            ss-get --timeout=3600 $INSTANCE_NAME:net.services.enable
+            ss-set $INSTANCE_NAME:net.services.enable "[]"
             ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
             PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
             SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
@@ -826,9 +488,12 @@ add_nodes() {
         sed -i "s|$PUBLIC_SLAVE_IP|$SLAVE_IP|g" /etc/hosts
         echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME_SAFE, $SLAVE_IP"
         
-        NFS_export_pdisk_add
-        NFS_export_home_add
-        NFS_start_add
+        NFS_export_add /root/mydisk
+        NFS_export_add /home/$USER_NEW
+        if iscentos; then
+            NFS_export_add /opt/sge
+        fi
+        NFS_start
        
        if grep -q $SLAVE_IP /etc/hosts; then
             echo "$SLAVE_IP ready"
@@ -854,8 +519,8 @@ add_nodes() {
         if [ "$SLOTS" ]; then
             qconf -aattr queue slots "[$INSTANCE_NAME_SAFE=$SLOTS]" $QUEUE
         fi
+        qconf -ah $INSTANCE_NAME_SAFE
     done
-    ss-set nfs.ready "true"
     ss-set sge.ready "true"
     ss-display "Slave is added."
 }
@@ -926,42 +591,96 @@ usage(){
     echo "--help ou -h : afficher l'aide"
     echo "-m : Install sge master" 
     echo "-s : Install sge slave"
+    echo "-a : add nodes"
+    echo "-r : remove nodes"
 } 
 
 master_help(){
     echo "You can do:"
-    echo "    initiate_master"
-    echo "    make_file_test"
-    echo "    #if not vpn"
-    echo "    check_ip"
-    echo "    check_ip_slave_for_master"
-    echo "    #Endif"
+    echo "    #Post-install part:"
+    echo "    make_file_test_sge /root/mydisk"
+    echo "    check_if_vpn_or_not"
+    echo "    if [ \$IP_PARAMETER == 'hostname' ]; then"
+    echo "        if isubuntu 14; then"
+    echo "            initiate_install_edugain"
+    echo "        elif isubuntu 16; then"
+    echo "            initiate_install_edugain_ubuntu16"
+    echo "        fi"
+    echo "    fi"
+    echo "    "
+    echo "    #Deployment part:"
+    echo "    check_if_vpn_or_not"
     echo "    user_add"
-    echo "    #If one or several slaves "
-    echo "    NFS_export_pdisk"
-    echo "    NFS_export_home"
-    echo "    NFS_start"
-    echo "    #Endif"
+    echo "    initiate_master"
+    echo "    if [ \$IP_PARAMETER == 'hostname' ]; then"
+    echo "        if $(isubuntu 14) || $(isubuntu 16); then"
+    echo "            install_edugain"
+    echo "        fi"
+    echo "        check_ip"
+    echo "        if [ '\$category' == 'Deployment' ]; then"
+    echo "            check_ip_slave_for_master"
+    echo "        fi"
+    echo "    fi"
+    echo "    if [ '\$category' == 'Deployment' ]; then"
+    echo "        node_multiplicity=$(ss-get \$SLAVE_NAME:multiplicity)"
+    echo "        if [ '\$node_multiplicity '!= '0' ]; then"
+    echo "            NFS_export /root/mydisk"
+    echo "            NFS_export /home/\$USER_NEW"
+    echo "            if iscentos; then"
+    echo "                NFS_export /opt/sge"
+    echo "            fi"
+    echo "            NFS_start"
+    echo "        fi"
+    echo "    fi"
     echo "    Install_SGE_master"
-    echo "    Config_SGE"
-} 
+    echo "    Config_SGE_master"
+}
+
+add_nodes_help(){
+    echo "You can do:"
+    echo "    check_if_vpn_or_not"
+    echo "    UNSET_parameters"
+    echo "    if [ '\$SLIPSTREAM_SCALING_NODE' == 'slave' ]; then"
+    echo "        add_nodes"
+    echo "    else"
+    echo "        ss-abort 'Only slave can be added'"
+    echo "    fi"
+}
+
+rm_nodes_help(){
+    echo "You can do:"
+    echo "    check_if_vpn_or_not"
+    echo "    if [ '\$SLIPSTREAM_SCALING_NODE' == 'slave' ]; then"
+    echo "        rm_nodes"
+    echo "    else"
+    echo "        ss-abort 'Only slave can be removed'"
+    echo "    fi"
+}
 
 slave_help(){
-    echo "You can do:" 
-    echo "    initiate_slave"
-    echo "    make_file_test"
-    echo "    #if not vpn"
-    echo "    check_ip"
-    echo "    check_ip_master_for_slave"
-    echo "    #Endif"
+    echo "You can do:"
+    echo "    #Post-install part:"
+    echo "    check_if_vpn_or_not"
+    echo "    "
+    echo "    #Deployment part:"
+    echo "    check_if_vpn_or_not"
     echo "    user_add"
-    echo "    #If one or several slaves "
-    echo "    NFS_export_pdisk"
-    echo "    NFS_export_home"
-    echo "    NFS_start"
-    echo "    #Endif"
-    echo "    Install_SGE_master"
-    echo "    Config_SGE"
+    echo "    initiate_slave"
+    echo "    if [ \$IP_PARAMETER == 'hostname' ]; then"
+    echo "        check_ip"
+    echo "        if [ '\$category '== 'Deployment' ]; then"
+    echo "            check_ip_master_for_slave"
+    echo "        fi"
+    echo "    fi"
+    echo "    NFS_ready"
+    echo "    NFS_mount /root/mydisk"
+    echo "    NFS_mount /home/\$USER_NEW"
+    echo "    if iscentos; then"
+    echo "        mkdir -p /opt/sge"
+    echo "        NFS_mount /opt/sge"
+    echo "    fi"
+    echo "    check_if_sge_is_ready_on_master"
+    echo "    Install_SGE_slave"
 } 
 
 # Pas de paramètre 
@@ -969,7 +688,7 @@ slave_help(){
 
 # -o : options courtes 
 # -l : options longues 
-options=$(getopt -o h,m,s: -l help -- "$@") 
+options=$(getopt -o h,m,s,a,r: -l help -- "$@") 
 
 set -- $options 
 
@@ -978,6 +697,10 @@ while true; do
         -m) master_help
             shift;;
         -s) slave_help
+            shift;;
+        -a) add_nodes_help
+            shift;;
+        -r) rm_nodes_help
             shift;;
         -h|--help) usage 
             shift;;
