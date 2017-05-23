@@ -58,6 +58,7 @@ check_if_vpn_or_not()
 
 initiate_install_edugain()
 {
+    apt-get install -y python python-dev python-pip libpam-python
     pip install scriptine
     wget -O - https://raw.githubusercontent.com/cyclone-project/cyclone-python-pam/master/setup.sh | sed 's/~/\/tmp\//g' | sh
     wget -O /lib/security/cyclone_pam.py https://raw.githubusercontent.com/bryan-brancotte/cyclone-python-pam/patch-5/lib/security/cyclone_pam.py
