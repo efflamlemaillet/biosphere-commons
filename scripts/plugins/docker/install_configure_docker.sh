@@ -84,11 +84,14 @@ function remove_docker()
 	if [ "$res" -eq 0 ]; then
 		msg_info "Docker already install, version $(docker --version)"
 		
-		msg_info "Stop all containers"
-		docker stop $(docker ps -aq)
-		docker rm -v $(docker ps -aq)
+		n=$(docker ps -aq | wc -l)
+		if [ $n -ne 0 ]; then	
+			msg_info "Stop all containers"
+			docker stop $(docker ps -aq)
+			docker rm -v $(docker ps -aq)
+		fi
 		service docker stop
-
+		
 		msg_info "Remove docker"
 		apt-get purge -y docker-engine
 		apt-get autoremove -y --purge docker-engine
