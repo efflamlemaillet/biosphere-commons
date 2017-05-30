@@ -6,16 +6,16 @@
 NONE=none
 
 DOCKER_VERSION=${DOCKER_VERSION:-latest}
-DOCKER_STORE_DIRECTORY=${DOCKER_STORE_DIRECTORY:-NONE}
-DOCKER_OPTIONS=${DOCKER_OPTIONS:-NONE}
+DOCKER_STORE_DIRECTORY=${DOCKER_STORE_DIRECTORY:-$NONE}
+DOCKER_OPTIONS=${DOCKER_OPTIONS:-$NONE}
 
 # Set particular options
 # Registry : only IPs, separated by comma
 DOCKER_REGISTRIES=${DOCKER_REGISTRIES:-$NONE}
 # Set default host
-DOCKER_NEW_HOST=${DOCKER_NEW_HOST:-NONE}
+DOCKER_NEW_HOST=${DOCKER_NEW_HOST:-$NONE}
 # Storage type
-DOCKER_STORAGE=${DOCKER_STORAGE:-NONE}
+DOCKER_STORAGE=${DOCKER_STORAGE:-$NONE}
 
 DOCKER_MACHINE_VERSION=${DOCKER_MACHINE_VERSION:-0.10.0}
 DOCKER_COMPOSE_VERSION=${DOCKER_COMPOSE_VERSION:-1.11.2}
@@ -63,6 +63,44 @@ function update_bashrc()
 	# Remove -H
 	host=${1:3}
 	echo "export DOCKER_HOST=\"$host\" " >> $HOME/.bashrc
+}
+
+function update_version_with_os()
+{
+	os_codename=$(lsb_release -c | cut -f2)
+	codename_from_version=$(echo $DOCKER_VERSION | rev | cut -d'~' -f 1 | rev | cut -d '-' -f 2)
+
+	if [ "$os_codename" = "$codename_from_version" ]; then
+		echo $DOCKER_VERSION
+	else
+		echo $(echo $DOCKER_VERSION | sed "s/$codename_from_version/$os_codename/")
+	fi
+}
+
+function remove_docker()
+{	
+	which docker &> /dev/null
+	res=$(echo $?)
+	if [ "$res" -eq 0 ]; then
+		msg_info "Docker already install, version $(docker --version)"
+		
+		n=$(docker ps -aq | wc -l)
+		if [ $n -ne 0 ]; then	
+			msg_info "Stop all containers"
+			docker stop $(docker ps -aq)
+			docker rm -v $(docker ps -aq)
+		fi
+		service docker stop
+		
+		msg_info "Remove docker"
+		apt-get purge -y docker-engine
+		apt-get autoremove -y --purge docker-engine
+		apt-get autoclean
+		rm -rf /var/lib/docker
+
+		msg_info "Docker is removed"
+	fi
+
 }
 
 function create_new_options()
@@ -188,6 +226,8 @@ function install_docker()
     if [ "$DOCKER_VERSION" = "latest" ]; then
     	yes N | curl -fsSL https://get.docker.com/ |  sh
     else 
+    	DOCKER_VERSION=$(update_version_with_os)
+    	msg_info "Updated Docker version ${DOCKER_VERSION}"
     	yes N | curl -fsSL https://get.docker.com/ | sed -e "s/docker-engine/--force-yes docker-engine=${DOCKER_VERSION}/" | sh
     fi
 
@@ -250,6 +290,10 @@ function change_options_docker()
     
     msg_info "$(docker version)"
     msg_info "End of docker engine configuration."
+
+    if [ "$DOCKER_STORE_DIRECTORY" != "$NONE" ]; then
+    	move_docker_directory
+    fi
 }
 
 
