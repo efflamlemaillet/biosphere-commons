@@ -384,7 +384,7 @@ Install_ubuntu_torque_master(){
 	
 	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	
-	update-rc.d maui defaults
+	#update-rc.d maui defaults
 }
 
 Install_ubuntu_torque_slave(){
