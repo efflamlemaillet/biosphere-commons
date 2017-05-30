@@ -7,6 +7,7 @@ initiate_variable_global_torque()
     PBS_TEMP_DIR=/tmp/torque
     MAUI_TEMP_DIR=/tmp/maui
     PBS_ROOT_DIR=/opt/torque
+    mauidir=/opt/maui
     ID=1
 }
 
@@ -72,7 +73,6 @@ package_centos_torque(){
         chmod a+rx -R $PBS_ROOT_DIR
     fi
     
-    mauidir=/opt/maui
     if [ ! -e $mauidir ]; then
         git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
         mkdir -p $mauidir
@@ -95,14 +95,13 @@ package_ubuntu_torque(){
     wget -O $PBS_TEMP_DIR/index.php?wpfb_dl=3170 http://www.adaptivecomputing.com/index.php?wpfb_dl=3170
     cd $PBS_TEMP_DIR
     tar -xzf index.php?wpfb_dl=3170
-    mv torque-6.1.0/* $PBS_ROOT_DIR/
+    cp -rf torque-6.1.0/* $PBS_ROOT_DIR/
     rm -rf $PBS_TEMP_DIR/index.php?wpfb_dl=3170
     
-    mauidir=/opt/maui
     if [ ! -e $mauidir ]; then
         git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
         mkdir -p $mauidir
-        cp -rf $MAUI_TEMP_DIR $mauidir
+        cp -rf $MAUI_TEMP_DIR/* $mauidir
         chmod a+rx -R $mauidir
     fi
     
@@ -328,8 +327,7 @@ Install_ubuntu_torque_master(){
 	if grep -q $PBS_ROOT_DIR/bin "/etc/profile.d/ifb.sh" ; then
 	    echo "PATH ready"
 	else
-	        tools_dir_sed="$(echo $PBS_ROOT_DIR | sed 's/\//\\\//g')"
-	        sed -i "s/^export\ PATH\=\$PATH\:.*/&\:${tools_dir_sed}\/sbin\:${tools_dir_sed}\/bin/" /etc/profile.d/ifb.sh
+	        echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	fi
 	
 	pbs_server -t create
@@ -391,8 +389,7 @@ Install_ubuntu_torque_master(){
 	if grep -q $MAUI_ROOT_DIR/bin "/etc/profile.d/ifb.sh" ; then
 	    echo "PATH ready"
 	else
-	        tools_dir_sed="$(echo $MAUI_ROOT_DIR | sed 's/\//\\\//g')"
-	        sed -i "s/^export\ PATH\=\$PATH\:.*/&\:${tools_dir_sed}\/sbin\:${tools_dir_sed}\/bin/" /etc/profile.d/ifb.sh
+	        echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	fi
 	
 	update-rc.d maui defaults
