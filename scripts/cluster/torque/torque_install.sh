@@ -83,7 +83,7 @@ package_centos_torque(){
     cd $PBS_ROOT_DIR
     ./autogen.sh
     
-    echo 'export PATH=\$PATH:$mauidir/bin' > /etc/profile.d/maui.sh
+    echo 'export PATH=$PATH:'$mauidir'/bin' > /etc/profile.d/maui.sh
     
 }
 
@@ -106,7 +106,7 @@ package_ubuntu_torque(){
         chmod a+rx -R $mauidir
     fi
     
-    echo 'export PATH=\$PATH:$mauidir/bin' > /etc/profile.d/maui.sh
+    echo 'export PATH=$PATH:'$mauidir'/bin' > /etc/profile.d/maui.sh
 }
 
 package_torque(){
