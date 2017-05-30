@@ -316,7 +316,7 @@ Install_ubuntu_torque_master(){
 	./configure --prefix=/opt/torque --with-server-home=/opt/torque/spool --enable-server --enable-clients --with-scp;make;make install;
 	
 	#Export the torque libraries
-	echo “/opt/torque/lib” > /etc/ld.so.conf.d/torque.conf
+	echo "/opt/torque/lib" > /etc/ld.so.conf.d/torque.conf
 	ldconfig
 	make packages
 	
@@ -327,11 +327,10 @@ Install_ubuntu_torque_master(){
 	
 	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	
-	pbs_server -t create
-	
-	cd contrib/init.d
-	cp debian.pbs_server /etc/init.d/pbs_server
-	cp debian.pbs_trqauthd /etc/init.d/pbs_trqauthd
+	$PBS_ROOT_DIR/sbin/pbs_server -t create
+
+	cp $PBS_ROOT_DIR/contrib/init.d/debian.pbs_server /etc/init.d/pbs_server
+	cp $PBS_ROOT_DIR/contrib/init.d/debian.trqauthd /etc/init.d/trqauthd
 
 	update-rc.d trqauthd default
 	update-rc.d pbs_server default
@@ -394,8 +393,8 @@ Install_ubuntu_torque_slave(){
 	cd $PBS_ROOT_DIR
     ./torque-package-clients-linux-x86_64.sh --install
     ./torque-package-mom-linux-x86_64.sh --install
-    cp debian.pbs_mom /etc/init.d/pbs_mom
-    cp debian.pbs_trqauthd /etc/init.d/pbs_trqauthd
+    cp $PBS_ROOT_DIR/contrib/init.d/debian.pbs_mom /etc/init.d/pbs_mom
+    cp $PBS_ROOT_DIR/contrib/init.d/debian.trqauthd /etc/init.d/trqauthd
     update-rc.d trqauthd default
     update-rc.d pbs_mom defaults
 }
@@ -403,7 +402,7 @@ Install_ubuntu_torque_slave(){
 install_exec_torque_ubuntu(){
     cd $PBS_ROOT_DIR
     ./torque-package-mom-linux-x86_64.sh --install
-    cp debian.pbs_mom /etc/init.d/pbs_mom
+    cp $PBS_ROOT_DIR/contrib/init.d/debian.pbs_mom /etc/init.d/pbs_mom
     update-rc.d pbs_mom defaults
     
 	number_proc=`nproc`
