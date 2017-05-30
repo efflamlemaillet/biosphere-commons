@@ -320,16 +320,12 @@ Install_ubuntu_torque_master(){
 	ldconfig
 	make packages
 	
-	./torque-package-server-linux-x86_64.sh –install
+	./torque-package-server-linux-x86_64.sh -–install
 	./torque-package-clients-linux-x86_64.sh  --install
-	./torque-package-devel-linux-x86_64.sh –install
-	./torque-package-doc-linux-x86_64.sh –install
+	./torque-package-devel-linux-x86_64.sh -–install
+	./torque-package-doc-linux-x86_64.sh --install
 	
-	if grep -q $PBS_ROOT_DIR/bin "/etc/profile.d/ifb.sh" ; then
-	    echo "PATH ready"
-	else
-	        echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
-	fi
+	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	
 	pbs_server -t create
 	
@@ -387,11 +383,7 @@ Install_ubuntu_torque_master(){
 	make
 	make install
 	
-	if grep -q $MAUI_ROOT_DIR/bin "/etc/profile.d/ifb.sh" ; then
-	    echo "PATH ready"
-	else
-	        echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
-	fi
+	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	
 	update-rc.d maui defaults
 }
