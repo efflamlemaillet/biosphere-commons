@@ -92,6 +92,7 @@ package_ubuntu_torque(){
     apt-get install -y wget csh bzip2 build-essential autotools-dev automake libtool openssl libboost-dev gcc g++ gpp kcc libssl-dev libxml2-dev libtool openssh-server make git nfs-kernel-server pvm-dev
     
     mkdir -p $PBS_TEMP_DIR
+    mkdir -p $PBS_ROOT_DIR
     wget -O $PBS_TEMP_DIR/index.php?wpfb_dl=3170 http://www.adaptivecomputing.com/index.php?wpfb_dl=3170
     cd $PBS_TEMP_DIR
     tar -xzf index.php?wpfb_dl=3170
