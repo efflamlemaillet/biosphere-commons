@@ -386,7 +386,7 @@ Install_ubuntu_torque_master(){
 	
 	#update-rc.d maui defaults
 	
-    ss-set sge.ready "true"
+    ss-set pbs.ready "true"
     msg_info "PBS is installed and configured."
 }
 
