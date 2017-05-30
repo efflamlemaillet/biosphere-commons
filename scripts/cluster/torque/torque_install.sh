@@ -385,6 +385,9 @@ Install_ubuntu_torque_master(){
 	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	
 	#update-rc.d maui defaults
+	
+    ss-set sge.ready "true"
+    msg_info "PBS is installed and configured."
 }
 
 Install_ubuntu_torque_slave(){
