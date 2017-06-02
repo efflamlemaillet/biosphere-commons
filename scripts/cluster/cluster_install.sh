@@ -191,7 +191,7 @@ user_sudoers(){
 	if grep -q $USER_NEW "/etc/sudoers"; then 
 		echo "$USER_NEW ready"
 	else 
-		echo -e "$USER_NEW\tALL=(ALL)\tALL" >> /etc/sudoers
+		echo -e "$USER_NEW\tALL=(ALL)\tNOPASSWD:ALL" >> /etc/sudoers
 	fi
 }
 
