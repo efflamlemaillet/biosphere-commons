@@ -54,6 +54,8 @@ check_if_vpn_or_not()
     mkdir -p $WORKDIR
     chmod 750 /root
     chmod 775 $WORKDIR
+    
+    ss-set allowed_components "$(echo $(ss-get allowed_components) | sed 's|ifbuser|'$USER_NEW'|g' )"
 }
 
 initiate_install_edugain()
