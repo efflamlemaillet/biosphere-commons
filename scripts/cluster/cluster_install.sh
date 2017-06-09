@@ -197,6 +197,11 @@ user_sudoers(){
 	fi
 }
 
+selinux_config(){
+    setenforce 1
+    setsebool -P use_nfs_home_dirs=true
+}
+
 check_ip()
 {
     NETWORK_MODE=$(ss-get network)
