@@ -1,3 +1,5 @@
+source /scripts/toolshed/os_detection.sh
+
 create_tools_dir(){
     # Pas de paramètre 
     if [[ $# -lt 1 ]]; then
@@ -24,12 +26,16 @@ install_canu(){
     tool_url="https://github.com/marbl/canu/archive"
     tool_ark="${tool_id}-${tool_version}"
     tool_pkg="v${tool_version}.tar.gz" 
-
-    wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
-    # Installation des composantes nécessaires pour la compilation C++
-    # (Version par defaut de gcc dans CentOS:4.4.7, alors que Canu requiert 4.5+)
-    yum -y install devtoolset-2-gcc-c++
-    yum -y install devtoolset-2-binutils
+    
+    if iscentos 6; then
+        wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
+        # Installation des composantes nécessaires pour la compilation C++
+        # (Version par defaut de gcc dans CentOS:4.4.7, alors que Canu requiert 4.5+)
+        yum -y install devtoolset-2-gcc-c++
+        yum -y install devtoolset-2-binutils
+    else
+        yum group install "Development Tools"
+    fi
 
     # Fetch the tool pkg
     wget "${tool_url}/${tool_pkg}" 
@@ -37,12 +43,14 @@ install_canu(){
     tar xzf ${tool_pkg}
     rm -rf ${tool_pkg}
     cd "${tool_ark}/src"
-    scl enable devtoolset-2 bash
+    if iscentos 6; then
+        scl enable devtoolset-2 bash
+    fi
     make
     
     cp -r ../Linux-amd64 $tools_dir/
 
-    if grep -q $tools_dir/Linux-amd64/bin "/etc/profile.d/ifb.sh" ; then
+    if grep -q $tools_dir/Linux-amd64/bin "/etc/profile.d/canu.sh" ; then
         echo "PATH ready"
     else
     	echo "export PATH=\$PATH:$tools_dir/Linux-amd64/bin" > /etc/profile.d/canu.sh
@@ -59,17 +67,17 @@ install_lordec(){
 
     dep_id="gatb-core"
     dep_version="1.1.0"
-
-    # Librairie nécessaire pour traiter les fichiers zippes (?)
-    yum -y install zlib-devel
-    ## Librairie necessaire pour la parallelisation
-    yum -y install boost-devel
-    ## Ajout du repository de dev pour centOS
-    wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
-    # Installation des composantes nécessaires pour la compilation C++
-    # (Version par defaut de gcc dans CentOS:4.4.7, alors que Lordec requiert 4.5+)
-    yum -y install devtoolset-2-gcc-c++
-    yum -y install devtoolset-2-binutils
+    
+    if iscentos 6; then
+        ## Ajout du repository de dev pour centOS
+        wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
+        # Installation des composantes nécessaires pour la compilation C++
+        # (Version par defaut de gcc dans CentOS:4.4.7, alors que Lordec requiert 4.5+)
+        yum -y install devtoolset-2-gcc-c++
+        yum -y install devtoolset-2-binutils
+    else
+        yum group install "Development Tools"
+    fi
 
     # Fetch and untar the tool package
     wget "${tool_url}/${tool_ark}" 
@@ -84,7 +92,9 @@ install_lordec(){
     make install_dep
     #rm -f ${dep_id}-${dep_version}-Linux.tar.gz
     # Install tool via external shell running in the devtools environment
-    scl enable devtoolset-2 bash
+    if iscentos 6; then
+        scl enable devtoolset-2 bash
+    fi
     make
     
 
@@ -94,7 +104,7 @@ install_lordec(){
     cp test-lordec.sh $tools_dir/lordec
     cp -r DATA/ $tools_dir/lordec
 
-    if grep -q $tools_dir/lordec/bin "/etc/profile.d/ifb.sh"; then
+    if grep -q $tools_dir/lordec/bin "/etc/profile.d/lordec.sh"; then
         echo "PATH ready"
     else
     	echo "export PATH=\$PATH:$tools_dir/lordec/bin" > /etc/profile.d/lordec.sh
