@@ -10,11 +10,7 @@ create_tools_dir(){
         if [ ! -d "$tools_dir" ]; then
             mkdir -p $tools_dir
         fi
-        if grep -q $tools_dir "/etc/profile.d/asm.sh" ; then
-            echo "PATH ready"
-        else
-        	echo "export PATH=\$PATH:$tools_dir" > /etc/profile.d/asm.sh
-        fi       
+        echo "export PATH=\$PATH:$tools_dir" > /etc/profile.d/asm.sh     
     fi
 
 }
@@ -49,12 +45,8 @@ install_canu(){
     make
     
     cp -r ../Linux-amd64 $tools_dir/
-
-    if grep -q $tools_dir/Linux-amd64/bin "/etc/profile.d/canu.sh" ; then
-        echo "PATH ready"
-    else
-    	echo "export PATH=\$PATH:$tools_dir/Linux-amd64/bin" > /etc/profile.d/canu.sh
-    fi
+    
+    echo "export PATH=\$PATH:$tools_dir/Linux-amd64/bin" > /etc/profile.d/canu.sh
 }
 
 install_lordec(){
@@ -104,11 +96,7 @@ install_lordec(){
     cp test-lordec.sh $tools_dir/lordec
     cp -r DATA/ $tools_dir/lordec
 
-    if grep -q $tools_dir/lordec/bin "/etc/profile.d/lordec.sh"; then
-        echo "PATH ready"
-    else
-    	echo "export PATH=\$PATH:$tools_dir/lordec/bin" > /etc/profile.d/lordec.sh
-    fi
+    echo "export PATH=\$PATH:$tools_dir/lordec/bin" > /etc/profile.d/lordec.sh
 }
 
 install_pipeline(){
