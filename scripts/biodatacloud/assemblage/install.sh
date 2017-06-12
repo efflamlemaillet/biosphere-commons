@@ -34,7 +34,7 @@ install_canu(){
         yum -y install devtoolset-2-gcc-c++
         yum -y install devtoolset-2-binutils
     else
-        yum group install "Development Tools"
+        yum group install -y "Development Tools"
     fi
 
     # Fetch the tool pkg
@@ -76,7 +76,7 @@ install_lordec(){
         yum -y install devtoolset-2-gcc-c++
         yum -y install devtoolset-2-binutils
     else
-        yum group install "Development Tools"
+        yum group install -y "Development Tools"
     fi
 
     # Fetch and untar the tool package
