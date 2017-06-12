@@ -119,7 +119,7 @@ create_readme(){
             mkdir -p $README_DIR
         fi
             
-        echo"Description:
+        echo "Description:
                 This is a wrapper script for LoRDEC [Salmela & Rivals, 2014].
                 It corrects Long Reads using Short Reads by pipelining the commands
                 that (1) create a DeBruijn Graph of the SR, (2) correct the LR, and (3)
