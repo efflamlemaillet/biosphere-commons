@@ -74,6 +74,8 @@ initiate_install_edugain()
 
 initiate_install_edugain_ubuntu16()
 {
+    apt-get install -y python python-dev python-pip libpam-python
+    
     # Clone and install python package dependencies
     cd ~
     mkdir cyclone-pam && cd cyclone-pam
