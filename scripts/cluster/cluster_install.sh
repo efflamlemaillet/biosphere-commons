@@ -177,7 +177,7 @@ msg_info()
 
 user_add()
 {
-    getent passwd $1 > /dev/null
+    getent passwd $USER_NEW > /dev/null
     user_missing=$?
     if [ "$user_missing" != "0" ]; then
         useradd --create-home -u 666 $USER_NEW --shell /bin/bash
