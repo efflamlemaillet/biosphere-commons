@@ -1,18 +1,12 @@
 source /scripts/toolshed/os_detection.sh
 
 create_tools_dir(){
-    # Pas de paramètre 
-    if [[ $# -lt 1 ]]; then
-        echo "This function expects a directory in argument !"
-    else    
-        tools_dir=$1
-        
-        if [ ! -d "$tools_dir" ]; then
-            mkdir -p $tools_dir
-        fi
-        echo "export PATH=\$PATH:$tools_dir" > /etc/profile.d/asm.sh     
+    tools_dir=$1
+    
+    if [ ! -d "$tools_dir" ]; then
+        mkdir -p $tools_dir
     fi
-
+    echo "export PATH=\$PATH:$tools_dir" > /etc/profile.d/asm.sh 
 }
 
 install_canu(){
@@ -100,10 +94,19 @@ install_lordec(){
 }
 
 install_pipeline(){
-    cp /scripts/biodatacloud/assemblage/lordec_2_fastq.pl $tools_dir
-    cp /scripts/biodatacloud/assemblage/lordec_pipeline.pl $tools_dir
-    chmod 755 $tools_dir/lordec_2_fastq.pl
-    chmod 755 $tools_dir/lordec_pipeline.pl
+    # Pas de paramètre 
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a directory in argument !"
+    else    
+        tools_dir=$1
+        
+        create_tools_dir $tools_dir
+        
+        cp /scripts/biodatacloud/assemblage/lordec_2_fastq.pl $tools_dir
+        cp /scripts/biodatacloud/assemblage/lordec_pipeline.pl $tools_dir
+        chmod 755 $tools_dir/lordec_2_fastq.pl
+        chmod 755 $tools_dir/lordec_pipeline.pl
+    fi
 }
 
 create_readme(){
