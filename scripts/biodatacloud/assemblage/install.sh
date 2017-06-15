@@ -1,12 +1,17 @@
 source /scripts/toolshed/os_detection.sh
 
 create_tools_dir(){
-    tools_dir=$1
+    # Pas de paramètre 
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a directory in argument !"
+    else 
+        tools_dir=$1
     
-    if [ ! -d "$tools_dir" ]; then
-        mkdir -p $tools_dir
+        if [ ! -d "$tools_dir" ]; then
+            mkdir -p $tools_dir
+        fi
+        echo "export PATH=\$PATH:$tools_dir" > /etc/profile.d/asm.sh
     fi
-    echo "export PATH=\$PATH:$tools_dir" > /etc/profile.d/asm.sh 
 }
 
 install_canu(){
