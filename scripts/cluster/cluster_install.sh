@@ -4,7 +4,7 @@ check_if_vpn_or_not()
 {
     component_vpn_name=${component_vpn_name:-vpn}
     
-    ss-display "test" 1>/dev/null 2>/dev/null
+    ss-display "test if deployment" 1>/dev/null 2>/dev/null
     ret=$?
     if [ $ret -ne 0 ]; then
         export USER_NEW=${USER_NEW:-ifbuser}
