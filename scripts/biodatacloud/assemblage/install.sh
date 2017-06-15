@@ -17,7 +17,7 @@ create_tools_dir(){
 install_canu(){
     tool_id="canu" 
     tool_bin="canu" 
-    tool_version="1.2"
+    tool_version="1.5"
     tool_url="https://github.com/marbl/canu/archive"
     tool_ark="${tool_id}-${tool_version}"
     tool_pkg="v${tool_version}.tar.gz" 
