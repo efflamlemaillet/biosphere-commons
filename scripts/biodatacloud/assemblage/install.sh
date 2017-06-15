@@ -124,14 +124,14 @@ install_lordec(){
 
     echo "export PATH=\$PATH:$tools_dir/lordec/bin" > /etc/profile.d/lordec.sh
     
-    $tools_dir/lordec/bin/lordec-correct -h 2> /tmp/lordec_error_message.log
-    ret=$?
-    if [ $ret -ne 0 ]; then
-    	msg_info ""
-    	msg_info "Install Lordec aborted."
-        msg_info ""
-        ss-abort "$(cat /tmp/lordec_error_message.log)"
-    fi
+    #$tools_dir/lordec/bin/lordec-correct -h 2> /tmp/lordec_error_message.log
+    #ret=$?
+    #if [ $ret -ne 0 ]; then
+    #	msg_info ""
+    #	msg_info "Install Lordec aborted."
+    #    msg_info ""
+    #    ss-abort "$(cat /tmp/lordec_error_message.log)"
+    #fi
     
     msg_info "Lordec is installed."
 }
