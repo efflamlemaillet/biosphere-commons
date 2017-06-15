@@ -1,5 +1,17 @@
 source /scripts/toolshed/os_detection.sh
 
+msg_info()
+{
+    ss-display "test if deployment" 1>/dev/null 2>/dev/null
+    ret=$?
+    if [ $ret -ne 0 ]; then
+        echo -e "$@"
+    else
+        echo -e "$@"
+        ss-display "$@"
+    fi
+}
+
 create_tools_dir(){
     # Pas de paramètre 
     if [[ $# -lt 1 ]]; then
@@ -15,6 +27,8 @@ create_tools_dir(){
 }
 
 install_canu(){
+    msg_info "Installing Canu..."
+    
     tool_id="canu" 
     tool_bin="canu" 
     tool_version="1.5"
@@ -46,9 +60,22 @@ install_canu(){
     cp -r ../Linux-amd64 $tools_dir/
     
     echo "export PATH=\$PATH:$tools_dir/Linux-amd64/bin" > /etc/profile.d/canu.sh
+    
+    canu -h 2> /tmp/canu_error_message.log
+    ret=$?
+    if [ $ret -ne 0 ]; then
+    	msg_info ""
+    	msg_info "Install Canu aborted."
+        msg_info ""
+        ss-abort "$(cat /opt/canu_error_message.log)"
+    fi
+    
+    msg_info "Canu is installed."
 }
 
 install_lordec(){
+    msg_info "Installing Lordec..."
+    
     tool_id="LoRDEC" 
     tool_bin="lordec" 
     tool_version="0.6"
@@ -96,6 +123,17 @@ install_lordec(){
     cp -r DATA/ $tools_dir/lordec
 
     echo "export PATH=\$PATH:$tools_dir/lordec/bin" > /etc/profile.d/lordec.sh
+    
+    lordec-correct -h 2> /tmp/lordec_error_message.log
+    ret=$?
+    if [ $ret -ne 0 ]; then
+    	msg_info ""
+    	msg_info "Install Lordec aborted."
+        msg_info ""
+        ss-abort "$(cat /opt/lordec_error_message.log)"
+    fi
+    
+    msg_info "Lordec is installed."
 }
 
 install_pipeline(){
