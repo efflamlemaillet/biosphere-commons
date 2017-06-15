@@ -165,7 +165,7 @@ install_edugain()
 
 msg_info()
 {
-    ss-display "test" 1>/dev/null 2>/dev/null
+    ss-display "test if deployment" 1>/dev/null 2>/dev/null
     ret=$?
     if [ $ret -ne 0 ]; then
         echo -e "$@"
@@ -229,6 +229,7 @@ check_ip_slave_for_master()
     ss-set ss:url.service "${url}"
     
     for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
+        msg_info "Waiting ip of slave to be ready."
         ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
         #url=$(ss-get $SLAVE_NAME.$i:url.ssh)
         #PUBLIC_SLAVE_IP=$(echo $url | cut -d "@" -f2)
@@ -240,6 +241,7 @@ check_ip_slave_for_master()
 
 check_ip_master_for_slave()
 {
+    msg_info "Waiting ip of master to be ready."
     ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
     url=$(ss-get $MASTER_HOSTNAME:url.service)
     #PUBLIC_IP_MASTER=$(echo $url | cut -d "@" -f2)
