@@ -123,14 +123,14 @@ install_pipeline(){
     if [[ $# -lt 1 ]]; then
         echo "This function expects a directory in argument !"
     else    
-        tools_dir=$1
+        pipeline_dir=$1
         
-        create_tools_dir $tools_dir
+        create_tools_dir $pipeline_dir
         
-        cp /scripts/biodatacloud/assemblage/lordec_2_fastq.pl $tools_dir
-        cp /scripts/biodatacloud/assemblage/lordec_pipeline.pl $tools_dir
-        chmod 755 $tools_dir/lordec_2_fastq.pl
-        chmod 755 $tools_dir/lordec_pipeline.pl
+        cp /scripts/biodatacloud/assemblage/lordec_2_fastq.pl $pipeline_dir
+        cp /scripts/biodatacloud/assemblage/lordec_pipeline.pl $pipeline_dir
+        chmod 755 $pipeline_dir/lordec_2_fastq.pl
+        chmod 755 $pipeline_dir/lordec_pipeline.pl
     fi
 }
 
