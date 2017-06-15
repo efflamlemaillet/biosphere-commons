@@ -61,13 +61,13 @@ install_canu(){
     
     echo "export PATH=\$PATH:$tools_dir/Linux-amd64/bin" > /etc/profile.d/canu.sh
     
-    canu -h 2> /tmp/canu_error_message.log
+    $tools_dir/Linux-amd64/bin/canu -h 2> /tmp/canu_error_message.log
     ret=$?
     if [ $ret -ne 0 ]; then
     	msg_info ""
     	msg_info "Install Canu aborted."
         msg_info ""
-        ss-abort "$(cat /opt/canu_error_message.log)"
+        ss-abort "$(cat /tmp/canu_error_message.log)"
     fi
     
     msg_info "Canu is installed."
@@ -124,13 +124,13 @@ install_lordec(){
 
     echo "export PATH=\$PATH:$tools_dir/lordec/bin" > /etc/profile.d/lordec.sh
     
-    lordec-correct -h 2> /tmp/lordec_error_message.log
+    $tools_dir/lordec/bin/lordec-correct -h 2> /tmp/lordec_error_message.log
     ret=$?
     if [ $ret -ne 0 ]; then
     	msg_info ""
     	msg_info "Install Lordec aborted."
         msg_info ""
-        ss-abort "$(cat /opt/lordec_error_message.log)"
+        ss-abort "$(cat /tmp/lordec_error_message.log)"
     fi
     
     msg_info "Lordec is installed."
