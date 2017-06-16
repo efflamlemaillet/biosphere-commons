@@ -119,19 +119,10 @@ install_lordec(){
 }
 
 install_pipeline(){
-    # Pas de paramètre 
-    if [[ $# -lt 1 ]]; then
-        echo "This function expects a directory in argument !"
-    else    
-        pipeline_dir=$1
-        
-        create_tools_dir $pipeline_dir
-        
-        cp /scripts/biodatacloud/assemblage/lordec_2_fastq.pl $pipeline_dir
-        cp /scripts/biodatacloud/assemblage/lordec_pipeline.pl $pipeline_dir
-        chmod 755 $pipeline_dir/lordec_2_fastq.pl
-        chmod 755 $pipeline_dir/lordec_pipeline.pl
-    fi
+    cp /scripts/biodatacloud/assemblage/lordec_2_fastq.pl $tools_dir
+    cp /scripts/biodatacloud/assemblage/lordec_pipeline.pl $tools_dir
+    chmod -R 755 $tools_dir/lordec_2_fastq.pl
+    chmod -R 755 $tools_dir/lordec_pipeline.pl
 }
 
 create_readme(){
