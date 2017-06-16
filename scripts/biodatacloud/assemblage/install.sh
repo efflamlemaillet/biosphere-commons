@@ -132,9 +132,9 @@ create_readme(){
     else    
         README_DIR=$1
         
-        if [ ! -d "$README_DIR" ]; then
-            mkdir -p $README_DIR
-        fi
+        #if [ ! -d "$README_DIR" ]; then
+        #    mkdir -p $README_DIR
+        #fi
         cp /scripts/biodatacloud/assemblage/HOWTO.README $README_DIR/HOWTO.README
         sed -i "s|<tools_dir>|$tools_dir|" $README_DIR/HOWTO.README
     fi
