@@ -135,30 +135,7 @@ create_readme(){
         if [ ! -d "$README_DIR" ]; then
             mkdir -p $README_DIR
         fi
-            
-        echo "Description:
-                This is a wrapper script for LoRDEC [Salmela & Rivals, 2014].
-                It corrects Long Reads using Short Reads by pipelining the commands
-                that (1) create a DeBruijn Graph of the SR, (2) correct the LR, and (3)
-                adapt a fitted set of the input quality values to the corrected sequences.
-        Version:
-                v.1.2.2
-        Usage:
-                $tools_dir/hybrid_correction -short <DIR> -long <DIR> -out <DIR> [options]
-        Options:
-                -short|sr DIR   : Short reads directory.
-                -long|lr DIR    : Long reads directory.
-                -output DIR     : Output directory.
-                -k INT          : Kmer length to use in LoRDEC (Default = 19).
-                -s INT          : Solid kmer abundance threshold to use in LoRDEC (Default = 3).
-                -dbg FILE       : Don't create De Bruijn Graph anew, instead use existing FILE.
-                -fasta          : Keep initial Lordec fasta output (Default: remove).
-
-                -submit JSCHED  : Specify underlying job scheduler to use: PBS (Default) or SGE.
-                -maxcores INT   : Use at most INT cores in cluster (Default: use all available).
-
-                -gauge          : Measure resource usage (time, mem...) for each job (Default: don't).
-                -help           : Display this description and exit.
-        " > $README_DIR/HOWTO.README
+        cp /scripts/biodatacloud/assemblage/HOWTO.README $README_DIR/HOWTO.README
+        sed -i "s|<tools_dir>|$tools_dir|" $README_DIR/HOWTO.README
     fi
 }
