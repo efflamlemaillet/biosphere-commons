@@ -58,6 +58,60 @@ check_if_vpn_or_not()
     ss-set allowed_components "$(echo $(ss-get allowed_components) | sed 's|ifbuser|'$USER_NEW'|g' )"
 }
 
+initiate_master_cluster()
+{
+    check_if_vpn_or_not
+    
+    ID=1
+    
+    HOSTIP=$(ss-get $IP_PARAMETER)
+
+    if [ "$category" == "Deployment" ]; then
+        HOSTNAME=$(ss-get nodename)-$ID
+        SLAVE_NAME=$(ss-get slave.nodename)
+    else
+        HOSTNAME=machine-$ID
+    fi
+    if [ $IP_PARAMETER == "hostname" ]; then
+        ssh_root=/root/.ssh
+        ssh_user=/home/$USER_NEW/.ssh
+        if [ ! -f $ssh_user/authorized_keys ]; then
+            mkdir -p $ssh_user
+            touch $ssh_user/authorized_keys
+            chmod 700 $ssh_user
+            chmod 600 $ssh_user/authorized_keys
+            chown $USER_NEW:$USER_NEW $ssh_user/authorized_keys
+        fi
+        cat $ssh_root/authorized_keys >> $ssh_user/authorized_keys
+    fi
+        
+    echo "$HOSTNAME" > /etc/hostname
+    hostname $HOSTNAME   
+}
+
+initiate_slave_cluster()
+{
+    check_if_vpn_or_not
+    
+    ID=1
+    
+    if [ "$category" != "Deployment" ]; then
+        ss-abort "You need to deploy with a master!!!"
+    fi
+    
+    SLAVE_HOSTNAME=$(ss-get nodename).$(ss-get id)
+    SLAVE_HOSTNAME_SAFE=$(ss-get nodename)-$(ss-get id)
+
+    SLAVE_IP=$(ss-get $SLAVE_HOSTNAME:$IP_PARAMETER)
+
+    MASTER_HOSTNAME=$(ss-get master.nodename)
+    MASTER_HOSTNAME_SAFE=$MASTER_HOSTNAME-$ID
+
+    MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
+    
+    hostname $SLAVE_HOSTNAME_SAFE
+}
+
 initiate_install_edugain()
 {
     apt-get install -y python python-dev python-pip libpam-python
@@ -91,7 +145,7 @@ global s\
 s = socket\.socket(socket\.AF_INET, socket\.SOCK_DGRAM)\
 s\.connect(("8\.8\.8\.8", 80))\
 ' /usr/local/bin/cyclone_pam.py
-    sed -ie 's|host_ip = .*|host_ip = s\.getsockname()[0]|' /usr/local/bin/cyclone_pam.py
+    sed -i 's|host_ip = .*|host_ip = s\.getsockname()[0]|' /usr/local/bin/cyclone_pam.py
 
     mkdir /etc/cyclone
     cp -f etc/cyclone/cyclone.conf /etc/cyclone/cyclone.conf
