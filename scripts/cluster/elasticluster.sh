@@ -60,9 +60,9 @@ install_ansible(){
     
     ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/ansible.yml
     
-    ansible_dir="/etc/ansible"
-    sed -i '/\[defaults\]/a library = /usr/share/ansible:library' $ansible_dir/ansible.cfg
-    sed -i 's|#host_key_checking.*|host_key_checking = False|' $ansible_dir/ansible.cfg
+    #ansible_dir="/etc/ansible"
+    #sed -i '/\[defaults\]/a library = /usr/share/ansible:library' $ansible_dir/ansible.cfg
+    #sed -i 's|#host_key_checking.*|host_key_checking = False|' $ansible_dir/ansible.cfg
 }
 
 config_elasticluster(){
