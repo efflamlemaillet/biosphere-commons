@@ -52,8 +52,7 @@ install_ansible(){
     fi
     
     if [ -f /root/.ssh/config ]; then
-        echo "PubkeyAcceptedKeyTypes +ssh-dss" > /root/.ssh/config
-        echo "Host $ORCH_IP #GEN_HOSTS_CONFIG" >> /root/.ssh/config
+        echo "Host $ORCH_IP #GEN_HOSTS_CONFIG" > /root/.ssh/config
         echo "   StrictHostKeyChecking no" >> /root/.ssh/config
         echo "   UserKnownHostsFile /dev/null" >> /root/.ssh/config
     fi
