@@ -25,7 +25,7 @@ install_elasticluster(){
     cd src
     
     pip install -e .
-    elasticluster list-templates
+    elasticluster list-templates 1>/dev/null 2>/dev/null
     echo "" > $playbook_dir/hosts
     
 }
