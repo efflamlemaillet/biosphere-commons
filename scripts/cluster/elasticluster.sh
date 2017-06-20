@@ -57,7 +57,7 @@ install_ansible(){
         echo "   UserKnownHostsFile /dev/null" >> /root/.ssh/config
     fi
     
-    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/ansible.yml
+    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/ansible.yml 1>tmp/ansible.log 2>/tmp/ansible.log
     
     #ansible_dir="/etc/ansible"
     #sed -i '/\[defaults\]/a library = /usr/share/ansible:library' $ansible_dir/ansible.cfg
@@ -111,5 +111,5 @@ fix_elasticluster(){
 }
 
 install_slurm(){
-    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml 1>tmp/ansible.log 2>/tmp/ansible.log
 }
