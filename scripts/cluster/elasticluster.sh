@@ -78,6 +78,7 @@ config_elasticluster(){
     #slave
     echo "" >> $playbook_dir/hosts
     echo "[slurm_worker]" >> $playbook_dir/hosts
+    SLAVE_NAME=slave
     for (( i=1; i <= $(ss-get slave:multiplicity); i++ )); do
         msg_info "Waiting ip of slave to be ready."
         ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
