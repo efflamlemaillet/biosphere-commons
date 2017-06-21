@@ -6,18 +6,24 @@ install_elasticluster(){
     hosts_dir=$playbook_dir
     
     if isubuntu; then
+        msg_info "Installing requirements with apt-get."
         apt-get update -y
-        apt-get install -y gcc g++ git libc6-dev libffi-dev libssl-dev python-dev git
+        apt-get install -y gcc g++ git libc6-dev libffi-dev libssl-dev python python-dev git
         curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
         python get-pip.py
     elif iscentos; then
+        msg_info "Installing dependance with yum."
         yum update -y
-        yum install -y gcc gcc-c++ git libffi-devel openssl-devel python-devel git python-pip
+        yum install -y gcc gcc-c++ git libffi-devel openssl-devel python python-devel git python-pip
     fi
+    msg_info "Requirements are installed."
     
-    pip install --upgrade 'pip>=9.0.0' 1>/dev/null 2>/dev/null
-    pip install --upgrade setuptools 1>/dev/null 2>/dev/null
-    pip install backports.ssl_match_hostname 1>/dev/null 2>/dev/null
+    msg_info "Installing package with pip."
+    pip install pyOpenSSL ndg-httpsclient pyasn1  
+    
+    pip install --upgrade 'pip>=9.0.0'
+    pip install --upgrade setuptools
+    pip install backports.ssl_match_hostname
     #pip install requests[security]
     #pip install --upgrade ndg-httpsclient
     #pip install 'requests[security]' --upgrade
@@ -31,9 +37,12 @@ install_elasticluster(){
     elasticluster list-templates 1>/dev/null 2>/dev/null
     echo "" > $playbook_dir/hosts
     
+    msg_info "Elasticluster is installed."
 }
 
 install_ansible(){
+    msg_info "Installing ansible playbook."
+    
     #if isubuntu; then
     #    apt-get update -y
     #    apt-get install -y software-properties-common
@@ -65,10 +74,11 @@ install_ansible(){
     #ansible_dir="/etc/ansible"
     #sed -i '/\[defaults\]/a library = /usr/share/ansible:library' $ansible_dir/ansible.cfg
     #sed -i 's|#host_key_checking.*|host_key_checking = False|' $ansible_dir/ansible.cfg
+    msg_info "Ansible playbook is installed."
 }
 
 config_elasticluster(){
-    
+    msg_info "Configuring slurm hosts."
     #master
     msg_info "Waiting ip of master to be ready."
     MASTER_HOSTNAME=master
@@ -87,6 +97,7 @@ config_elasticluster(){
         SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
         echo $SLAVE_IP >> $playbook_dir/hosts
     done
+    msg_info "Slurm hosts are configured."
 }
 
 fix_elasticluster(){
@@ -114,5 +125,7 @@ fix_elasticluster(){
 }
 
 install_slurm(){
+    msg_info "Installing slurm cluster."
     ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml 1>/tmp/ansible.log 2>/tmp/ansible.log
+    msg_info "Slurm cluster is installed."
 }
