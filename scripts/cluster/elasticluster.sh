@@ -17,10 +17,10 @@ install_elasticluster(){
     
     pip install --upgrade 'pip>=9.0.0'
     pip install --upgrade setuptools
-    pip install backports.ssl_match_hostname
-    pip install requests[security]
-    pip install --upgrade ndg-httpsclient
-    pip install 'requests[security]' --upgrade
+    #pip install backports.ssl_match_hostname
+    #pip install requests[security]
+    #pip install --upgrade ndg-httpsclient
+    #pip install 'requests[security]' --upgrade
     
     mkdir $elastic_dir
     cd $elastic_dir
