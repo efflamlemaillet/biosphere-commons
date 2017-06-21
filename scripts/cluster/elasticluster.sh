@@ -15,9 +15,9 @@ install_elasticluster(){
         yum install -y gcc gcc-c++ git libffi-devel openssl-devel python-devel git python-pip
     fi
     
-    pip install --upgrade 'pip>=9.0.0'
-    pip install --upgrade setuptools
-    #pip install backports.ssl_match_hostname
+    pip install --upgrade 'pip>=9.0.0' 1>/dev/null 2>/dev/null
+    pip install --upgrade setuptools 1>/dev/null 2>/dev/null
+    pip install backports.ssl_match_hostname 1>/dev/null 2>/dev/null
     #pip install requests[security]
     #pip install --upgrade ndg-httpsclient
     #pip install 'requests[security]' --upgrade
