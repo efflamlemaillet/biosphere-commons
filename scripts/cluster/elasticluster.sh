@@ -18,6 +18,7 @@ install_elasticluster(){
     pip install --upgrade 'pip>=9.0.0'
     pip install --upgrade setuptools
     pip install backports.ssl_match_hostname
+    pip install requests[security]
     
     mkdir $elastic_dir
     cd $elastic_dir
@@ -52,7 +53,7 @@ install_ansible(){
     fi
     
     if [ -f /root/.ssh/config ]; then
-        echo "Host $ORCH_IP #GEN_HOSTS_CONFIG" > /root/.ssh/config
+        echo "Host *" > /root/.ssh/config
         echo "   StrictHostKeyChecking no" >> /root/.ssh/config
         echo "   UserKnownHostsFile /dev/null" >> /root/.ssh/config
     fi
