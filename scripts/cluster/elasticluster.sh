@@ -69,7 +69,7 @@ install_ansible(){
         echo "   UserKnownHostsFile /dev/null" >> /root/.ssh/config
     fi
     
-    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/ansible.yml 1>/tmp/ansible.log 2>/tmp/ansible.log
+    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/ansible.yml
     
     #ansible_dir="/etc/ansible"
     #sed -i '/\[defaults\]/a library = /usr/share/ansible:library' $ansible_dir/ansible.cfg
@@ -126,6 +126,8 @@ fix_elasticluster(){
 
 install_slurm(){
     msg_info "Installing slurm cluster."
-    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml 1>/tmp/ansible.log 2>/tmp/ansible.log
+    ansible_memtotal_mb=$(ssh master 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
+    ansible_processor_vcpus=$(ssh master 'nproc')
+    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus"
     msg_info "Slurm cluster is installed."
 }
