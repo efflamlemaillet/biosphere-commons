@@ -12,7 +12,7 @@ install_elasticluster(){
         curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
         python get-pip.py
     elif iscentos; then
-        msg_info "Installing dependance with yum."
+        msg_info "Installing requirements with yum."
         yum update -y
         yum install -y gcc gcc-c++ git libffi-devel openssl-devel python python-devel git python-pip
     fi
@@ -84,8 +84,13 @@ config_elasticluster(){
     MASTER_HOSTNAME=master
     ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
     MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
+    ansible_user=root
+    host_master=$HOSTNAME
+    memory_master=$(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024))))
+    vcpu_master=$(nproc)
+    
     echo "[slurm_master]" >> $playbook_dir/hosts
-    echo $MASTER_IP >> $playbook_dir/hosts
+    echo "$MASTER_IP ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
     
     #slave
     echo "" >> $playbook_dir/hosts
@@ -95,7 +100,11 @@ config_elasticluster(){
         msg_info "Waiting ip of slave to be ready."
         ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
         SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        echo $SLAVE_IP >> $playbook_dir/hosts
+        host_slave=$SLAVE_NAME-$i
+        memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
+        vcpu_slave=$(ssh $host_slave 'nproc')
+        
+        echo "$SLAVE_IP SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
     done
     msg_info "Slurm hosts are configured."
 }
@@ -126,8 +135,13 @@ fix_elasticluster(){
 
 install_slurm(){
     msg_info "Installing slurm cluster."
-    ansible_memtotal_mb=$(ssh master 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
-    ansible_processor_vcpus=$(ssh master 'nproc')
-    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
+    
+    #ansible_user=root
+    #host_master=master-1
+    #memory_master=$(ssh master 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
+    #vcpu_master=$(ssh master 'nproc')    
+    
+    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+    #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
     msg_info "Slurm cluster is installed."
 }
