@@ -128,6 +128,6 @@ install_slurm(){
     msg_info "Installing slurm cluster."
     ansible_memtotal_mb=$(ssh master 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
     ansible_processor_vcpus=$(ssh master 'nproc')
-    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus"
+    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
     msg_info "Slurm cluster is installed."
 }
