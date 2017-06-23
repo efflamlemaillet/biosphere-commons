@@ -77,7 +77,7 @@ install_ansible(){
     msg_info "Ansible playbook is installed."
 }
 
-config_elasticluster(){
+config_elasticluster(){    
     msg_info "Configuring slurm hosts."
     #master
     msg_info "Waiting ip of master to be ready."
@@ -85,12 +85,12 @@ config_elasticluster(){
     ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
     MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
     ansible_user=root
-    host_master=$HOSTNAME
+    host_master=$MASTER_HOSTNAME-1
     memory_master=$(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024))))
     vcpu_master=$(nproc)
     
     echo "[slurm_master]" >> $playbook_dir/hosts
-    echo "$MASTER_IP ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
+    echo "$host_master ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
     
     #slave
     echo "" >> $playbook_dir/hosts
@@ -104,7 +104,7 @@ config_elasticluster(){
         memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
         vcpu_slave=$(ssh $host_slave 'nproc')
         
-        echo "$SLAVE_IP SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
+        echo "$host_slave SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
     done
     msg_info "Slurm hosts are configured."
 }
