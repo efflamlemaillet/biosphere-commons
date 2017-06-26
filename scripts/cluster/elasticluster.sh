@@ -77,51 +77,79 @@ install_ansible(){
     msg_info "Ansible playbook is installed."
 }
 
-config_elasticluster(){    
-    check_if_vpn_or_not
+config_elasticluster(){
+    # Pas de paramètre 
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a type of cluster in argument (slurm or torque)!"
+    else 
+        cluster_type=$1
+         
+        check_if_vpn_or_not        
     
-    msg_info "Configuring slurm hosts."
-    
-    #master
-    msg_info "Waiting ip of master to be ready."
-    MASTER_HOSTNAME=master
-    ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
-    if [ $IP_PARAMETER == "hostname" ]; then
-        MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
-    else
-        MASTER_IP=$(ss-get $MASTER_HOSTNAME:vpn.adress)
-    fi
-    
-    ansible_user=root
-    host_master=$MASTER_HOSTNAME-1
-    memory_master=$(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024))))
-    vcpu_master=$(nproc)
-    
-    #FIX controlmachine
-    sed -i "s|ControlMachine=.*|ControlMachine="$host_master"|" $playbook_dir/roles/slurm-common/templates/slurm.conf.j2
-    
-    echo "[slurm_master]" >> $playbook_dir/hosts
-    echo "$MASTER_IP ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
-    
-    #slave
-    echo "" >> $playbook_dir/hosts
-    echo "[slurm_worker]" >> $playbook_dir/hosts
-    SLAVE_NAME=slave
-    for (( i=1; i <= $(ss-get slave:multiplicity); i++ )); do
-        msg_info "Waiting ip of slave to be ready."
-        ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
-        if [ $IP_PARAMETER == "hostname" ]; then
-            SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
-        else
-            SLAVE_IP=$(ss-get $SLAVE_NAME.$i:vpn.adress)
-        fi    
-        host_slave=$SLAVE_NAME-$i
-        memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
-        vcpu_slave=$(ssh $host_slave 'nproc')
+        #master
+        msg_info "Waiting ip of master to be ready."
+        MASTER_HOSTNAME=master
+        ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
         
-        echo "$host_slave SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
-    done
-    msg_info "Slurm hosts are configured."
+        if [ $IP_PARAMETER == "hostname" ]; then
+            NETWORK_MODE=$(ss-get $MASTER_HOSTNAME:network)
+            if [ "$NETWORK_MODE" == "Public" ]; then
+                MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
+            else
+                MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
+            fi
+        else
+            MASTER_IP=$(ss-get $MASTER_HOSTNAME:vpn.adress)
+        fi
+    
+        ansible_user=root
+        host_master=$MASTER_HOSTNAME-1
+        memory_master=$(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024))))
+        vcpu_master=$(nproc)
+    
+        if [ $cluster_type == "slurm" ]; then
+            msg_info "Configuring slurm hosts."
+            #FIX controlmachine
+            sed -i "s|ControlMachine=.*|ControlMachine="$host_master"|" $playbook_dir/roles/slurm-common/templates/slurm.conf.j2
+    
+            echo "[slurm_master]" >> $playbook_dir/hosts
+            echo "$MASTER_IP ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
+        fi
+    
+        #slave
+        echo "" >> $playbook_dir/hosts
+        
+        if [ $cluster_type == "slurm" ]; then
+            echo "[slurm_worker]" >> $playbook_dir/hosts
+        fi
+        
+        SLAVE_NAME=slave
+        for (( i=1; i <= $(ss-get slave:multiplicity); i++ )); do
+            msg_info "Waiting ip of slave to be ready."
+            ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
+            if [ $IP_PARAMETER == "hostname" ]; then
+                NETWORK_MODE=$(ss-get $SLAVE_NAME.$i:network)
+                if [ "$NETWORK_MODE" == "Public" ]; then
+                    SLAVE_IP=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
+                else
+                    SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
+                fi
+            else
+                SLAVE_IP=$(ss-get $SLAVE_NAME.$i:vpn.adress)
+            fi    
+            host_slave=$SLAVE_NAME-$i
+            memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
+            vcpu_slave=$(ssh $host_slave 'nproc')
+            
+            if [ $cluster_type == "slurm" ]; then
+                echo "$host_slave SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
+            fi
+        done
+        
+        if [ $cluster_type == "slurm" ]; then
+            msg_info "Slurm hosts are configured."
+        fi
+    fi
 }
 
 fix_elasticluster(){
@@ -149,6 +177,8 @@ fix_elasticluster(){
 }
 
 install_slurm(){
+    config_elasticluster slurm
+    
     msg_info "Installing slurm cluster."
     
     #ansible_user=root
