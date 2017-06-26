@@ -78,12 +78,20 @@ install_ansible(){
 }
 
 config_elasticluster(){    
+    check_if_vpn_or_not
+    
     msg_info "Configuring slurm hosts."
+    
     #master
     msg_info "Waiting ip of master to be ready."
     MASTER_HOSTNAME=master
     ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
-    MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
+    if [ $IP_PARAMETER == "hostname" ]; then
+        MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
+    else
+        MASTER_IP=$(ss-get $MASTER_HOSTNAME:vpn.adress)
+    fi
+    
     ansible_user=root
     host_master=$MASTER_HOSTNAME-1
     memory_master=$(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024))))
@@ -102,7 +110,11 @@ config_elasticluster(){
     for (( i=1; i <= $(ss-get slave:multiplicity); i++ )); do
         msg_info "Waiting ip of slave to be ready."
         ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
-        SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
+        if [ $IP_PARAMETER == "hostname" ]; then
+            SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
+        else
+            SLAVE_IP=$(ss-get $SLAVE_NAME.$i:vpn.adress)
+        fi    
         host_slave=$SLAVE_NAME-$i
         memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
         vcpu_slave=$(ssh $host_slave 'nproc')
