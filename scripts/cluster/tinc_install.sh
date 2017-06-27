@@ -46,7 +46,7 @@ configure_tinc_server(){
     fi
     ss-set private_ip "$HOSTIP"
     
-    INTERFACE="eth0:0"
+    INTERFACE="tun0"
     netname="vpn"
     externalnyc="vpn_server"
     externalnyc_public_IP=$(ss-get $component_server_name:hostname)
@@ -102,7 +102,7 @@ configure_tinc_client(){
     fi
     ss-set private_ip "$HOSTIP"
     
-    INTERFACE="eth0:0"
+    INTERFACE="tun0"
     netname="vpn"
     externalnyc="vpn_server"
     ID=$(ss-get id)
