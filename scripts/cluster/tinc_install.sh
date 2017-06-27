@@ -46,7 +46,7 @@ configure_tinc_server(){
     fi
     ss-set private_ip "$HOSTIP"
     
-    INTERFACE="eth0"
+    INTERFACE="tun0"
     netname="vpn"
     externalnyc="vpn_server"
     externalnyc_public_IP=$(ss-get $component_server_name:hostname)
@@ -100,7 +100,7 @@ configure_tinc_client(){
     fi
     ss-set private_ip "$HOSTIP"
     
-    INTERFACE="eth0"
+    INTERFACE="tun0"
     netname="vpn"
     externalnyc="vpn_server"
     ID=$(ss-get id)
@@ -130,10 +130,10 @@ configure_tinc_client(){
     ss-set hosts_configuration_file "$(cat $tinc_dir/$netname/hosts/$node_name)"
     
     ss-get --timeout=3600 $component_server_name:hosts_configuration_file > $tinc_dir/$netname/hosts/$externalnyc
-    sed -i "s|Address = .*|Address = "$externalnyc_private_IP"|" $tinc_dir/$netname/hosts/$externalnyc
+    #sed -i "s|Address = .*|Address = "$externalnyc_private_IP"|" $tinc_dir/$netname/hosts/$externalnyc
     
     echo "# This file contains all names of the networks to be started on system startup." > $tinc_dir/nets.boot
     echo "$netname" >> $tinc_dir/nets.boot
     
-    service tinc start
+    #service tinc start
 }
