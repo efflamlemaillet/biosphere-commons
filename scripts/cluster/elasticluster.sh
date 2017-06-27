@@ -99,7 +99,7 @@ config_elasticluster(){
                 MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
             fi
         else
-            MASTER_IP=$(ss-get $MASTER_HOSTNAME:vpn.adress)
+            MASTER_IP=$(ss-get $MASTER_HOSTNAME:vpn.address)
         fi
     
         ansible_user=root
@@ -137,7 +137,7 @@ config_elasticluster(){
                     SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
                 fi
             else
-                SLAVE_IP=$(ss-get $SLAVE_NAME.$i:vpn.adress)
+                SLAVE_IP=$(ss-get $SLAVE_NAME.$i:vpn.address)
             fi    
             host_slave=$SLAVE_NAME-$i
             memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
@@ -227,7 +227,7 @@ add_nodes_elasticluster(){
                     SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
                 fi
             else
-                SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.adress)
+                SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
             fi    
             host_slave=$INSTANCE_NAME_SAFE
             memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
