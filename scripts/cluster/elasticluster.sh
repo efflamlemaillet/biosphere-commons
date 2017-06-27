@@ -211,6 +211,8 @@ add_nodes_elasticluster(){
         playbook_dir=$elastic_dir/src/elasticluster/share/playbooks
         hosts_dir=$playbook_dir
         
+        check_if_vpn_or_not
+        
         ss-display "ADD slave..."
         for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
             INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
