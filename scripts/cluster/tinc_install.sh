@@ -81,8 +81,6 @@ configure_tinc_server(){
         node_name=$component_client_name-$i
         ss-get --timeout=3600 $component_client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
     done
-    
-    ss-set server.ready "true" 
 }
 
 configure_tinc_client(){
