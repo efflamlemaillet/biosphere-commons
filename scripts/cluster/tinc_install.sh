@@ -75,7 +75,7 @@ configure_tinc_server(){
     ss-set $component_server_name:vpn.adress "10.0.0.1"
     
     for i in $(echo "$(ss-get $component_client_name:ids)" | sed 's/,/\n/g'); do
-        j=1+$i
+        j=$[$i+1]
         ss-set $component_client_name.$i:vpn.adress "10.0.0.$j"
         
         node_name=$component_client_name-$i
