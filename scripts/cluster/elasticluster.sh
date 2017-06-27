@@ -107,6 +107,8 @@ config_elasticluster(){
         memory_master=$(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024))))
         vcpu_master=$(nproc)
     
+        echo "---" > $playbook_dir/hosts
+        
         if [ $cluster_type == "slurm" ]; then
             msg_info "Configuring slurm hosts."
             #FIX controlmachine
@@ -176,17 +178,108 @@ fix_elasticluster(){
     chown munge /var/log/munge/
 }
 
-install_slurm(){
-    config_elasticluster slurm
+install_playbooks(){
+    # Pas de paramètre 
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a type of cluster in argument (slurm or torque)!"
+    else
+        cluster_type=$1
     
-    msg_info "Installing slurm cluster."
+        if [ $cluster_type == "slurm" ]; then
+            msg_info "Installing slurm cluster."
     
-    #ansible_user=root
-    #host_master=master-1
-    #memory_master=$(ssh master 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
-    #vcpu_master=$(ssh master 'nproc')    
+            #ansible_user=root
+            #host_master=master-1
+            #memory_master=$(ssh master 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
+            #vcpu_master=$(ssh master 'nproc')    
 
-    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
-    #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
-    msg_info "Slurm cluster is installed."
+            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
+            msg_info "Slurm cluster is installed."
+        fi
+    fi
+}
+
+add_nodes_elasticluster(){
+    # Pas de paramètre 
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a type of cluster in argument (slurm or torque)!"
+    else 
+        cluster_type=$1
+        
+        elastic_dir="/opt/elasticluster"
+        playbook_dir=$elastic_dir/src/elasticluster/share/playbooks
+        hosts_dir=$playbook_dir
+        
+        ss-display "ADD slave..."
+        for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+            INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+        
+            echo "Processing $INSTANCE_NAME"
+        
+            msg_info "Waiting ip of slave to be ready."
+            ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
+            if [ $IP_PARAMETER == "hostname" ]; then
+                NETWORK_MODE=$(ss-get $INSTANCE_NAME:network)
+                if [ "$NETWORK_MODE" == "Public" ]; then
+                    SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+                else
+                    SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+                fi
+            else
+                SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.adress)
+            fi    
+            host_slave=$INSTANCE_NAME_SAFE
+            memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
+            vcpu_slave=$(ssh $host_slave 'nproc')
+        
+            if [ $cluster_type == "slurm" ]; then
+                sed -i '/\[slurm_worker\]/a '$host_slave' SLURM_ACCOUNTING_HOST='$host_slave' ansible_memtotal_mb='$memory_slave' ansible_processor_vcpus='$vcpu_slave'' $playbook_dir/hosts
+            fi
+        done
+    
+        if [ $cluster_type == "slurm" ]; then
+            msg_info "Slurm hosts are configured."
+        fi
+        
+        if [ $cluster_type == "slurm" ]; then
+            msg_info "Installing slurm cluster."
+            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            msg_info "Slurm cluster is installed."
+        fi
+    fi
+}
+
+rm_nodes_elasticluster(){
+    # Pas de paramètre 
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a type of cluster in argument (slurm or torque)!"
+    else 
+        cluster_type=$1
+        
+        elastic_dir="/opt/elasticluster"
+        playbook_dir=$elastic_dir/src/elasticluster/share/playbooks
+        hosts_dir=$playbook_dir
+        
+        ss-display "RM slave..."
+        for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+            INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+        
+            host_slave=$INSTANCE_NAME_SAFE
+        
+            if [ $cluster_type == "slurm" ]; then
+                sed -i '/'$host_slave'/d' $playbook_dir/hosts
+            fi
+        done
+    
+        if [ $cluster_type == "slurm" ]; then
+            msg_info "Slurm hosts are configured."
+        fi
+        
+        if [ $cluster_type == "slurm" ]; then
+            msg_info "Installing slurm cluster."
+            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            msg_info "Slurm cluster is installed."
+        fi
+    fi
 }
