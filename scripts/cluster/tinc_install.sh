@@ -72,11 +72,11 @@ configure_tinc_server(){
     
     ss-set hosts_configuration_file "$(cat $tinc_dir/$netname/hosts/$externalnyc)"
     
-    ss-set $component_server_name:vpn.adress "10.0.0.1"
+    ss-set $component_server_name:vpn.address "10.0.0.1"
     
     for i in $(echo "$(ss-get $component_client_name:ids)" | sed 's/,/\n/g'); do
         j=$[$i+1]
-        ss-set $component_client_name.$i:vpn.adress "10.0.0.$j"
+        ss-set $component_client_name.$i:vpn.address "10.0.0.$j"
         
         node_name=$component_client_name$i
         ss-get --timeout=3600 $component_client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
@@ -115,7 +115,7 @@ configure_tinc_client(){
     echo "Interface = $INTERFACE" >> $tinc_dir/$netname/tinc.conf
     echo "ConnectTo = $externalnyc" >> $tinc_dir/$netname/tinc.conf
     
-    ip_client=$(ss-get --timeout=3600 vpn.adress)
+    ip_client=$(ss-get --timeout=3600 vpn.address)
     echo "Subnet = $ip_client/32" > $tinc_dir/$netname/hosts/$node_name
     
     yes "" | tincd -n $netname -K4096
@@ -151,7 +151,7 @@ add_tinc_client(){
         
         ID=$(ss-get $INSTANCE_NAME:id)
         j=$[$ID+1]
-        ss-set $INSTANCE_NAME:vpn.adress "10.0.0.$j"
+        ss-set $INSTANCE_NAME:vpn.address "10.0.0.$j"
         
         node_name=$component_client_name$ID
         ss-get --timeout=3600 $INSTANCE_NAME:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
