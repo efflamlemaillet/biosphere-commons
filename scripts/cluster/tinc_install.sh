@@ -82,7 +82,8 @@ configure_tinc_server(){
         ss-get --timeout=3600 $component_client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
     done
     
-    #tincd -n $netname -D
+    tincd -n $netname -D
+    ss-set vpn.ready "true"
 }
 
 configure_tinc_client(){
@@ -137,6 +138,7 @@ configure_tinc_client(){
     echo "# This file contains all names of the networks to be started on system startup." > $tinc_dir/nets.boot
     echo "$netname" >> $tinc_dir/nets.boot
     
-    #tincd -n $netname -D
+    ss-get --timeout=3600 $component_server_name:vpn.ready
+    tincd -n $netname -D
     #service tinc start
 }
