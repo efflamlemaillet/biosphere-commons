@@ -82,7 +82,7 @@ configure_tinc_server(){
         ss-get --timeout=3600 $component_client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
     done
     
-    tincd -n $netname -D
+    tincd -n $netname -D&
     ss-set vpn.ready "true"
 }
 
@@ -139,6 +139,34 @@ configure_tinc_client(){
     echo "$netname" >> $tinc_dir/nets.boot
     
     ss-get --timeout=3600 $component_server_name:vpn.ready
-    tincd -n $netname -D
+    tincd -n $netname -D&
     #service tinc start
+}
+
+add_tinc_client(){
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+    
+        echo "Processing $INSTANCE_NAME"
+        
+        ID=$(ss-get $INSTANCE_NAME:id)
+        j=$[$ID+1]
+        ss-set $INSTANCE_NAME:vpn.adress "10.0.0.$j"
+        
+        node_name=$component_client_name$ID
+        ss-get --timeout=3600 $INSTANCE_NAME:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
+    done
+}
+
+rm_tinc_client(){
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+    
+        echo "Processing $INSTANCE_NAME"
+        
+        ID=$(ss-get $INSTANCE_NAME:id)
+        
+        node_name=$component_client_name$ID
+        rm $tinc_dir/$netname/hosts/$node_name
+    done
 }
