@@ -161,6 +161,7 @@ configure_tinc_client(){
 add_tinc_client(){
     tinc_dir="/usr/local/etc/tinc"
     netname="vpn"
+    component_client_name=${component_client_name:-slave}
     
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
@@ -179,6 +180,7 @@ add_tinc_client(){
 rm_tinc_client(){
     tinc_dir="/usr/local/etc/tinc"
     netname="vpn"
+    component_client_name=${component_client_name:-slave}
     
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
