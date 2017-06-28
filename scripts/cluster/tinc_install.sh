@@ -1,5 +1,18 @@
 source /scripts/cluster/cluster_install.sh
 
+configure_firewall(){
+    # Allow Tinc VPN connections
+    iptables -A INPUT -p tcp --sport 655 -j ACCEPT
+    iptables -A INPUT -p tcp --dport 655 -j ACCEPT
+    iptables -A OUTPUT -p tcp --sport 655 -j ACCEPT
+    iptables -A OUTPUT -p tcp --dport 655 -j ACCEPT
+
+    iptables -A INPUT -p udp --sport 655 -j ACCEPT
+    iptables -A INPUT -p udp --dport 655 -j ACCEPT
+    iptables -A OUTPUT -p udp --sport 655 -j ACCEPT
+    iptables -A OUTPUT -p udp --dport 655 -j ACCEPT
+}
+
 install_tinc(){
     if isubuntu; then
         msg_info "Installing requirements with apt-get."
@@ -26,6 +39,8 @@ install_tinc(){
     ./configure
     make
     make install
+    
+    configure_firewall
 }
 
 configure_tinc_server(){
