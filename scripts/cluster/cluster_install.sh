@@ -128,40 +128,28 @@ initiate_install_edugain()
 
 initiate_install_edugain_ubuntu16()
 {
-    apt-get install -y python python-dev python-pip libpam-python
+    #apt-get install -y python python-dev python-pip libpam-python
     
-    # Clone and install python package dependencies
-    cd ~
-    mkdir cyclone-pam && cd cyclone-pam
-    git clone https://github.com/cyclone-project/cyclone-python-pam.git .
-    git checkout ubuntu1604
-    pip install -r requirements.pip
+    # Toogle to install xPra
+    #export XPRA_INSTALL=true
 
-    # Install python script and config
-    cp usr/local/bin/cyclone_pam.py /usr/local/bin/cyclone_pam.py
+    ## INSTALL CYCLONE PAM
+    wget -O - https://raw.githubusercontent.com/cyclone-project/cyclone-python-pam/V2/setup.sh | sh > /root/cyclone-install.log
+    
 
-sed -ie '/BASE_URI =/i\
-global s\
-s = socket\.socket(socket\.AF_INET, socket\.SOCK_DGRAM)\
-s\.connect(("8\.8\.8\.8", 80))\
-' /usr/local/bin/cyclone_pam.py
-    sed -i 's|host_ip = .*|host_ip = s\.getsockname()[0]|' /usr/local/bin/cyclone_pam.py
+#sed -ie '/BASE_URI =/i\
+#global s\
+#s = socket\.socket(socket\.AF_INET, socket\.SOCK_DGRAM)\
+#s\.connect(("8\.8\.8\.8", 80))\
+#' /usr/local/bin/cyclone_pam.py
+#    sed -i 's|host_ip = .*|host_ip = s\.getsockname()[0]|' /usr/local/bin/cyclone_pam.py
 
-    mkdir /etc/cyclone
-    cp -f etc/cyclone/cyclone.conf /etc/cyclone/cyclone.conf
-    cp -f etc/cyclone/key.pem /etc/cyclone/key.pem
-
-    # Update ssh PAM config
-    cp -f etc/pam.d/sshd /etc/pam.d/sshd
-
-    # Update sshd configuration and restart service
-    cp -f etc/ssh/sshd_config /etc/ssh/sshd_config
-    service ssh restart
-
-    # Load default ports
-    echo "{
-      \"ports\":[[20000, 25000] ]
-    }" > /etc/cyclone/cyclone.conf
+    # Load default configuration
+    echo "# CUSTOM NUVLA CONFIGURATION" >> /etc/cyclone/cyclone.conf
+    echo "OIDC_HOST = https://federation.cyclone-project.eu" >> /etc/cyclone/cyclone.conf
+    echo "PORTS = 20000-25000" >> /etc/cyclone/cyclone.conf
+    echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/public-ipv4" >> /etc/cyclone/cyclone.conf
+    
 
     ## INSTALL SCRIPTS
     if [ ! -e /scripts/ ]; then
@@ -171,26 +159,68 @@ s\.connect(("8\.8\.8\.8", 80))\
         chmod a+rx -R /scripts/
         pip install -r /scripts/requirements.txt
     fi
-
-    ## INSTALL XPRA
-    # Install xPra latest version from WinSwitch repo
-    #curl http://winswitch.org/gpg.asc | apt-key add -
-    #echo "deb http://winswitch.org/ xenial main" > /etc/apt/sources.list.d/winswitch.list
-    #apt-get install -y software-properties-common
-    #add-apt-repository universe
-    #apt-get update
-    #apt-get install -y xpra
-    # Install xFce
-    #apt-get install -y xfce4
-
-    # Start xPra at start and execute it now (need to update to use random local internal port!)
-    #cp -f etc/rc.local /etc/rc.local
-    #chmod +x /etc/rc.local
     
     # Clean up installation files
-    cd ~ && rm -rf cyclone-pam    
+    #cd ~ && rm -rf cyclone-pam    
 }
 
+install_edugain_ubuntu16()
+{
+    OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
+
+    echo "REALM = $(ss-get federated_identity_realm)" >> /etc/cyclone/cyclone.conf
+    echo "CLIENT_ID = $(ss-get federated_identity_client_id)" >> /etc/cyclone/cyclone.conf
+    echo "CLIENT_SECRET = $(ss-get federated_identity_client_secret)" >> /etc/cyclone/cyclone.conf
+    if [ ! "$OPENSTACK_HOSTNAME" == "" ]; then
+        echo "HOSTNAME = $OPENSTACK_HOSTNAME" >> /etc/cyclone/cyclone.conf
+    fi
+
+    cd /scripts/
+
+    NEW_USER="$(ss-get edugain_username)"
+
+    source /scripts/edugain_access_tool_shed.sh --dry-run
+    source /scripts/allows_other_to_access_me.sh --dry-run
+
+    auto_gen_users
+    gen_key_for_user $NEW_USER
+    echo "EMAIL = $(echo_owner_email)" > /home/$NEW_USER/.cyclone
+    publish_pubkey
+    allow_others
+    
+    source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+    if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
+        populate_hosts_with_components_name_and_ips vpn.address
+    else
+        populate_hosts_with_components_name_and_ips hostname
+    fi
+
+    if [ "$OPENSTACK_HOSTNAME" == "" ]; then
+        echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
+    else
+        echo $OPENSTACK_HOSTNAME > /etc/hostname
+    fi
+
+    hostname -F /etc/hostname 
+
+    if [ "$(ss-get cloudservice)" == "cyclone-fr2" ]; then
+        # set the service url to SSH url
+        url=$(echo -n "$(ss-get url.ssh)" | sed 's/root/ubuntu/g')
+        ss-set url.ssh "${url}"
+        ss-set url.service "${url}"
+        ss-set ss:url.service "${url}"
+    fi
+
+    url="ssh://$NEW_USER@$(ss-get hostname)"
+    old_ssh="$(ss-get url.ssh)"
+    ss-set url.ssh "${url}"
+    ss-set url.service "[ssh-edu]${url}, ${old_ssh}"
+    ss-set ss:url.service "[ssh-edu]${url}, ${old_ssh}"
+
+    # Execute rc.local for the first time manually
+    /etc/rc.local
+}
+    
 install_edugain()
 {
     source /scripts/edugain_access_tool_shed.sh --dry-run
