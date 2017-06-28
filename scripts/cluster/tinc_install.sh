@@ -161,7 +161,6 @@ configure_tinc_client(){
 add_tinc_client(){
     tinc_dir="/usr/local/etc/tinc"
     netname="vpn"
-    component_client_name=${component_client_name:-slave}
     
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
@@ -172,7 +171,7 @@ add_tinc_client(){
         j=$[$ID+1]
         ss-set $INSTANCE_NAME:vpn.address "10.0.0.$j"
         
-        node_name=$component_client_name$ID
+        node_name=$(echo $INSTANCE_NAME | sed "s/\.//g")
         ss-get --timeout=3600 $INSTANCE_NAME:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
     done
 }
@@ -180,7 +179,6 @@ add_tinc_client(){
 rm_tinc_client(){
     tinc_dir="/usr/local/etc/tinc"
     netname="vpn"
-    component_client_name=${component_client_name:-slave}
     
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
@@ -189,7 +187,7 @@ rm_tinc_client(){
         
         ID=$(ss-get $INSTANCE_NAME:id)
         
-        node_name=$component_client_name$ID
+        node_name=$(echo $INSTANCE_NAME | sed "s/\.//g")
         rm $tinc_dir/$netname/hosts/$node_name
     done
 }
