@@ -1,16 +1,18 @@
 source /scripts/cluster/cluster_install.sh
 
-configure_firewall(){
-    # Allow Tinc VPN connections
-    iptables -A INPUT -p tcp --sport 655 -j ACCEPT
-    iptables -A INPUT -p tcp --dport 655 -j ACCEPT
-    iptables -A OUTPUT -p tcp --sport 655 -j ACCEPT
-    iptables -A OUTPUT -p tcp --dport 655 -j ACCEPT
+port_tinc="443"
 
-    iptables -A INPUT -p udp --sport 655 -j ACCEPT
-    iptables -A INPUT -p udp --dport 655 -j ACCEPT
-    iptables -A OUTPUT -p udp --sport 655 -j ACCEPT
-    iptables -A OUTPUT -p udp --dport 655 -j ACCEPT
+configure_firewall(){    
+    # Allow Tinc VPN connections
+    iptables -A INPUT -p tcp --sport $port_tinc -j ACCEPT
+    iptables -A INPUT -p tcp --dport $port_tinc -j ACCEPT
+    iptables -A OUTPUT -p tcp --sport $port_tinc -j ACCEPT
+    iptables -A OUTPUT -p tcp --dport $port_tinc -j ACCEPT
+
+    iptables -A INPUT -p udp --sport $port_tinc -j ACCEPT
+    iptables -A INPUT -p udp --dport $port_tinc -j ACCEPT
+    iptables -A OUTPUT -p udp --sport $port_tinc -j ACCEPT
+    iptables -A OUTPUT -p udp --dport $port_tinc -j ACCEPT
 }
 
 install_tinc(){
@@ -73,6 +75,7 @@ configure_tinc_server(){
     
     echo "Address = $externalnyc_public_IP" > $tinc_dir/$netname/hosts/$externalnyc
     echo "Subnet = 10.0.0.1/32" >> $tinc_dir/$netname/hosts/$externalnyc
+    echo "Port = $port_tinc" >> $tinc_dir/$netname/hosts/$externalnyc
     
     yes "" | tincd -n $netname -K4096
     
@@ -132,6 +135,7 @@ configure_tinc_client(){
     
     ip_client=$(ss-get --timeout=3600 vpn.address)
     echo "Subnet = $ip_client/32" > $tinc_dir/$netname/hosts/$node_name
+    echo "Port = $port_tinc" >> $tinc_dir/$netname/hosts/$node_name
     
     yes "" | tincd -n $netname -K4096
     
