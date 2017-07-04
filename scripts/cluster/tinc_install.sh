@@ -1,6 +1,6 @@
 source /scripts/cluster/cluster_install.sh
 
-port_tinc="443"
+port_tinc=${port_tinc:-443}
 
 configure_firewall(){    
     # Allow Tinc VPN connections
@@ -41,11 +41,11 @@ install_tinc(){
     ./configure
     make
     make install
-    
-    configure_firewall
 }
 
 configure_tinc_server(){
+    configure_firewall
+    
     tinc_dir="/usr/local/etc/tinc"
     
     component_vpn_name=${component_vpn_name:-vpn}
@@ -105,6 +105,8 @@ configure_tinc_server(){
 }
 
 configure_tinc_client(){
+    configure_firewall
+    
     tinc_dir="/usr/local/etc/tinc"
     
     component_server_name=${component_server_name:-master}
