@@ -470,7 +470,7 @@ NFS_export_add()
         	    echo "$SLAVE_IP ready"
             else
                 WD=$(echo $EXPORT_DIR | sed 's|\/|\\\/|g')
-                sed -ie '/'$WD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
+                sed -i '/'$WD'/s/$/\t'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)/' $EXPORTS_FILE
             fi
 	
         	msg_info "$EXPORT_DIR is exported."
