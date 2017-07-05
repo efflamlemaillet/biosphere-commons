@@ -99,6 +99,7 @@ configure_tinc_server(){
         node_name=$component_client_name$i
         ss-get --timeout=3600 $component_client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
     done
+    echo 1 >/proc/sys/net/ipv4/ip_forward
     
     tincd -n $netname -D&
     ss-set vpn.ready "true"
@@ -158,6 +159,7 @@ configure_tinc_client(){
     
     echo "# This file contains all names of the networks to be started on system startup." > $tinc_dir/nets.boot
     echo "$netname" >> $tinc_dir/nets.boot
+    echo 1 >/proc/sys/net/ipv4/ip_forward
     
     ss-get --timeout=3600 $component_server_name:vpn.ready
     tincd -n $netname -D&
