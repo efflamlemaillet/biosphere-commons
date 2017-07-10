@@ -48,7 +48,6 @@ configure_tinc_server(){
     
     tinc_dir="/usr/local/etc/tinc"
     
-    component_vpn_name=${component_vpn_name:-vpn}
     component_server_name=${component_server_name:-master}
     component_client_name=${component_client_name:-slave}
     
