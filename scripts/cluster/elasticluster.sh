@@ -87,11 +87,11 @@ config_elasticluster(){
         check_if_vpn_or_not        
     
         #master
-        msg_info "Waiting ip of master to be ready."
         MASTER_HOSTNAME=master
-        ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
-        
+
         if [ $IP_PARAMETER == "hostname" ]; then
+            msg_info "Waiting ip of master to be ready."
+            ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
             NETWORK_MODE=$(ss-get $MASTER_HOSTNAME:network)
             if [ "$NETWORK_MODE" == "Public" ]; then
                 MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
@@ -127,9 +127,9 @@ config_elasticluster(){
         
         SLAVE_NAME=slave
         for (( i=1; i <= $(ss-get slave:multiplicity); i++ )); do
-            msg_info "Waiting ip of slave to be ready."
-            ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
             if [ $IP_PARAMETER == "hostname" ]; then
+                msg_info "Waiting ip of slave to be ready."
+                ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
                 NETWORK_MODE=$(ss-get $SLAVE_NAME.$i:network)
                 if [ "$NETWORK_MODE" == "Public" ]; then
                     SLAVE_IP=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
@@ -219,9 +219,9 @@ add_nodes_elasticluster(){
         
             echo "Processing $INSTANCE_NAME"
         
-            msg_info "Waiting ip of slave to be ready."
-            ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
             if [ $IP_PARAMETER == "hostname" ]; then
+                msg_info "Waiting ip of slave to be ready."
+                ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
                 NETWORK_MODE=$(ss-get $INSTANCE_NAME:network)
                 if [ "$NETWORK_MODE" == "Public" ]; then
                     SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
