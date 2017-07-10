@@ -92,12 +92,12 @@ config_elasticluster(){
         if [ $IP_PARAMETER == "hostname" ]; then
             msg_info "Waiting ip of master to be ready."
             ss-get --timeout=3600 $MASTER_HOSTNAME:ip.ready
-            NETWORK_MODE=$(ss-get $MASTER_HOSTNAME:network)
-            if [ "$NETWORK_MODE" == "Public" ]; then
-                MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
-            else
+            #NETWORK_MODE=$(ss-get $MASTER_HOSTNAME:network)
+            #if [ "$NETWORK_MODE" == "Public" ]; then
+            #    MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
+            #else
                 MASTER_IP=$(ss-get $MASTER_HOSTNAME:ip.ready)
-            fi
+                #fi
         else
             MASTER_IP=$(ss-get $MASTER_HOSTNAME:vpn.address)
         fi
@@ -130,12 +130,12 @@ config_elasticluster(){
             if [ $IP_PARAMETER == "hostname" ]; then
                 msg_info "Waiting ip of slave to be ready."
                 ss-get --timeout=3600 $SLAVE_NAME.$i:ip.ready
-                NETWORK_MODE=$(ss-get $SLAVE_NAME.$i:network)
-                if [ "$NETWORK_MODE" == "Public" ]; then
-                    SLAVE_IP=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
-                else
+                #NETWORK_MODE=$(ss-get $SLAVE_NAME.$i:network)
+                #if [ "$NETWORK_MODE" == "Public" ]; then
+                #    SLAVE_IP=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
+                #else
                     SLAVE_IP=$(ss-get $SLAVE_NAME.$i:ip.ready)
-                fi
+                    #fi
             else
                 SLAVE_IP=$(ss-get $SLAVE_NAME.$i:vpn.address)
             fi    
@@ -222,12 +222,12 @@ add_nodes_elasticluster(){
             if [ $IP_PARAMETER == "hostname" ]; then
                 msg_info "Waiting ip of slave to be ready."
                 ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
-                NETWORK_MODE=$(ss-get $INSTANCE_NAME:network)
-                if [ "$NETWORK_MODE" == "Public" ]; then
-                    SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
-                else
+                #NETWORK_MODE=$(ss-get $INSTANCE_NAME:network)
+                #if [ "$NETWORK_MODE" == "Public" ]; then
+                #    SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+                #else
                     SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
-                fi
+                    #fi
             else
                 SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
             fi    
