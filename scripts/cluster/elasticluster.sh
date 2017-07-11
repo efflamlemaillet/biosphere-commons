@@ -149,6 +149,8 @@ config_elasticluster(){
         done
         
         if [ $cluster_type == "slurm" ]; then
+            echo "[slurm_submit]" >> $playbook_dir/hosts
+            echo "$MASTER_IP"  >> $playbook_dir/hosts
             msg_info "Slurm hosts are configured."
         fi
     fi
