@@ -148,8 +148,12 @@ initiate_install_edugain_ubuntu16()
     echo "# CUSTOM NUVLA CONFIGURATION" >> /etc/cyclone/cyclone.conf
     echo "OIDC_HOST = https://federation.cyclone-project.eu" >> /etc/cyclone/cyclone.conf
     echo "PORTS = 20000-25000" >> /etc/cyclone/cyclone.conf
-    echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/public-ipv4" >> /etc/cyclone/cyclone.conf
     
+    if [ "$(ss-get cloudservice)" == "ifb-genouest-genostack" ]; then
+        echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/local-ipv4" >> /etc/cyclone/cyclone.conf
+    else
+        echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/public-ipv4" >> /etc/cyclone/cyclone.conf
+    fi
 
     ## INSTALL SCRIPTS
     if [ ! -e /scripts/ ]; then
@@ -166,7 +170,11 @@ initiate_install_edugain_ubuntu16()
 
 install_edugain_ubuntu16()
 {
-    OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
+    if [ "$(ss-get cloudservice)" == "ifb-genouest-genostack" ]; then
+        OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+    else
+        OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
+    fi
 
     echo "REALM = $(ss-get federated_identity_realm)" >> /etc/cyclone/cyclone.conf
     echo "CLIENT_ID = $(ss-get federated_identity_client_id)" >> /etc/cyclone/cyclone.conf
