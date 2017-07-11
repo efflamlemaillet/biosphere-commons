@@ -144,7 +144,7 @@ config_elasticluster(){
             vcpu_slave=$(ssh $host_slave 'nproc')
             
             if [ $cluster_type == "slurm" ]; then
-                echo "$host_slave SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
+                echo "$SLAVE_IP SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
             fi
         done
         
