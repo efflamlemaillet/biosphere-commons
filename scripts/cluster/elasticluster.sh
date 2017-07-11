@@ -144,7 +144,7 @@ config_elasticluster(){
             vcpu_slave=$(ssh $host_slave 'nproc')
             
             if [ $cluster_type == "slurm" ]; then
-                echo "$SLAVE_IP SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
+                echo "$host_slave SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
             fi
         done
         
@@ -191,8 +191,10 @@ install_playbooks(){
             #ansible_user=root
             #host_master=master-1
             #memory_master=$(ssh master 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
-            #vcpu_master=$(ssh master 'nproc')    
-
+            #vcpu_master=$(ssh master 'nproc')
+            rm -f $playbook_dir/roles/slurm.yml
+            wget -O $playbook_dir/roles/slurm.yml https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/slurm/slurm.yml
+            
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
             #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
             msg_info "Slurm cluster is installed."
