@@ -16,7 +16,7 @@ check_if_vpn_or_not()
             if [ "$category" == "Deployment" ]; then
                 vpn_multiplicity=$(ss-get $component_vpn_name:multiplicity)
                 if [ "$vpn_multiplicity" != "0" ]; then
-                    USER_NEW=$(ss-get $component_vpn_name:edugain_username)
+                    USER_NEW=${USER_NEW:-ifbuser}
                     if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
                         IP_PARAMETER=vpn.address
                         ss-set net.services.enable "[\"vpn\"]"
