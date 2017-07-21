@@ -44,6 +44,8 @@ install_tinc(){
 }
 
 configure_tinc_server(){
+    msg_info "Configuring tinc server..."
+    
     configure_firewall
     
     tinc_dir="/usr/local/etc/tinc"
@@ -102,9 +104,12 @@ configure_tinc_server(){
     
     tincd -n $netname -D&
     ss-set vpn.ready "true"
+    msg_info "Tinc server is configured."
 }
 
 configure_tinc_client(){
+    msg_info "Configuring tinc client..."
+    
     configure_firewall
     
     tinc_dir="/usr/local/etc/tinc"
@@ -163,12 +168,15 @@ configure_tinc_client(){
     ss-get --timeout=3600 $component_server_name:vpn.ready
     tincd -n $netname -D&
     #service tinc start
+    
+    msg_info "Tinc client is configured."
 }
 
 add_tinc_client(){
     tinc_dir="/usr/local/etc/tinc"
     netname="vpn"
     
+    msg_info "ADD client to vpn."
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
     
@@ -187,6 +195,7 @@ rm_tinc_client(){
     tinc_dir="/usr/local/etc/tinc"
     netname="vpn"
     
+    msg_info "RM client to vpn."
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
     
