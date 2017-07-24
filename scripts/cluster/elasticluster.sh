@@ -117,12 +117,24 @@ config_elasticluster(){
             echo "[slurm_master]" >> $playbook_dir/hosts
             echo "$MASTER_IP ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
         fi
+        
+        if [ $cluster_type == "torque" ]; then
+            msg_info "Configuring torque hosts."
+    
+            echo "[pbs_master]" >> $playbook_dir/hosts
+            echo "$MASTER_IP"  >> $playbook_dir/hosts
+            echo "[maui_master]" >> $playbook_dir/hosts
+            echo "$MASTER_IP"  >> $playbook_dir/hosts            
+        fi
     
         #slave
         echo "" >> $playbook_dir/hosts
         
         if [ $cluster_type == "slurm" ]; then
             echo "[slurm_worker]" >> $playbook_dir/hosts
+        fi
+        if [ $cluster_type == "torque" ]; then
+            echo "[pbs_clients]" >> $playbook_dir/hosts
         fi
         
         SLAVE_NAME=slave
@@ -146,12 +158,18 @@ config_elasticluster(){
             if [ $cluster_type == "slurm" ]; then
                 echo "$host_slave SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
             fi
+            if [ $cluster_type == "torque" ]; then
+                echo "$SLAVE_IP" >> $playbook_dir/hosts
+            fi
         done
         
         if [ $cluster_type == "slurm" ]; then
             echo "[slurm_submit]" >> $playbook_dir/hosts
             echo "$MASTER_IP"  >> $playbook_dir/hosts
             msg_info "Slurm hosts are configured."
+        fi
+        if [ $cluster_type == "torque" ]; then
+            msg_info "Torque hosts are configured."
         fi
     fi
 }
@@ -198,8 +216,14 @@ install_playbooks(){
             wget -O $playbook_dir/roles/slurm.yml https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/slurm/slurm.yml
             
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            slurmctld -D&
             #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
             msg_info "Slurm cluster is installed."
+        fi
+        if [ $cluster_type == "torque" ]; then
+            msg_info "Installing torque cluster."            
+            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/pbs+maui.yml
+            msg_info "Torque cluster is installed."
         fi
     fi
 }
@@ -241,17 +265,22 @@ add_nodes_elasticluster(){
         
             if [ $cluster_type == "slurm" ]; then
                 sed -i '/\[slurm_worker\]/a '$host_slave' SLURM_ACCOUNTING_HOST='$host_slave' ansible_memtotal_mb='$memory_slave' ansible_processor_vcpus='$vcpu_slave'' $playbook_dir/hosts
+            fi            
+            if [ $cluster_type == "torque" ]; then
+                sed -i '/\[pbs_clients\]/a '$SLAVE_IP'' $playbook_dir/hosts
             fi
         done
-    
-        if [ $cluster_type == "slurm" ]; then
-            msg_info "Slurm hosts are configured."
-        fi
         
         if [ $cluster_type == "slurm" ]; then
             msg_info "Installing slurm cluster."
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            slurmctld -D&
             msg_info "Slurm cluster is installed."
+        fi
+        if [ $cluster_type == "torque" ]; then
+            msg_info "Installing torque cluster."
+            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/pbs+maui.yml
+            msg_info "Torque cluster is installed."
         fi
     fi
 }
@@ -268,24 +297,42 @@ rm_nodes_elasticluster(){
         hosts_dir=$playbook_dir
         
         ss-display "RM slave..."
-        for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do            
             INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+            
+            if [ $IP_PARAMETER == "hostname" ]; then
+                msg_info "Waiting ip of slave to be ready."
+                ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
+                #NETWORK_MODE=$(ss-get $INSTANCE_NAME:network)
+                #if [ "$NETWORK_MODE" == "Public" ]; then
+                #    SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+                #else
+                    SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+                    #fi
+            else
+                SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
+            fi
         
             host_slave=$INSTANCE_NAME_SAFE
         
             if [ $cluster_type == "slurm" ]; then
                 sed -i '/'$host_slave'/d' $playbook_dir/hosts
             fi
+            if [ $cluster_type == "torque" ]; then
+                sed -i '/'$SLAVE_IP'/d' $playbook_dir/hosts
+            fi
         done
-    
-        if [ $cluster_type == "slurm" ]; then
-            msg_info "Slurm hosts are configured."
-        fi
         
         if [ $cluster_type == "slurm" ]; then
             msg_info "Installing slurm cluster."
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            slurmctld -D&
             msg_info "Slurm cluster is installed."
+        fi
+        if [ $cluster_type == "torque" ]; then
+            msg_info "Installing torque cluster."
+            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/pbs+maui.yml
+            msg_info "Torque cluster is installed."
         fi
     fi
 }
