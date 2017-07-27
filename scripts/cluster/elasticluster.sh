@@ -80,7 +80,7 @@ install_ansible(){
 config_elasticluster(){
     # Pas de paramètre 
     if [[ $# -lt 1 ]]; then
-        echo "This function expects a type of cluster in argument (slurm or torque)!"
+        echo "This function expects a type of cluster in argument (slurm)!"
     else 
         cluster_type=$1
          
@@ -117,24 +117,12 @@ config_elasticluster(){
             echo "[slurm_master]" >> $playbook_dir/hosts
             echo "$MASTER_IP ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
         fi
-        
-        if [ $cluster_type == "torque" ]; then
-            msg_info "Configuring torque hosts."
-    
-            echo "[pbs_master]" >> $playbook_dir/hosts
-            echo "$MASTER_IP"  >> $playbook_dir/hosts
-            echo "[maui_master]" >> $playbook_dir/hosts
-            echo "$MASTER_IP"  >> $playbook_dir/hosts            
-        fi
     
         #slave
         echo "" >> $playbook_dir/hosts
         
         if [ $cluster_type == "slurm" ]; then
             echo "[slurm_worker]" >> $playbook_dir/hosts
-        fi
-        if [ $cluster_type == "torque" ]; then
-            echo "[pbs_clients]" >> $playbook_dir/hosts
         fi
         
         SLAVE_NAME=slave
@@ -158,18 +146,12 @@ config_elasticluster(){
             if [ $cluster_type == "slurm" ]; then
                 echo "$host_slave SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
             fi
-            if [ $cluster_type == "torque" ]; then
-                echo "$SLAVE_IP" >> $playbook_dir/hosts
-            fi
         done
         
         if [ $cluster_type == "slurm" ]; then
             echo "[slurm_submit]" >> $playbook_dir/hosts
             echo "$MASTER_IP"  >> $playbook_dir/hosts
             msg_info "Slurm hosts are configured."
-        fi
-        if [ $cluster_type == "torque" ]; then
-            msg_info "Torque hosts are configured."
         fi
     fi
 }
@@ -201,7 +183,7 @@ fix_elasticluster(){
 install_playbooks(){
     # Pas de paramètre 
     if [[ $# -lt 1 ]]; then
-        echo "This function expects a type of cluster in argument (slurm or torque)!"
+        echo "This function expects a type of cluster in argument (slurm)!"
     else
         cluster_type=$1
     
@@ -220,18 +202,13 @@ install_playbooks(){
             #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
             msg_info "Slurm cluster is installed."
         fi
-        if [ $cluster_type == "torque" ]; then
-            msg_info "Installing torque cluster."            
-            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/pbs+maui.yml
-            msg_info "Torque cluster is installed."
-        fi
     fi
 }
 
 add_nodes_elasticluster(){
     # Pas de paramètre 
     if [[ $# -lt 1 ]]; then
-        echo "This function expects a type of cluster in argument (slurm or torque)!"
+        echo "This function expects a type of cluster in argument (slurm)!"
     else 
         cluster_type=$1
         
@@ -265,9 +242,6 @@ add_nodes_elasticluster(){
         
             if [ $cluster_type == "slurm" ]; then
                 sed -i '/\[slurm_worker\]/a '$host_slave' SLURM_ACCOUNTING_HOST='$host_slave' ansible_memtotal_mb='$memory_slave' ansible_processor_vcpus='$vcpu_slave'' $playbook_dir/hosts
-            fi            
-            if [ $cluster_type == "torque" ]; then
-                sed -i '/\[pbs_clients\]/a '$SLAVE_IP'' $playbook_dir/hosts
             fi
         done
         
@@ -277,18 +251,13 @@ add_nodes_elasticluster(){
             slurmctld -D&
             msg_info "Slurm cluster is installed."
         fi
-        if [ $cluster_type == "torque" ]; then
-            msg_info "Installing torque cluster."
-            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/pbs+maui.yml
-            msg_info "Torque cluster is installed."
-        fi
     fi
 }
 
 rm_nodes_elasticluster(){
     # Pas de paramètre 
     if [[ $# -lt 1 ]]; then
-        echo "This function expects a type of cluster in argument (slurm or torque)!"
+        echo "This function expects a type of cluster in argument (slurm)!"
     else 
         cluster_type=$1
         
@@ -318,9 +287,6 @@ rm_nodes_elasticluster(){
             if [ $cluster_type == "slurm" ]; then
                 sed -i '/'$host_slave'/d' $playbook_dir/hosts
             fi
-            if [ $cluster_type == "torque" ]; then
-                sed -i '/'$SLAVE_IP'/d' $playbook_dir/hosts
-            fi
         done
         
         if [ $cluster_type == "slurm" ]; then
@@ -328,11 +294,6 @@ rm_nodes_elasticluster(){
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
             slurmctld -D&
             msg_info "Slurm cluster is installed."
-        fi
-        if [ $cluster_type == "torque" ]; then
-            msg_info "Installing torque cluster."
-            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/pbs+maui.yml
-            msg_info "Torque cluster is installed."
         fi
     fi
 }
