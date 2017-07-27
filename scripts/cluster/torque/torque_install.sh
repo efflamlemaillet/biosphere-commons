@@ -9,9 +9,10 @@ initiate_variable_global_torque()
     INSTALL_DIR=/opt
     PBS_ROOT_DIR=$INSTALL_DIR/torque
     mauidir=$INSTALL_DIR/maui
-    maui_bin=/usr/local/maui/bin/
-    maui_sbin=/usr/local/maui/sbin/
+    maui_bin=/usr/local/maui/bin
+    maui_sbin=/usr/local/maui/sbin
     ID=1
+    scheduler_type="torque"
 }
 
 initiate_master_torque()
@@ -76,18 +77,18 @@ package_centos_torque(){
         chmod a+rx -R $PBS_ROOT_DIR
     fi
     
-    if [ ! -e $mauidir ]; then
-        git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
-        mkdir -p $INSTALL_DIR
-        cp -rf $MAUI_TEMP_DIR $INSTALL_DIR
-        chmod a+rx -R $mauidir
+    if [ $scheduler_type == "maui" ]; then
+        if [ ! -e $mauidir ]; then
+            git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
+            mkdir -p $INSTALL_DIR
+            cp -rf $MAUI_TEMP_DIR $INSTALL_DIR
+            chmod a+rx -R $mauidir
+        fi
+        echo 'export PATH=$PATH:'$mauidir'/bin' > /etc/profile.d/maui.sh
     fi
     
     cd $PBS_ROOT_DIR
-    ./autogen.sh
-    
-    echo 'export PATH=$PATH:'$mauidir'/bin' > /etc/profile.d/maui.sh
-    
+    ./autogen.sh    
 }
 
 package_ubuntu_torque(){
@@ -102,14 +103,15 @@ package_ubuntu_torque(){
     cp -rf torque-6.1.0/* $PBS_ROOT_DIR/
     rm -rf $PBS_TEMP_DIR/index.php?wpfb_dl=3170
     
-    if [ ! -e $mauidir ]; then
-        git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
-        mkdir -p $INSTALL_DIR
-        cp -rf $MAUI_TEMP_DIR $INSTALL_DIR
-        chmod a+rx -R $mauidir
+    if [ $scheduler_type == "maui" ]; then
+        if [ ! -e $mauidir ]; then
+            git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
+            mkdir -p $INSTALL_DIR
+            cp -rf $MAUI_TEMP_DIR $INSTALL_DIR
+            chmod a+rx -R $mauidir
+        fi    
+        echo 'export PATH=$PATH:'$mauidir'/bin' > /etc/profile.d/maui.sh
     fi
-    
-    echo 'export PATH=$PATH:'$mauidir'/bin' > /etc/profile.d/maui.sh
 }
 
 package_torque(){
@@ -143,12 +145,14 @@ install_centos_torque_master(){
     	TRQAUTHD=trqauthd.service
     	PBS_SERVER=pbs_server.service
     	PBS_MOM=pbs_mom.service
+        PBS_SCHED=pbs_sched.service
     elif iscentos 6; then
     	INIT=/etc/init.d
     	CONTRIB=$PBS_ROOT_DIR/contrib/init.d
     	TRQAUTHD=trqauthd
     	PBS_SERVER=pbs_server
     	PBS_MOM=pbs_mom
+        PBS_SCHED=pbs_sched
     fi    
     
     cd $PBS_ROOT_DIR
@@ -172,7 +176,8 @@ install_centos_torque_master(){
 		fi
 	
 		qterm
-		./torque.setup root
+		echo "y" | ./torque.setup root
+	    qterm
 	fi
     
 	echo $HOSTNAME > $SPOOL_DIR/server_priv/nodes
@@ -193,15 +198,16 @@ install_centos_torque_master(){
         fi
 	fi	
 	
-	qterm
 	cp $CONTRIB/$PBS_SERVER $INIT/
 	
 	if iscentos 7 ; then
 		systemctl enable $PBS_SERVER
 		systemctl restart $PBS_SERVER
+        #pbs_server -t create
 	elif iscentos 6; then
 		chkconfig --add $PBS_SERVER	
 		service $PBS_SERVER restart
+        #pbs_server -t create
 	fi
 
 	make packages
@@ -257,18 +263,22 @@ install_centos_torque_master(){
         Install_exec_torque_centos
     fi
     
-	msg_info ""
-	msg_info "Installing maui..."
-	if [ -d "$MAUI_TEMP_DIR/bin" ]; then
-		echo "maui ready"
-	else
-		kill -9 maui
-		$maui_bin/schedctl -k &
-		cd $MAUI_TEMP_DIR;./configure;make;make install;
-	fi
-	kill -9 maui
-	$maui_bin/schedctl -k &
-	$maui_sbin/maui &
+    if [ $scheduler_type == "maui" ]; then
+    	msg_info ""
+    	msg_info "Installing maui..."
+    	if [ -d "$MAUI_TEMP_DIR/bin" ]; then
+    		echo "maui ready"
+    	else
+    		$maui_bin/schedctl -k &
+    		cd $MAUI_TEMP_DIR;./configure;make;make install;
+    	fi
+    	$maui_bin/schedctl -k &
+    	$maui_sbin/maui &
+    else
+        cp $CONTRIB/$PBS_SCHED $INIT/
+        systemctl enable $PBS_SCHED
+        systemctl start $PBS_SCHED
+    fi
     
     ss-set pbs.ready "true"
     
@@ -296,7 +306,7 @@ install_centos_torque_slave(){
 	cd $PBS_ROOT_DIR
     ./torque-package-mom-linux-x86_64.sh --install
     ./torque-package-clients-linux-x86_64.sh --install
-    ldconfig
+    /sbin/ldconfig
     
 	if iscentos 7; then
 		PBS_MOM_NODE=pbs_mom.service
@@ -380,14 +390,18 @@ Install_ubuntu_torque_master(){
         install_exec_torque_ubuntu
     fi
     
-	cd $MAUI_ROOT_DIR
-	./configure --prefix=/opt/maui --with-pbs=/opt/torque --with-spooldir=/opt/maui/spool
-	make
-	make install
+    if [ $scheduler_type == "maui" ]; then
+	    cd $MAUI_ROOT_DIR
+	    ./configure --prefix=/opt/maui --with-pbs=/opt/torque --with-spooldir=/opt/maui/spool
+	    make
+	    make install
+    else
+        cp $CONTRIB/$PBS_SCHED $INIT/
+        systemctl enable $PBS_SCHED
+        systemctl start $PBS_SCHED
+    fi
 	
 	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
-	
-	#update-rc.d maui defaults
 	
     ss-set pbs.ready "true"
     msg_info "PBS is installed and configured."
