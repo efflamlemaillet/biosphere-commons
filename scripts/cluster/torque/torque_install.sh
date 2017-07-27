@@ -6,8 +6,9 @@ initiate_variable_global_torque()
 
     PBS_TEMP_DIR=/tmp/torque
     MAUI_TEMP_DIR=/tmp/maui
-    PBS_ROOT_DIR=/opt/torque
-    mauidir=/opt/maui
+    INSTALL_DIR=/opt
+    PBS_ROOT_DIR=$INSTALL_DIR/torque
+    mauidir=$INSTALL_DIR/maui
     ID=1
 }
 
@@ -68,15 +69,15 @@ package_centos_torque(){
     
     if [ ! -e $PBS_ROOT_DIR ]; then
         git clone https://github.com/adaptivecomputing/torque $PBS_TEMP_DIR
-        mkdir -p $PBS_ROOT_DIR
-        cp -rf $PBS_TEMP_DIR $PBS_ROOT_DIR
+        mkdir -p $INSTALL_DIR
+        cp -rf $PBS_TEMP_DIR $INSTALL_DIR
         chmod a+rx -R $PBS_ROOT_DIR
     fi
     
     if [ ! -e $mauidir ]; then
         git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
-        mkdir -p $mauidir
-        cp -rf $MAUI_TEMP_DIR $mauidir
+        mkdir -p $INSTALL_DIR
+        cp -rf $MAUI_TEMP_DIR $INSTALL_DIR
         chmod a+rx -R $mauidir
     fi
     
@@ -101,8 +102,8 @@ package_ubuntu_torque(){
     
     if [ ! -e $mauidir ]; then
         git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
-        mkdir -p $mauidir
-        cp -rf $MAUI_TEMP_DIR/* $mauidir
+        mkdir -p $INSTALL_DIR
+        cp -rf $MAUI_TEMP_DIR $INSTALL_DIR
         chmod a+rx -R $mauidir
     fi
     
