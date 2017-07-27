@@ -9,6 +9,8 @@ initiate_variable_global_torque()
     INSTALL_DIR=/opt
     PBS_ROOT_DIR=$INSTALL_DIR/torque
     mauidir=$INSTALL_DIR/maui
+    maui_bin=/usr/local/maui/bin/
+    maui_sbin=/usr/local/maui/sbin/
     ID=1
 }
 
@@ -260,13 +262,13 @@ install_centos_torque_master(){
 	if [ -d "$MAUI_TEMP_DIR/bin" ]; then
 		echo "maui ready"
 	else
-		killall -gw maui
-		schedctl -k &
+		kill -9 maui
+		$maui_bin/schedctl -k &
 		cd $MAUI_TEMP_DIR;./configure;make;make install;
 	fi
-	killall -gw maui
-	schedctl -k &
-	maui &
+	kill -9 maui
+	$maui_bin/schedctl -k &
+	$maui_sbin/maui &
     
     ss-set pbs.ready "true"
     
