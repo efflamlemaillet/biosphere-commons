@@ -235,8 +235,8 @@ install_centos_torque_master(){
                 fi
         	    node_name=$SLAVE_NAME-$i
 
-        		scp -prq torque-package-mom-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
-        		scp -prq torque-package-clients-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
+        		scp -prq -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null torque-package-mom-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
+        		scp -prq -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null torque-package-clients-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
 		
         		if iscentos 7; then
         			INIT_NODE=/usr/lib/systemd/system
@@ -248,7 +248,7 @@ install_centos_torque_master(){
         			PBS_MOM_NODE=pbs_mom
         		fi
 			
-        		scp -prq $CONTRIB_NODE/$PBS_MOM_NODE $node_host:$INIT_NODE/
+        		scp -prq -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $CONTRIB_NODE/$PBS_MOM_NODE $node_host:$INIT_NODE/
                 
                 qmgr -c 'set server submit_hosts += '$node_name''
             done
@@ -369,8 +369,8 @@ Install_ubuntu_torque_master(){
                 fi
         	    node_name=$SLAVE_NAME-$i
                 
-        		scp -prq torque-package-mom-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
-        		scp -prq torque-package-clients-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
+        		scp -prq -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null torque-package-mom-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
+        		scp -prq -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null torque-package-clients-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
                 
             	number_proc=$(ssh root@$node_host 'nproc')
             	qmgr -c 'create node '$node_host' np='$number_proc''
