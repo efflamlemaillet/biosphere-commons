@@ -12,6 +12,7 @@ initiate_variable_global_torque()
     maui_bin=/usr/local/maui/bin
     maui_sbin=/usr/local/maui/sbin
     ID=1
+    #torque or maui
     scheduler_type="torque"
 }
 
@@ -390,16 +391,10 @@ Install_ubuntu_torque_master(){
         install_exec_torque_ubuntu
     fi
     
-    if [ $scheduler_type == "maui" ]; then
-	    cd $MAUI_ROOT_DIR
-	    ./configure --prefix=/opt/maui --with-pbs=/opt/torque --with-spooldir=/opt/maui/spool
-	    make
-	    make install
-    else
-        cp $CONTRIB/$PBS_SCHED $INIT/
-        systemctl enable $PBS_SCHED
-        systemctl start $PBS_SCHED
-    fi
+    cd $MAUI_ROOT_DIR
+	./configure --prefix=/opt/maui --with-pbs=/opt/torque --with-spooldir=/opt/maui/spool
+	make
+	make install
 	
 	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	
@@ -448,6 +443,95 @@ install_torque_slave(){
         ss-abort "centos or ubuntu only!!!"
     fi
 }
+
+add_nodes_torque(){
+    check_if_vpn_or_not
+    
+    if iscentos 7; then
+    	INIT=/usr/lib/systemd/system
+    	CONTRIB=$PBS_ROOT_DIR/contrib/systemd
+    	TRQAUTHD=trqauthd.service
+    	PBS_SERVER=pbs_server.service
+        PBS_SCHED=pbs_sched.service
+    elif iscentos 6; then
+    	INIT=/etc/init.d
+    	CONTRIB=$PBS_ROOT_DIR/contrib/init.d
+    	TRQAUTHD=trqauthd
+    	PBS_SERVER=pbs_server
+        PBS_SCHED=pbs_sched
+    fi
+    
+    ss-display "ADD slave..."
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+    
+        echo "Processing $INSTANCE_NAME"
+    
+        if [ $IP_PARAMETER == "hostname" ]; then
+            msg_info "Waiting ip of slave to be ready."
+            ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
+            #NETWORK_MODE=$(ss-get $INSTANCE_NAME:network)
+            #if [ "$NETWORK_MODE" == "Public" ]; then
+            #    SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+            #else
+                SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+                #fi
+        else
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
+        fi
+        qmgr -c "create node $INSTANCE_NAME_SAFE"
+    done
+    
+	if iscentos 7 ; then
+		systemctl restart $PBS_SERVER
+	elif iscentos 6; then
+		service $PBS_SERVER restart
+	fi
+}
+
+rm_nodes_torque(){
+    check_if_vpn_or_not
+    
+    if iscentos 7; then
+    	INIT=/usr/lib/systemd/system
+    	CONTRIB=$PBS_ROOT_DIR/contrib/systemd
+    	TRQAUTHD=trqauthd.service
+    	PBS_SERVER=pbs_server.service
+        PBS_SCHED=pbs_sched.service
+    elif iscentos 6; then
+    	INIT=/etc/init.d
+    	CONTRIB=$PBS_ROOT_DIR/contrib/init.d
+    	TRQAUTHD=trqauthd
+    	PBS_SERVER=pbs_server
+        PBS_SCHED=pbs_sched
+    fi
+    
+    ss-display "RM slave..."
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do            
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+        
+        if [ $IP_PARAMETER == "hostname" ]; then
+            msg_info "Waiting ip of slave to be ready."
+            ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
+            #NETWORK_MODE=$(ss-get $INSTANCE_NAME:network)
+            #if [ "$NETWORK_MODE" == "Public" ]; then
+            #    SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+            #else
+                SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+                #fi
+        else
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
+        fi
+        qmgr -c "delete node $INSTANCE_NAME_SAFE"
+    done
+    
+	if iscentos 7 ; then
+		systemctl restart $PBS_SERVER
+	elif iscentos 6; then
+		service $PBS_SERVER restart
+	fi
+}
+
 
 error(){ 
     echo "utilisez l'option -h pour en savoir plus" >&2 
