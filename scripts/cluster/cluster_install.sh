@@ -320,6 +320,7 @@ check_ip()
 
 check_ip_slave_for_master()
 {
+    USER_NEW="$(ss-get edugain_username)"
     url="ssh://$USER_NEW@$PUBLIC_IP"
     #ss-set url.ssh "${url}"
     ss-set url.service "${url}"
