@@ -36,6 +36,7 @@ initiate_master()
         #echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
     else
         HOSTNAME=machine-$ID
+        echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
     fi
     if [ $IP_PARAMETER == "hostname" ]; then
         ssh_root=/root/.ssh
@@ -56,6 +57,7 @@ initiate_master()
     if isubuntu; then
         if grep -q "myhostname = ." "/etc/postfix/main.cf"; then
             sed -i "s|myhostname = .*|myhostname = $HOSTNAME|" /etc/postfix/main.cf
+            /etc/init.d/postfix start
             /etc/init.d/postfix reload
         fi
     fi    
