@@ -272,6 +272,50 @@ msg_info()
     fi
 }
 
+install_federation_proxy()
+{
+    msg_info "Extract username and usermail"
+    
+    EDUGAIN_OTHERS_USERS=$(ss-get edugain.others.users)
+    
+    username=$(cat /opt/slipstream/client/bin/slipstream.context | grep username | sed 's/username = //g')
+    cat /opt/slipstream/client/bin/slipstream.context | grep cookie | sed 's/cookie = //g' > /root/.slipstream-cookie
+    ss-user-get $username 1> /root/user.xml
+
+    user_mail=$(cat /root/user.xml | sed 's/ /\n/g' | grep email= | sed 's/email=//g' | sed 's/"//g')
+    ss-display "$username has mail $user_mail"
+
+    ss-set user.mail.edugain $user_mail
+    
+    if [ -z "$EDUGAIN_OTHERS_USERS" -o $( echo "$EDUGAIN_OTHERS_USERS" | grep -c "@") == 0 ]; then
+        msg_info "No new user to add in federation proxy Eudgain ."
+    else 
+        # Set good syntax
+        others=$(echo $EDUGAIN_OTHERS_USERS | sed -e 's/[^ ],/ ,/' -e 's/,[^ ]/, /' )
+    fi
+        
+    if [ ! -d /ifb/federated-filtering-proxy-with-docker/ ]
+    then
+            mkdir -p /ifb/federated-filtering-proxy-with-docker/
+            cd /ifb/federated-filtering-proxy-with-docker/
+            git clone https://github.com/cyclone-project/federated-filtering-proxy-with-docker .
+        
+        
+            echo "cyclone: $user_mail, $others" > apache_groups
+            # iptables -I INPUT 1 -p tcp -i docker0 -m tcp --dport 8080 -j ACCEPT
+
+            msg_info "docker proxy ready to start"
+
+            chmod a+rx *.sh
+    fi
+
+    msg_info "run federated proxy"
+
+
+    cd /ifb/federated-filtering-proxy-with-docker/
+    ./startFilteringProxy.sh | tee /var/log/run_federate_proxy.log
+}
+
 user_add()
 {
     getent passwd $USER_NEW > /dev/null
@@ -489,5 +533,29 @@ NFS_export_add()
 	
         	msg_info "$EXPORT_DIR is exported."
         fi
+    fi
+}
+
+make_file_test_slurm()
+{
+    # Pas de paramètre 
+    if [[ $# -lt 1 ]]; then
+        echo "This function expects a directory in argument !"
+    else
+        file_name=submit    
+        TESTDIR=$1
+        mkdir -p $TESTDIR
+        chmod 775 $TESTDIR
+        echo "#!/bin/bash" > $TESTDIR/$file_name.sh
+        echo "#" >> $TESTDIR/$file_name.sh
+        echo "#SBATCH --output=res.txt" >> $TESTDIR/$file_name.sh
+        echo "for i in {1..50}" >> $TESTDIR/$file_name.sh
+        echo "    do" >> $TESTDIR/$file_name.sh
+        echo "        len=\$(shuf -i 1-10 -n 1)" >> $TESTDIR/$file_name.sh
+        echo "        echo \"#\$i : sleep \$len\" >> res.txt" >> $TESTDIR/$file_name.sh
+        echo "        srun sleep \$len" >> $TESTDIR/$file_name.sh
+        echo "done" >> $TESTDIR/$file_name.sh
+        echo "wait" >> $TESTDIR/$file_name.sh
+        chmod 755 $TESTDIR/$file_name.sh
     fi
 }
