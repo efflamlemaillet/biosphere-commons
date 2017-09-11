@@ -149,7 +149,7 @@ initiate_install_edugain_ubuntu16()
     echo "OIDC_HOST = https://federation.cyclone-project.eu" >> /etc/cyclone/cyclone.conf
     echo "PORTS = 20000-25000" >> /etc/cyclone/cyclone.conf
     
-    if [ "$(echo $(ss-get cloudservice) | grep '"exoscale"' | wc -l)" == "1" ]; then
+    if [ "$(echo $(ss-get cloudservice) | grep 'exoscale' | wc -l)" == "1" ]; then
         EXO_HOSTNAME=$(ss-get hostname)
         echo "HOSTNAME_OPENSTACK = $EXO_HOSTNAME" >> /etc/cyclone/cyclone.conf
     elif [ "$(ss-get cloudservice)" == "ifb-genouest-genostack" ]; then
@@ -181,7 +181,7 @@ install_edugain_ubuntu16()
         others=$(echo ", $EDUGAIN_OTHERS_USERS" | sed -e 's/[^ ],/ ,/' -e 's/,[^ ]/, /' )
     fi
     
-    if [ "$(echo $(ss-get cloudservice) | grep '"exoscale"' | wc -l)" == "1" ]; then
+    f [ "$(echo $(ss-get cloudservice) | grep 'exoscale' | wc -l)" == "1" ]; then
         OPENSTACK_HOSTNAME=$(ss-get hostname)
     elif [ "$(ss-get cloudservice)" == "ifb-genouest-genostack" ]; then
         OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
