@@ -178,7 +178,7 @@ install_edugain_ubuntu16()
         msg_info "No new user to add in federation proxy Eudgain ."
     else 
         # Set good syntax
-        others=$(echo $EDUGAIN_OTHERS_USERS | sed -e 's/[^ ],/ ,/' -e 's/,[^ ]/, /' )
+        others=$(echo ", $EDUGAIN_OTHERS_USERS" | sed -e 's/[^ ],/ ,/' -e 's/,[^ ]/, /' )
     fi
     
     if [ "$(echo $(ss-get cloudservice) | grep '"exoscale"' | wc -l)" == "1" ]; then
@@ -205,7 +205,7 @@ install_edugain_ubuntu16()
 
     auto_gen_users
     gen_key_for_user $NEW_USER
-    echo "EMAIL = $(echo_owner_email) , $others" > /home/$NEW_USER/.cyclone
+    echo "EMAIL = $(echo_owner_email) $others" > /home/$NEW_USER/.cyclone
     publish_pubkey
     allow_others
     
