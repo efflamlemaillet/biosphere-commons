@@ -299,7 +299,7 @@ install_federation_proxy()
         msg_info "No new user to add in federation proxy Eudgain ."
     else 
         # Set good syntax
-        others=$(echo $EDUGAIN_OTHERS_USERS | sed -e 's/[^ ],/ ,/' -e 's/,[^ ]/, /' )
+        others=$(echo ", $EDUGAIN_OTHERS_USERS" | sed -e 's/[^ ],/ ,/' -e 's/,[^ ]/, /' )
     fi
         
     if [ ! -d /ifb/federated-filtering-proxy-with-docker/ ]
@@ -309,7 +309,7 @@ install_federation_proxy()
             git clone https://github.com/cyclone-project/federated-filtering-proxy-with-docker .
         
         
-            echo "cyclone: $user_mail, $others" > apache_groups
+            echo "cyclone: $user_mail $others" > apache_groups
             # iptables -I INPUT 1 -p tcp -i docker0 -m tcp --dport 8080 -j ACCEPT
 
             msg_info "docker proxy ready to start"
