@@ -181,7 +181,7 @@ install_edugain_ubuntu16()
         others=$(echo ", $EDUGAIN_OTHERS_USERS" | sed -e 's/[^ ],/ ,/' -e 's/,[^ ]/, /' )
     fi
     
-    f [ "$(echo $(ss-get cloudservice) | grep exoscale | wc -l)" == "1" ]; then
+    if [ "$(echo $(ss-get cloudservice) | grep exoscale | wc -l)" == "1" ]; then
         OPENSTACK_HOSTNAME=$(ss-get hostname)
     elif [ "$(ss-get cloudservice)" == "ifb-genouest-genostack" ]; then
         OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
