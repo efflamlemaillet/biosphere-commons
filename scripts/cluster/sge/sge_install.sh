@@ -430,7 +430,8 @@ Config_SGE_master()
                 msg_info "\t. on node $node_host"
         		
         		QUEUE=all.q
-                SLOTS=$(ssh root@$node_host 'nproc')
+                #SLOTS=$(ssh root@$node_host 'nproc')
+                SLOTS=$(ss-get $SLAVE_NAME.$i:cpu.nb)
                 
                 # add to the execution host list
                 TMPFILE=/tmp/sge.hostname-$node_name
@@ -503,7 +504,8 @@ add_nodes() {
         fi
         
         QUEUE=all.q
-        SLOTS=$(ssh root@$SLAVE_IP 'nproc')
+        #SLOTS=$(ssh root@$SLAVE_IP 'nproc')
+        SLOTS=$(ss-get $INSTANCE_NAME:cpu.nb)
         
         # add to the execution host list
         TMPFILE=/tmp/sge.hostname-$SLAVE_IP
