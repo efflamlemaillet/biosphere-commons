@@ -185,6 +185,8 @@ install_edugain_ubuntu16()
         OPENSTACK_HOSTNAME=$(ss-get hostname)
     elif [ "$(ss-get cloudservice)" == "ifb-genouest-genostack" ]; then
         OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+    elif [ "$(ss-get cloudservice)" == "cyclone-fr2" ]; then
+        OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
     else
         OPENSTACK_HOSTNAME=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
     fi
@@ -296,7 +298,7 @@ install_federation_proxy()
     ss-set user.mail.edugain $user_mail
     
     if [ -z "$EDUGAIN_OTHERS_USERS" -o $( echo "$EDUGAIN_OTHERS_USERS" | grep -c "@") == 0 ]; then
-        msg_info "No new user to add in federation proxy Eudgain ."
+        msg_info "No new user to add in federation proxy Edugain ."
     else 
         # Set good syntax
         others=$(echo ", $EDUGAIN_OTHERS_USERS" | sed -e 's/[^ ],/ ,/' -e 's/,[^ ]/, /' )
@@ -565,5 +567,20 @@ make_file_test_slurm()
         echo "done" >> $TESTDIR/$file_name.sh
         echo "wait" >> $TESTDIR/$file_name.sh
         chmod 755 $TESTDIR/$file_name.sh
+    fi
+}
+
+clean_docker()
+{
+    apt-get purge -y docker*
+    apt-get autoremove -y --purge docker*
+    apt-get autoclean
+    rm -rf /var/lib/docker
+    rm /etc/apparmor.d/docker
+    if grep -q docker /etc/group
+    then
+        groupdel docker
+    else
+        echo "group not exits"
     fi
 }
