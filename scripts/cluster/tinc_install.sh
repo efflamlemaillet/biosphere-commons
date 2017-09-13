@@ -46,6 +46,9 @@ install_tinc(){
 configure_tinc_server(){
     msg_info "Configuring tinc server..."
     
+    NB_PROC='nproc'
+    ss-set cpu.nb "$NB_PROC"
+    
     configure_firewall
     
     tinc_dir="/usr/local/etc/tinc"
@@ -109,6 +112,9 @@ configure_tinc_server(){
 
 configure_tinc_client(){
     msg_info "Configuring tinc client..."
+    
+    NB_PROC='nproc'
+    ss-set cpu.nb "$NB_PROC"
     
     configure_firewall
     
