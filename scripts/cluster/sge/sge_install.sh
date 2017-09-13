@@ -495,7 +495,6 @@ add_nodes() {
         if iscentos; then
             NFS_export_add /opt/sge
         fi
-        NFS_start
        
        if grep -q $SLAVE_IP /etc/hosts; then
             echo "$SLAVE_IP ready"
@@ -523,6 +522,7 @@ add_nodes() {
         fi
         qconf -ah $INSTANCE_NAME_SAFE
     done
+    NFS_start
     ss-set sge.ready "true"
     ss-display "Slave is added."
 }
