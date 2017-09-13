@@ -154,6 +154,8 @@ initiate_install_edugain_ubuntu16()
         echo "HOSTNAME_OPENSTACK = $EXO_HOSTNAME" >> /etc/cyclone/cyclone.conf
     elif [ "$(ss-get cloudservice)" == "ifb-genouest-genostack" ]; then
         echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/local-ipv4" >> /etc/cyclone/cyclone.conf
+    elif [ "$(ss-get cloudservice)" == "cyclone-fr2" ]; then
+        echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/local-ipv4" >> /etc/cyclone/cyclone.conf
     else
         echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/public-ipv4" >> /etc/cyclone/cyclone.conf
     fi
