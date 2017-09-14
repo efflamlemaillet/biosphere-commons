@@ -96,13 +96,13 @@ package_ubuntu_torque(){
     apt-get update -y
     apt-get install -y wget csh bzip2 build-essential autotools-dev automake libtool openssl libboost-dev gcc g++ gpp kcc libssl-dev libxml2-dev libtool openssh-server make git nfs-kernel-server pvm-dev
     
-    mkdir -p $PBS_TEMP_DIR
-    mkdir -p $PBS_ROOT_DIR
-    wget -O $PBS_TEMP_DIR/index.php?wpfb_dl=3170 http://www.adaptivecomputing.com/index.php?wpfb_dl=3170
-    cd $PBS_TEMP_DIR
-    tar -xzf index.php?wpfb_dl=3170
-    cp -rf torque-6.1.0/* $PBS_ROOT_DIR/
-    rm -rf $PBS_TEMP_DIR/index.php?wpfb_dl=3170
+    #mkdir -p $PBS_TEMP_DIR
+    #mkdir -p $PBS_ROOT_DIR
+    #wget -O $PBS_TEMP_DIR/index.php?wpfb_dl=3170 http://www.adaptivecomputing.com/index.php?wpfb_dl=3170
+    #cd $PBS_TEMP_DIR
+    #tar -xzf index.php?wpfb_dl=3170
+    #cp -rf torque-6.1.0/* $PBS_ROOT_DIR/
+    #rm -rf $PBS_TEMP_DIR/index.php?wpfb_dl=3170
     
     if [ $scheduler_type == "maui" ]; then
         if [ ! -e $mauidir ]; then
@@ -128,7 +128,7 @@ package_torque(){
 check_if_torque_is_ready_on_master(){
     ss-get --timeout=3600 $MASTER_HOSTNAME:pbs.ready
     pbs_ready=$(ss-get $MASTER_HOSTNAME:pbs.ready)
-    msg_info "Waiting SGE to be ready."
+    msg_info "Waiting TORQUE to be ready."
 	while [ "$sge_ready" == "false" ]
 	do
 		sleep 10;
@@ -326,40 +326,35 @@ install_centos_torque_slave(){
 Install_ubuntu_torque_master(){
 	msg_info ""
 	msg_info "Installing master node..."
-	cd $PBS_ROOT_DIR
-	./configure --prefix=/opt/torque --with-server-home=/opt/torque/spool --enable-server --enable-clients --with-scp;make;make install;
-	
-	#Export the torque libraries
-	echo "/opt/torque/lib" > /etc/ld.so.conf.d/torque.conf
-	ldconfig
-	make packages
-	
-	./torque-package-server-linux-x86_64.sh -–install
-	./torque-package-clients-linux-x86_64.sh  --install
-	./torque-package-devel-linux-x86_64.sh -–install
-	./torque-package-doc-linux-x86_64.sh --install
-	
-	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
-	
-	$PBS_ROOT_DIR/sbin/pbs_server -t create
-
-	cp $PBS_ROOT_DIR/contrib/init.d/debian.pbs_server /etc/init.d/pbs_server
-	cp $PBS_ROOT_DIR/contrib/init.d/debian.trqauthd /etc/init.d/trqauthd
-
-	update-rc.d trqauthd default
-	update-rc.d pbs_server default
-	
+    
+    apt-get install -y torque-server torque-scheduler torque-client
+    
+    service torque-scheduler stop
+    service torque-server stop
+    
+    yes | pbs_server -t create
+    
+    echo $HOSTNAME > /etc/torque/server_name
+    
 	qmgr -c "set server scheduling=true"
-	qmgr -c "create queue batch queue_type=execution"
-	qmgr -c "set queue batch started=true"
-	qmgr -c "set queue batch enabled=true"
-	qmgr -c "set queue batch resources_default.nodes=4"
-	qmgr -c "set queue batch resources_default.walltime=3600"
-	qmgr -c "set server default_queue=batch"
+    qmgr -c "set server acl_hosts = $HOSTNAME"
+    qmgr -c "set server managers = root@$HOSTNAME"
+    qmgr -c "set server operators = root@$HOSTNAME"
+    qmgr -c "set server auto_node_np = True"
+    
+    
+    
+	qmgr -c "create queue jobq"
+    qmgr -c "set queue jobq queue_type = Execution"
+	qmgr -c "set queue jobq started=true"
+	qmgr -c "set queue jobq enabled=true"
+	qmgr -c "set queue jobq resources_default.nodes=4"
+	qmgr -c "set queue jobq resources_default.walltime=3600"
+	qmgr -c "set server default_queue=jobq"
 	qmgr -c "set server keep_completed = 0"
-	qmgr -c "set queue batch resources_default.ncpus = 1"
-	qmgr -c "set queue batch resources_default.nodect = 1"
-	qmgr -c "set queue batch resources_default.nodes = 1"
+	qmgr -c "set queue jobq resources_default.ncpus = 1"
+	qmgr -c "set queue jobq resources_default.nodect = 1"
+	qmgr -c "set queue jobq resources_default.nodes = 1"
 	
 	msg_info ""
 	msg_info "Installing compute nodes..."
@@ -384,18 +379,23 @@ Install_ubuntu_torque_master(){
         		scp -prq -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null torque-package-clients-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
                 
             	number_proc=$(ss-get $SLAVE_NAME.$i:cpu.nb)
-            	qmgr -c 'create node '$node_host' np='$number_proc''
+            	qmgr -c 'create node '$node_name' np='$number_proc''
             done
         fi
     else
         install_exec_torque_ubuntu
     fi
     
-    cd $MAUI_ROOT_DIR
-	./configure --prefix=/opt/maui --with-pbs=/opt/torque --with-spooldir=/opt/maui/spool
-	make
-	make install
-	
+    if [ $scheduler_type == "maui" ]; then
+        cd $MAUI_ROOT_DIR
+    	./configure --prefix=/opt/maui --with-pbs=/opt/torque --with-spooldir=/opt/maui/spool
+    	make
+    	make install
+    else
+        systemctl enable pbs_sched.service
+        systemctl start pbs_sched.service
+    fi
+    
 	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	
     ss-set pbs.ready "true"
@@ -405,23 +405,16 @@ Install_ubuntu_torque_master(){
 Install_ubuntu_torque_slave(){
 	msg_info ""
 	msg_info "Installing slave node..."
-	cd $PBS_ROOT_DIR
-    ./torque-package-clients-linux-x86_64.sh --install
-    ./torque-package-mom-linux-x86_64.sh --install
-    cp $PBS_ROOT_DIR/contrib/init.d/debian.pbs_mom /etc/init.d/pbs_mom
-    cp $PBS_ROOT_DIR/contrib/init.d/debian.trqauthd /etc/init.d/trqauthd
-    update-rc.d trqauthd default
-    update-rc.d pbs_mom defaults
+    apt-get install -y torque-mom
+    echo "$MASTER_HOSTNAME_SAFE" > /etc/torque/server_name
+    service torque-mom restart
 }
 
 install_exec_torque_ubuntu(){
-    cd $PBS_ROOT_DIR
-    ./torque-package-mom-linux-x86_64.sh --install
-    cp $PBS_ROOT_DIR/contrib/init.d/debian.pbs_mom /etc/init.d/pbs_mom
-    update-rc.d pbs_mom defaults
-    
+    apt-get install -y torque-mom
 	number_proc=$(ss-get cpu.nb)
-	qmgr -c 'create node '$HOSTIP' np='$number_proc''
+	qmgr -c 'create node '$HOSTNAME' np='$number_proc''
+    service torque-mom restart
 }
 
 install_torque_master(){
@@ -479,7 +472,8 @@ add_nodes_torque(){
         else
             SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
         fi
-        qmgr -c "create node $INSTANCE_NAME_SAFE"
+        number_proc=$(ss-get $INSTANCE_NAME:cpu.nb)
+        qmgr -c "create node $INSTANCE_NAME_SAFE np=$number_proc"
     done
     
 	if iscentos 7 ; then
