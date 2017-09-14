@@ -342,8 +342,6 @@ Install_ubuntu_torque_master(){
     qmgr -c "set server operators = root@$HOSTNAME"
     qmgr -c "set server auto_node_np = True"
     
-    
-    
 	qmgr -c "create queue jobq"
     qmgr -c "set queue jobq queue_type = Execution"
 	qmgr -c "set queue jobq started=true"
@@ -392,11 +390,10 @@ Install_ubuntu_torque_master(){
     	make
     	make install
     else
-        systemctl enable pbs_sched.service
-        systemctl start pbs_sched.service
+        service torque-scheduler start
     fi
     
-	echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
+	#echo "export PATH=\$PATH:$PBS_ROOT_DIR/sbin:$PBS_ROOT_DIR/bin" > /etc/profile.d/torque.sh
 	
     ss-set pbs.ready "true"
     msg_info "PBS is installed and configured."
