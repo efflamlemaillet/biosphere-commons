@@ -383,7 +383,7 @@ Install_ubuntu_torque_master(){
         		scp -prq -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null torque-package-mom-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
         		scp -prq -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null torque-package-clients-linux-x86_64.sh $node_host:$PBS_ROOT_DIR
                 
-            	number_proc=$(ssh root@$node_host 'nproc')
+            	number_proc=$(ss-get $SLAVE_NAME.$i:cpu.nb)
             	qmgr -c 'create node '$node_host' np='$number_proc''
             done
         fi
@@ -420,7 +420,7 @@ install_exec_torque_ubuntu(){
     cp $PBS_ROOT_DIR/contrib/init.d/debian.pbs_mom /etc/init.d/pbs_mom
     update-rc.d pbs_mom defaults
     
-	number_proc=`nproc`
+	number_proc=$(ss-get cpu.nb)
 	qmgr -c 'create node '$HOSTIP' np='$number_proc''
 }
 
