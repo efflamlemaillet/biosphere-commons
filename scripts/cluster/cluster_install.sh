@@ -457,7 +457,7 @@ NFS_export()
             msg_info "Exporting NFS share of $EXPORT_DIR..."
 	
             EXPORTS_FILE=/etc/exports
-            if grep -q $EXPORT_DIR $EXPORTS_FILE; then 
+            if grep -q --perl-regex "$EXPORT_DIR\t" $EXPORTS_FILE; then 
         		echo "$EXPORT_DIR ready"
         	else 
                 echo -ne "$EXPORT_DIR\t" >> $EXPORTS_FILE
@@ -529,7 +529,7 @@ NFS_export_add()
             msg_info "Exporting NFS share of $EXPORT_DIR..."
 	
             EXPORTS_FILE=/etc/exports
-            if grep -q $EXPORT_DIR $EXPORTS_FILE; then 
+            if grep -q --perl-regex "$EXPORT_DIR\t" $EXPORTS_FILE; then 
         		echo "$EXPORT_DIR ready"
         	else 
                 echo -ne "$EXPORT_DIR\t" >> $EXPORTS_FILE
