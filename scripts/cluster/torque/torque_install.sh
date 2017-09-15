@@ -129,7 +129,7 @@ check_if_torque_is_ready_on_master(){
     ss-get --timeout=3600 $MASTER_HOSTNAME:pbs.ready
     pbs_ready=$(ss-get $MASTER_HOSTNAME:pbs.ready)
     msg_info "Waiting TORQUE to be ready."
-	while [ "$sge_ready" == "false" ]
+	while [ "$pbs_ready" == "false" ]
 	do
 		sleep 10;
 		pbs_ready=$(ss-get $MASTER_HOSTNAME:pbs.ready)
