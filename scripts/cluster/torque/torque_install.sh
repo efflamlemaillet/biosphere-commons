@@ -434,9 +434,12 @@ install_torque_slave(){
     fi
 }
 
+UNSET_parameters_torque(){
+    ss-set nfs.ready "false"
+    ss-set pbs.ready "false"
+}
+
 add_nodes_torque(){
-    check_if_vpn_or_not
-    
     if iscentos 7; then
     	INIT=/usr/lib/systemd/system
     	CONTRIB=$PBS_ROOT_DIR/contrib/systemd
@@ -464,8 +467,8 @@ add_nodes_torque(){
             #if [ "$NETWORK_MODE" == "Public" ]; then
             #    SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
             #else
-                SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
-                #fi
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+            #fi
         else
             SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
         fi
@@ -481,8 +484,6 @@ add_nodes_torque(){
 }
 
 rm_nodes_torque(){
-    check_if_vpn_or_not
-    
     if iscentos 7; then
     	INIT=/usr/lib/systemd/system
     	CONTRIB=$PBS_ROOT_DIR/contrib/systemd
