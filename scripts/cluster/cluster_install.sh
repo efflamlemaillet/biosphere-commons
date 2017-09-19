@@ -376,7 +376,10 @@ check_ip()
 
 check_ip_slave_for_master()
 {
-    USER_NEW="$(ss-get edugain_username)"
+    if isubuntu; then
+        USER_NEW="$(ss-get edugain_username)"
+    fi
+    
     url="ssh://$USER_NEW@$PUBLIC_IP"
     #ss-set url.ssh "${url}"
     ss-set url.service "${url}"
@@ -584,5 +587,19 @@ clean_docker()
         groupdel docker
     else
         echo "group not exits"
+    fi
+}
+
+post_install_edugain(){
+    if isubuntu; then
+        check_if_vpn_or_not
+        if [ $IP_PARAMETER == "hostname" ]; then
+            pip install -r /scripts/requirements.txt
+            if isubuntu 14; then
+                initiate_install_edugain
+            elif isubuntu 16; then
+                initiate_install_edugain_ubuntu16
+            fi
+        fi
     fi
 }
