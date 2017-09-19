@@ -136,12 +136,12 @@ Install_SGE_master()
         chmod 775 $SGEDIR
         
         sge_version="8.1.9"
-        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
-        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmaster-$sge_version-1.el6.x86_64.rpm
-        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmon-$sge_version-1.el6.x86_64.rpm
-        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-guiinst-$sge_version-1.el6.noarch.rpm
-        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-execd-$sge_version-1.el6.x86_64.rpm
-        #yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-debuginfo-$sge_version-1.el6.x86_64.rpm
+        yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
+        yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmaster-$sge_version-1.el6.x86_64.rpm
+        yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmon-$sge_version-1.el6.x86_64.rpm
+        yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-guiinst-$sge_version-1.el6.noarch.rpm
+        yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-execd-$sge_version-1.el6.x86_64.rpm
+        #yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-debuginfo-$sge_version-1.el6.x86_64.rpm
         
         #wget -O /opt/sge/util/install_modules/inst_ifb.conf https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/inst_ifb.conf
         
@@ -203,7 +203,7 @@ Install_SGE_slave()
         chmod 775 $SGEDIR
         
         sge_version="8.1.9"
-        yum install -y http://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
+        yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
         cd /opt/sge
         . /opt/sge/default/common/settings.sh         
         ./inst_sge -x -auto util/install_modules/inst_template.conf
