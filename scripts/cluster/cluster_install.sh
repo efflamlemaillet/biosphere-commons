@@ -72,7 +72,7 @@ initiate_master_cluster()
     else
         HOSTNAME=machine-$ID
     fi
-    if [ $IP_PARAMETER == "hostname" ] || [ "$(ss-get edugain.enable)" == "false" ] ; then
+    if [ "$(ss-get edugain.enable)" == "false" ] ; then
         ssh_root=/root/.ssh
         ssh_user=/home/$USER_NEW/.ssh
         if [ ! -f $ssh_user/authorized_keys ]; then
