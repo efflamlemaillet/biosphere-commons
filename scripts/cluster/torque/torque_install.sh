@@ -29,7 +29,7 @@ initiate_master_torque()
     else
         HOSTNAME=machine-$ID
     fi
-    if [ $IP_PARAMETER == "hostname" ]; then
+    if [ $IP_PARAMETER == "hostname" ] || [ "$(ss-get edugain.enable)" == "false" ] ; then
         ssh_root=/root/.ssh
         ssh_user=/home/$USER_NEW/.ssh
         if [ ! -f $ssh_user/authorized_keys ]; then
@@ -40,6 +40,7 @@ initiate_master_torque()
             chown $USER_NEW:$USER_NEW $ssh_user/authorized_keys
         fi
         cat $ssh_root/authorized_keys >> $ssh_user/authorized_keys
+        msg_info "ssh key of root imported to $USER_NEW."
     fi
         
     echo "$HOSTNAME" > /etc/hostname

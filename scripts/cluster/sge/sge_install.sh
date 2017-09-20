@@ -38,7 +38,7 @@ initiate_master()
         HOSTNAME=machine-$ID
         echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
     fi
-    if [ $IP_PARAMETER == "hostname" ]; then
+    if [ $IP_PARAMETER == "hostname" ] || [ "$(ss-get edugain.enable)" == "false" ] ; then
         ssh_root=/root/.ssh
         ssh_user=/home/$USER_NEW/.ssh
         if [ ! -f $ssh_user/authorized_keys ]; then
@@ -49,6 +49,7 @@ initiate_master()
             chown $USER_NEW:$USER_NEW $ssh_user/authorized_keys
         fi
         cat $ssh_root/authorized_keys >> $ssh_user/authorized_keys
+        msg_info "ssh key of root imported to $USER_NEW."
     fi
         
     echo "$HOSTNAME" > /etc/hostname
@@ -136,6 +137,7 @@ Install_SGE_master()
         chmod 775 $SGEDIR
         
         sge_version="8.1.9"
+        yum remove -y gridengine*
         yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-$sge_version-1.el6.x86_64.rpm
         yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmaster-$sge_version-1.el6.x86_64.rpm
         yum install -y https://arc.liv.ac.uk/downloads/SGE/releases/$sge_version/gridengine-qmon-$sge_version-1.el6.x86_64.rpm
