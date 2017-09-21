@@ -1,6 +1,7 @@
 source /scripts/cluster/cluster_install.sh
 
 port_tinc=${port_tinc:-443}
+IP_subnet=${IP_subnet:-10.10.0}
 
 configure_firewall(){    
     # Allow Tinc VPN connections
@@ -78,13 +79,13 @@ configure_tinc_server(){
     echo "Interface = $INTERFACE" >> $tinc_dir/$netname/tinc.conf
     
     echo "Address = $externalnyc_public_IP" > $tinc_dir/$netname/hosts/$externalnyc
-    echo "Subnet = 10.0.0.1/32" >> $tinc_dir/$netname/hosts/$externalnyc
+    echo "Subnet = $IP_subnet.1/32" >> $tinc_dir/$netname/hosts/$externalnyc
     echo "Port = $port_tinc" >> $tinc_dir/$netname/hosts/$externalnyc
     
     yes "" | tincd -n $netname -K4096
     
     echo "#!/bin/sh" > $tinc_dir/$netname/tinc-up
-    echo "ifconfig $INTERFACE 10.0.0.1 netmask 255.255.255.0" >> $tinc_dir/$netname/tinc-up
+    echo "ifconfig $INTERFACE $IP_subnet.1 netmask 255.255.255.0" >> $tinc_dir/$netname/tinc-up
     
     echo "#!/bin/sh" > $tinc_dir/$netname/tinc-down
     echo "ifconfig $INTERFACE down" >> $tinc_dir/$netname/tinc-down
@@ -94,11 +95,11 @@ configure_tinc_server(){
     
     ss-set hosts_configuration_file "$(cat $tinc_dir/$netname/hosts/$externalnyc)"
     
-    ss-set $component_server_name:vpn.address "10.0.0.1"
+    ss-set $component_server_name:vpn.address "$IP_subnet.1"
     
     for i in $(echo "$(ss-get $component_client_name:ids)" | sed 's/,/\n/g'); do
         j=$[$i+1]
-        ss-set $component_client_name.$i:vpn.address "10.0.0.$j"
+        ss-set $component_client_name.$i:vpn.address "$IP_subnet.$j"
         
         node_name=$component_client_name$i
         ss-get --timeout=3600 $component_client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
@@ -190,7 +191,7 @@ add_tinc_client(){
         
         ID=$(ss-get $INSTANCE_NAME:id)
         j=$[$ID+1]
-        ss-set $INSTANCE_NAME:vpn.address "10.0.0.$j"
+        ss-set $INSTANCE_NAME:vpn.address "$IP_subnet.$j"
         
         node_name=$(echo $INSTANCE_NAME | sed "s/\.//g")
         ss-get --timeout=3600 $INSTANCE_NAME:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
