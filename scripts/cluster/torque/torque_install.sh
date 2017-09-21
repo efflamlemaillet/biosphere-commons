@@ -2,8 +2,6 @@ source /scripts/cluster/cluster_install.sh
 
 initiate_variable_global_torque()
 {
-    check_if_vpn_or_not
-
     PBS_TEMP_DIR=/tmp/torque
     MAUI_TEMP_DIR=/tmp/maui
     INSTALL_DIR=/opt
@@ -12,13 +10,14 @@ initiate_variable_global_torque()
     maui_bin=/usr/local/maui/bin
     maui_sbin=/usr/local/maui/sbin
     ID=1
-    #torque or maui
-    scheduler_type="torque"
 }
 
 initiate_master_torque()
 {
     initiate_variable_global_torque
+    
+    #torque or maui
+    scheduler_type=${scheduler_type:-torque}
     
     HOSTIP=$(ss-get $IP_PARAMETER)
 
@@ -72,6 +71,9 @@ package_centos_torque(){
     yum update -y
     yum install -y wget csh bzip2 libtool openssl-devel libxml2-devel boost-devel gcc gcc-c++ autoconf automake make git
     
+    #torque or maui
+    scheduler_type=${scheduler_type:-torque}
+    
     if [ ! -e $PBS_ROOT_DIR ]; then
         git clone https://github.com/adaptivecomputing/torque $PBS_TEMP_DIR
         mkdir -p $INSTALL_DIR
@@ -105,6 +107,9 @@ package_ubuntu_torque(){
     #cp -rf torque-6.1.0/* $PBS_ROOT_DIR/
     #rm -rf $PBS_TEMP_DIR/index.php?wpfb_dl=3170
     
+    #torque or maui
+    scheduler_type=${scheduler_type:-torque}
+    
     if [ $scheduler_type == "maui" ]; then
         if [ ! -e $mauidir ]; then
             git clone https://github.com/jbarber/maui $MAUI_TEMP_DIR
@@ -117,6 +122,8 @@ package_ubuntu_torque(){
 }
 
 package_torque(){
+    initiate_variable_global_torque
+    
     if iscentos; then
         package_centos_torque
     elif isubuntu; then
