@@ -27,7 +27,7 @@ install_tinc(){
     fi
     msg_info "Requirements are installed."
     
-    tinc_version="1.0.31"
+    tinc_version="1.0.32"
     tinc_name="tinc-$tinc_version"
     tinc_pkg="$tinc_name.tar.gz"
     tinc_url=https://www.tinc-vpn.org/packages/$tinc_pkg
