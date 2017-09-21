@@ -340,7 +340,8 @@ Install_ubuntu_torque_master(){
     service torque-scheduler stop
     service torque-server stop
     
-    yes | pbs_server -t create
+    #yes | pbs_server -t create
+    service torque-server start
     
     echo $HOSTNAME > /etc/torque/server_name
     
