@@ -1,7 +1,7 @@
 source /scripts/cluster/cluster_install.sh
 
 port_tinc=${port_tinc:-443}
-IP_subnet=${IP_subnet:-10.10.0}
+IP_subnet=${IP_subnet:-10}
 
 configure_firewall(){    
     # Allow Tinc VPN connections
@@ -72,6 +72,8 @@ configure_tinc_server(){
     netname="vpn"
     externalnyc="vpn_server"
     externalnyc_public_IP=$(ss-get $component_server_name:hostname)
+    second_mask=$(echo $externalnyc_public_IP | cut -d. -f3)
+    third_mask=$(echo $externalnyc_public_IP | cut -d. -f4)
     
     mkdir -p $tinc_dir/$netname/hosts
     echo "Name = $externalnyc" > $tinc_dir/$netname/tinc.conf
@@ -79,13 +81,13 @@ configure_tinc_server(){
     echo "Interface = $INTERFACE" >> $tinc_dir/$netname/tinc.conf
     
     echo "Address = $externalnyc_public_IP" > $tinc_dir/$netname/hosts/$externalnyc
-    echo "Subnet = $IP_subnet.1/32" >> $tinc_dir/$netname/hosts/$externalnyc
+    echo "Subnet = $IP_subnet.$second_mask.$third_mask.1/32" >> $tinc_dir/$netname/hosts/$externalnyc
     echo "Port = $port_tinc" >> $tinc_dir/$netname/hosts/$externalnyc
     
     yes "" | tincd -n $netname -K4096
     
     echo "#!/bin/sh" > $tinc_dir/$netname/tinc-up
-    echo "ifconfig $INTERFACE $IP_subnet.1 netmask 255.255.255.0" >> $tinc_dir/$netname/tinc-up
+    echo "ifconfig $INTERFACE $IP_subnet.$second_mask.$third_mask.1 netmask 255.0.0.0" >> $tinc_dir/$netname/tinc-up
     
     echo "#!/bin/sh" > $tinc_dir/$netname/tinc-down
     echo "ifconfig $INTERFACE down" >> $tinc_dir/$netname/tinc-down
@@ -95,11 +97,11 @@ configure_tinc_server(){
     
     ss-set hosts_configuration_file "$(cat $tinc_dir/$netname/hosts/$externalnyc)"
     
-    ss-set $component_server_name:vpn.address "$IP_subnet.1"
+    ss-set $component_server_name:vpn.address "$IP_subnet.$second_mask.$third_mask.1"
     
     for i in $(echo "$(ss-get $component_client_name:ids)" | sed 's/,/\n/g'); do
         j=$[$i+1]
-        ss-set $component_client_name.$i:vpn.address "$IP_subnet.$j"
+        ss-set $component_client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
         
         node_name=$component_client_name$i
         ss-get --timeout=3600 $component_client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
@@ -154,7 +156,7 @@ configure_tinc_client(){
     yes "" | tincd -n $netname -K4096
     
     echo "#!/bin/sh" > $tinc_dir/$netname/tinc-up
-    echo "ifconfig $INTERFACE $ip_client netmask 255.255.255.0" >> $tinc_dir/$netname/tinc-up
+    echo "ifconfig $INTERFACE $ip_client netmask 255.0.0.0" >> $tinc_dir/$netname/tinc-up
     
     echo "#!/bin/sh" > $tinc_dir/$netname/tinc-down
     echo "ifconfig $INTERFACE down" >> $tinc_dir/$netname/tinc-down
@@ -189,9 +191,13 @@ add_tinc_client(){
     
         echo "Processing $INSTANCE_NAME"
         
+        externalnyc_public_IP=$(ss-get hostname)
+        second_mask=$(echo $externalnyc_public_IP | cut -d. -f3)
+        third_mask=$(echo $externalnyc_public_IP | cut -d. -f4)
+        
         ID=$(ss-get $INSTANCE_NAME:id)
         j=$[$ID+1]
-        ss-set $INSTANCE_NAME:vpn.address "$IP_subnet.$j"
+        ss-set $INSTANCE_NAME:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
         
         node_name=$(echo $INSTANCE_NAME | sed "s/\.//g")
         ss-get --timeout=3600 $INSTANCE_NAME:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
