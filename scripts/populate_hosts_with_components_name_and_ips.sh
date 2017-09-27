@@ -44,7 +44,7 @@ populate_hosts_with_components_name_and_ips_on_vm_add(){
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
         INSTANCE_NAME_NO_NUM=$(echo $INSTANCE_NAME | cut -d. -f1)
         echo Processing $INSTANCE_NAME
-        vpn_address=$(ss-get $INSTANCE_NAME:$ip_field_name)
+        vpn_address=$(ss-get --timeout=3600 $INSTANCE_NAME:$ip_field_name)
         echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME/$INSTANCE_NAME_SAFE, $vpn_address"
         echo "$vpn_address    $INSTANCE_NAME_SAFE " >> /etc/hosts
         echo "$vpn_address    $INSTANCE_NAME " >> /etc/hosts
