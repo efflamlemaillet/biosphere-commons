@@ -63,8 +63,9 @@ configure_tinc_server(){
         #ss-set hostname "${PRIVATE_IP}"
         HOSTIP=$(echo $(hostname -I | sed 's/ /\n/g' | head -n 1))
     else
-        PUBLIC_IP=$(ss-get $IP_PARAMETER)
-        HOSTIP=$(ss-get $IP_PARAMETER)
+        ss-abort "You need to deploy the $component_server_name with a public network!!!"
+        #PUBLIC_IP=$(ss-get $IP_PARAMETER)
+        #HOSTIP=$(ss-get $IP_PARAMETER)
     fi
     ss-set private_ip "$HOSTIP"
     
@@ -132,8 +133,8 @@ configure_tinc_client(){
         #ss-set hostname "${PRIVATE_IP}"
         HOSTIP=$(echo $(hostname -I | sed 's/ /\n/g' | head -n 1))
     else
-        PUBLIC_IP=$(ss-get $IP_PARAMETER)
-        HOSTIP=$(ss-get $IP_PARAMETER)
+        #PUBLIC_IP=$(ss-get $IP_PARAMETER)
+        HOSTIP=$(ss-get hostname)
     fi
     ss-set private_ip "$HOSTIP"
     
