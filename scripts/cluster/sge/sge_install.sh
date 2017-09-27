@@ -99,8 +99,7 @@ message_at_boot_master_sge()
     echo "" > /etc/motd
     echo "$USER_NEW created for launch job" >> /etc/motd
     echo "" >> /etc/motd
-    echo "qhost : show the status of Sun Grid  Engine  hosts,  queues,
-     jobs" >> /etc/motd
+    echo "qhost : show the status of Sun Grid Engine hosts, queues, jobs" >> /etc/motd
     echo "qstat -f : show the status of Sun Grid Engine jobs and queues" >> /etc/motd
     echo "" >> /etc/motd
 }
