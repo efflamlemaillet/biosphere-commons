@@ -483,6 +483,18 @@ add_nodes_torque(){
         fi
         number_proc=$(ss-get $INSTANCE_NAME:cpu.nb)
         qmgr -c "create node $INSTANCE_NAME_SAFE np=$number_proc"
+        
+        NFS_export_add /root/mydisk
+        NFS_export_add /home/$USER_NEW
+        if iscentos; then
+            NFS_export_add /opt/sge
+        fi
+       
+       if grep -q $SLAVE_IP /etc/hosts; then
+            echo "$SLAVE_IP ready"
+        else
+            echo "$SLAVE_IP $INSTANCE_NAME_SAFE" >> /etc/hosts
+        fi        
     done
     
 	if iscentos 7 ; then
@@ -490,6 +502,10 @@ add_nodes_torque(){
 	elif iscentos 6; then
 		service $PBS_SERVER restart
 	fi
+    
+    NFS_start
+    ss-set pbs.ready "true"
+    ss-display "Slave is added."
 }
 
 rm_nodes_torque(){
@@ -524,6 +540,11 @@ rm_nodes_torque(){
             SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
         fi
         qmgr -c "delete node $INSTANCE_NAME_SAFE"
+        
+        sed -i "s|$SLAVE_IP.*||g" /etc/hosts
+        
+        #remove nfs export
+        sed -i 's|'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)||' /etc/exports
     done
     
 	if iscentos 7 ; then
@@ -531,6 +552,8 @@ rm_nodes_torque(){
 	elif iscentos 6; then
 		service $PBS_SERVER restart
 	fi
+    
+    ss-display "Slave is removed."    
 }
 
 
