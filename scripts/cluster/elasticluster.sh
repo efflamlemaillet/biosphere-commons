@@ -235,7 +235,16 @@ add_nodes_elasticluster(){
                     #fi
             else
                 SLAVE_IP=$(ss-get $INSTANCE_NAME:vpn.address)
-            fi    
+            fi
+            
+            NFS_export_add /home
+       
+           if grep -q $SLAVE_IP /etc/hosts; then
+                echo "$SLAVE_IP ready"
+            else
+                echo "$SLAVE_IP $INSTANCE_NAME_SAFE" >> /etc/hosts
+            fi
+            
             host_slave=$INSTANCE_NAME_SAFE
             memory_slave=$(ssh $host_slave 'echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))')
             vcpu_slave=$(ssh $host_slave 'nproc')
@@ -249,8 +258,9 @@ add_nodes_elasticluster(){
             msg_info "Installing slurm cluster."
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
             slurmctld -D&
-            msg_info "Slurm cluster is installed."
+            msg_info "Slurm cluster is installed."            
         fi
+        NFS_start
     fi
 }
 
@@ -287,6 +297,11 @@ rm_nodes_elasticluster(){
             if [ $cluster_type == "slurm" ]; then
                 sed -i '/'$host_slave'/d' $playbook_dir/hosts
             fi
+            
+            sed -i "s|$SLAVE_IP.*||g" /etc/hosts
+        
+            #remove nfs export
+            sed -i 's|'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)||' /etc/exports
         done
         
         if [ $cluster_type == "slurm" ]; then
