@@ -484,11 +484,7 @@ add_nodes_torque(){
         number_proc=$(ss-get $INSTANCE_NAME:cpu.nb)
         qmgr -c "create node $INSTANCE_NAME_SAFE np=$number_proc"
         
-        NFS_export_add /root/mydisk
-        NFS_export_add /home/$USER_NEW
-        if iscentos; then
-            NFS_export_add /opt/sge
-        fi
+        NFS_export_add /home
        
        if grep -q $SLAVE_IP /etc/hosts; then
             echo "$SLAVE_IP ready"
