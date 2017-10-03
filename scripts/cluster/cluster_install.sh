@@ -502,7 +502,7 @@ NFS_mount()
             umount $MOUNT_DIR
             mount $MASTER_IP:$MOUNT_DIR $MOUNT_DIR 2>/tmp/mount_error_message.txt
             ret=$?
-            msg_info "$(/tmp/mount_error_message.txt)"
+            msg_info "$(cat /tmp/mount_error_message.txt)"
      
             if [ $ret -ne 0 ]; then
                 ss-abort "$(cat /tmp/mount_error_message.txt)"
