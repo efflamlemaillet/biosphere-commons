@@ -197,8 +197,13 @@ install_playbooks(){
             rm -f $playbook_dir/roles/slurm.yml
             wget -O $playbook_dir/roles/slurm.yml https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/slurm/slurm.yml
             
-            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml            
+            
+            #add new user
+            sacctmgr -i add user $USER_NEW DefaultAccount=root AdminLevel=Admin
+            
             slurmctld -D&
+            
             #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
             msg_info "Slurm cluster is installed."
         fi
