@@ -262,6 +262,10 @@ add_nodes_elasticluster(){
         if [ $cluster_type == "slurm" ]; then
             msg_info "Installing slurm cluster."
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            
+            #add new user
+            sacctmgr -i add user $USER_NEW DefaultAccount=root AdminLevel=Admin
+            
             slurmctld -D&
             msg_info "Slurm cluster is installed."            
         fi
@@ -312,6 +316,10 @@ rm_nodes_elasticluster(){
         if [ $cluster_type == "slurm" ]; then
             msg_info "Installing slurm cluster."
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            
+            #add new user
+            sacctmgr -i add user $USER_NEW DefaultAccount=root AdminLevel=Admin
+            
             slurmctld -D&
             msg_info "Slurm cluster is installed."
         fi
