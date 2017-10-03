@@ -337,6 +337,7 @@ user_add()
         useradd --create-home -u 666 $USER_NEW --shell /bin/bash
     else
         usermod -u 666 $USER_NEW
+        groupmod -g 666 $USER_NEW
     fi
     ln -s /root/mydisk/ /home/$USER_NEW/work
     usermod -aG root $USER_NEW
