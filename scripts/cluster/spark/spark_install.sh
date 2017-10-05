@@ -45,7 +45,7 @@ Install_SPARK_master()
     
         echo "export JAVA_HOME=/usr/lib/jvm/java-8-oracle" > /etc/profile.d/spark.sh
         echo "export SBT_HOME=/usr/share/sbt-launcher-packaging/bin/sbt-launch.jar" >> /etc/profile.d/spark.sh
-        echo "export SPARK_HOME=/usr/lib/spark" >> /etc/profile.d/spark.sh
+        echo "export SPARK_HOME=$SPARK_ROOT_DIR" >> /etc/profile.d/spark.sh
         echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile.d/spark.sh
         echo "export PATH=\$PATH:\$SBT_HOME/bin:\$SPARK_HOME/bin:\$SPARK_HOME/sbin" >> /etc/profile.d/spark.sh
     elif iscentos; then
@@ -153,4 +153,5 @@ Config_SPARK_slave()
 	echo $SPARK_ROOT_DIR/conf/slaves found
     
     ss-set nfs.ready "true"
+    msg_info "SPARK is configured."
 }
