@@ -2,7 +2,6 @@ source /scripts/cluster/cluster_install.sh
 
 SPARK_DIR=/opt
 SPARK_ROOT_DIR=$SPARK_DIR/spark
-SPARK_ROOT_DIR
 
 Install_SPARK_master()
 {
