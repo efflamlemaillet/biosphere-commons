@@ -57,6 +57,46 @@ Install_SPARK_master()
     fi
 }
 
+Install_SPARK_slave()
+{    
+    if isubuntu; then
+        #install sbt
+        echo "deb https://dl.bintray.com/sbt/debian /" | sudo tee -a /etc/apt/sources.list.d/sbt.list
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823 -y
+        apt-get update -y
+        apt-get install -y sbt
+        
+        #install java8
+        apt-get install -y software-properties-common
+        apt-add-repository ppa:webupd8team/java -y
+        apt-get update -y
+        
+        echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections
+        echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 seen true" | debconf-set-selections
+        
+        apt-get install -y oracle-java8-installer
+    
+        #disable ipv6
+        if isubuntu 16; then
+            echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+            echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+            echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
+        fi
+    
+        echo "export JAVA_HOME=/usr/lib/jvm/java-8-oracle" > /etc/profile.d/spark.sh
+        echo "export SBT_HOME=/usr/share/sbt-launcher-packaging/bin/sbt-launch.jar" >> /etc/profile.d/spark.sh
+        echo "export SPARK_HOME=$SPARK_ROOT_DIR" >> /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:\$SBT_HOME/bin:\$SPARK_HOME/bin:\$SPARK_HOME/sbin" >> /etc/profile.d/spark.sh
+    elif iscentos; then
+        echo "export SPARK_HOME=\$HOME/spark-1.6.0-bin-hadoop2.6" > /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:\$SPARK_HOME/bin" >> /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:/usr/lib/scala/bin:\$SPARK_HOME/bin" >> /etc/profile.d/spark.sh
+        echo "export SPARK_HOME=\$HOME/spark-1.6.0-bin-hadoop2.6" >> /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:\$SPARK_HOME/bin" >> /etc/profile.d/spark.sh
+    fi
+}
+
 Config_iptables_spark()
 {
 	msg_info "Configuring iptables..."
@@ -110,10 +150,10 @@ Config_SPARK_master()
         	    #echo $node_host $node_name |  tee -a /etc/hosts
         	    
                 msg_info "\t. on node $node_host"
-        		if grep -q ${NODE_IP} "$SPARK_ROOT_DIR/conf/slaves"; then
-        		    echo "${NODE_IP} ready"
+        		if grep -q $node_host "$SPARK_ROOT_DIR/conf/slaves"; then
+        		    echo "$node_host ready"
         		else
-        			echo "${NODE_IP}" >> "$SPARK_ROOT_DIR/conf/slaves"
+        			echo "$node_host" >> "$SPARK_ROOT_DIR/conf/slaves"
         		fi
                 
                 ss-get --timeout=3600 $SLAVE_NAME.$i:nfs.ready
@@ -135,6 +175,9 @@ Config_SPARK_master()
 	ss-set spark.ready "true"
 	
 	msg_info "SPARK is configured."
+    
+    #command test
+    # spark-submit --class org.apache.spark.examples.SparkPi --master spark://master-1:7077 /opt/spark/examples/src/main/python/pi.py 1000
 }
 
 Config_SPARK_slave()
