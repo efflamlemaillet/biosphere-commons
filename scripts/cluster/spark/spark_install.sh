@@ -20,46 +20,64 @@ Install_SPARK_master()
         apt-get install -y sbt
         
         #install java8
+        apt-get install -y software-properties-common
         apt-add-repository ppa:webupd8team/java -y
         apt-get update -y
+        
+        echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections
+        echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 seen true" | debconf-set-selections
+        
         apt-get install -y oracle-java8-installer
+    
+    
+        cd $SPARK_ROOT_DIR/conf/
+    
+        #spark-env
+        cp spark-env.sh.template spark-env.sh
+        echo "JAVA_HOME=/usr/lib/jvm/java-8-oracle" >> spark-env.sh
+        echo "SPARK_WORKER_MEMORY=4g" >> spark-env.sh
+    
+        #disable ipv6
+        if isubuntu 16; then
+            echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+            echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+            echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
+        fi
+    
+        echo "export JAVA_HOME=/usr/lib/jvm/java-8-oracle" > /etc/profile.d/spark.sh
+        echo "export SBT_HOME=/usr/share/sbt-launcher-packaging/bin/sbt-launch.jar" >> /etc/profile.d/spark.sh
+        echo "export SPARK_HOME=/usr/lib/spark" >> /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:\$SBT_HOME/bin:\$SPARK_HOME/bin:\$SPARK_HOME/sbin" >> /etc/profile.d/spark.sh
+    elif iscentos; then
+        echo "export SPARK_HOME=\$HOME/spark-1.6.0-bin-hadoop2.6" > /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:\$SPARK_HOME/bin" >> /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:/usr/lib/scala/bin:\$SPARK_HOME/bin" >> /etc/profile.d/spark.sh
+        echo "export SPARK_HOME=\$HOME/spark-1.6.0-bin-hadoop2.6" >> /etc/profile.d/spark.sh
+        echo "export PATH=\$PATH:\$SPARK_HOME/bin" >> /etc/profile.d/spark.sh
     fi
-    
-    cd $SPARK_ROOT_DIR/conf/
-    
-    #spark-env
-    cp spark-env.sh.template spark-env.sh
-    echo "JAVA_HOME=/usr/lib/jvm/java-8-oracle" >> spark-env.sh
-    echo "SPARK_WORKER_MEMORY=4g" >> spark-env.sh
-    
-    #disable ipv6
-    if isubuntu 16; then
-        echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-        echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
-        echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
-    fi
-    
-    #configure variable
-    echo "export JAVA_HOME=/usr/lib/jvm/java-8-oracle" > /etc/profile.d/spark.sh
-    echo "export SBT_HOME=/usr/share/sbt-launcher-packaging/bin/sbt-launch.jar" >> /etc/profile.d/spark.sh
-    echo "export SPARK_HOME=/usr/lib/spark" >> /etc/profile.d/spark.sh
-    echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile.d/spark.sh
-    echo "export PATH=\$PATH:\$SBT_HOME/bin:\$SPARK_HOME/bin:\$SPARK_HOME/sbin" >> /etc/profile.d/spark.sh
 }
 
 Config_iptables_spark()
 {
 	msg_info "Configuring iptables..."
-    if $(isubuntu 16) || $(iscentos 7); then
+    if isubuntu 16; then
         systemctl restart iptables.service
-	else
+    elif isubuntu 14; then
 		service iptables restart
 	fi
-
-	iptables -N IFB_CLSTR_SPARK &&  iptables -I INPUT -j IFB_CLSTR_SPARK
-	iptables -F IFB_CLSTR_SPARK
-	iptables -I IFB_CLSTR_SPARK -m multiport -p tcp --dport 80,111,662,875,892,2049,32803,7077,8080,8081,4040,18080,51810:51816 -j ACCEPT
-	iptables -I IFB_CLSTR_SPARK -m multiport -p udp --dport 80,111,662,875,892,2049,32803,7077,8080,8081,4040,18080,51810:51816 -j ACCEPT
+    
+    if isubuntu; then
+	    iptables -N IFB_CLSTR_SPARK &&  iptables -I INPUT -j IFB_CLSTR_SPARK
+	    iptables -F IFB_CLSTR_SPARK
+	    iptables -I IFB_CLSTR_SPARK -m multiport -p tcp --dport 80,111,662,875,892,2049,32803,7077,8080,8081,4040,18080,51810:51816 -j ACCEPT
+	    iptables -I IFB_CLSTR_SPARK -m multiport -p udp --dport 80,111,662,875,892,2049,32803,7077,8080,8081,4040,18080,51810:51816 -j ACCEPT
+    elif iscentos; then
+        firewall-cmd --permanent --zone=public --add-port=6066/tcp
+        firewall-cmd --permanent --zone=public --add-port=7077/tcp
+        firewall-cmd --permanent --zone=public --add-port=8080-8081/tcp
+        firewall-cmd --reload
+    fi
 }
 
 Config_SPARK_master()
