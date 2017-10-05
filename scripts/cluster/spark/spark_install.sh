@@ -1,0 +1,139 @@
+source /scripts/cluster/cluster_install.sh
+
+SPARK_DIR=/opt
+SPARK_ROOT_DIR=$SPARK_DIR/spark
+SPARK_ROOT_DIR
+
+Install_SPARK_master()
+{
+    cd $SPARK_DIR
+    wget http://wwwftp.ciril.fr/pub/apache/spark/spark-2.2.0/spark-2.2.0-bin-hadoop2.7.tgz
+    tar xzvf spark-2.2.0-bin-hadoop2.7.tgz
+    mv spark-2.2.0-bin-hadoop2.7/ spark
+    rm -rf spark-2.2.0-bin-hadoop2.7.tgz
+    
+    if isubuntu; then
+        #install sbt
+        echo "deb https://dl.bintray.com/sbt/debian /" | sudo tee -a /etc/apt/sources.list.d/sbt.list
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823 -y
+        apt-get update -y
+        apt-get install -y sbt
+        
+        #install java8
+        apt-add-repository ppa:webupd8team/java -y
+        apt-get update -y
+        apt-get install -y oracle-java8-installer
+    fi
+    
+    cd $SPARK_ROOT_DIR/conf/
+    
+    #spark-env
+    cp spark-env.sh.template spark-env.sh
+    echo "JAVA_HOME=/usr/lib/jvm/java-8-oracle" >> spark-env.sh
+    echo "SPARK_WORKER_MEMORY=4g" >> spark-env.sh
+    
+    #disable ipv6
+    if isubuntu 16; then
+        echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+        echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+        echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
+    fi
+    
+    #configure variable
+    echo "export JAVA_HOME=/usr/lib/jvm/java-8-oracle" > /etc/profile.d/spark.sh
+    echo "export SBT_HOME=/usr/share/sbt-launcher-packaging/bin/sbt-launch.jar" >> /etc/profile.d/spark.sh
+    echo "export SPARK_HOME=/usr/lib/spark" >> /etc/profile.d/spark.sh
+    echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile.d/spark.sh
+    echo "export PATH=\$PATH:\$SBT_HOME/bin:\$SPARK_HOME/bin:\$SPARK_HOME/sbin" >> /etc/profile.d/spark.sh
+}
+
+Config_iptables_spark()
+{
+	msg_info "Configuring iptables..."
+    if $(isubuntu 16) || $(iscentos 7); then
+        systemctl restart iptables.service
+	else
+		service iptables restart
+	fi
+
+	iptables -N IFB_CLSTR_SPARK &&  iptables -I INPUT -j IFB_CLSTR_SPARK
+	iptables -F IFB_CLSTR_SPARK
+	iptables -I IFB_CLSTR_SPARK -m multiport -p tcp --dport 80,111,662,875,892,2049,32803,7077,8080,8081,4040,18080,51810:51816 -j ACCEPT
+	iptables -I IFB_CLSTR_SPARK -m multiport -p udp --dport 80,111,662,875,892,2049,32803,7077,8080,8081,4040,18080,51810:51816 -j ACCEPT
+}
+
+Config_SPARK_master()
+{
+    Config_iptables_spark
+    
+	msg_info "Add nodes slave in conf/slaves..."
+	
+	cp $SPARK_ROOT_DIR/conf/slaves.template $SPARK_ROOT_DIR/conf/slaves
+	
+	#sed -i -e 's|# - SPARK_MASTER_IP.*|# - SPARK_MASTER_IP, to bind the master to a different IP address or hostname\nSPARK_MASTER_IP='${MASTER_IP}'|g' $SPARK_ROOT_DIR/conf/spark-env.sh
+    
+	# add slaves
+	if [ "$category" == "Deployment" ]; then
+        compute_node=$(ss-get compute.enable)
+        if [ "$compute_node" == "false" ]; then
+	        sed -i '/^localhost/d' $SPARK_ROOT_DIR/conf/slaves
+        fi
+        node_multiplicity=$(ss-get $SLAVE_NAME:multiplicity)
+        if [ "$node_multiplicity" != "0" ]; then
+        	for i in $(echo "$(ss-get $SLAVE_NAME:ids)" | sed 's/,/\n/g'); do
+        	#for (( i=1; i <= $(ss-get $SLAVE_NAME:multiplicity); i++ )); do
+        	
+        	    if [ $IP_PARAMETER == "hostname" ]; then
+                    node_host=$(ss-get $SLAVE_NAME.$i:ip.ready)
+                else
+                    node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
+                fi
+        	    node_name=$SLAVE_NAME-$i
+        	    
+        	    #echo $node_host $node_name |  tee -a /etc/hosts
+        	    
+                msg_info "\t. on node $node_host"
+        		if grep -q ${NODE_IP} "$SPARK_ROOT_DIR/conf/slaves"; then
+        		    echo "${NODE_IP} ready"
+        		else
+        			echo "${NODE_IP}" >> "$SPARK_ROOT_DIR/conf/slaves"
+        		fi
+                
+                ss-get --timeout=3600 $SLAVE_NAME.$i:nfs.ready
+                nfs_ready=$(ss-get $SLAVE_NAME.$i:nfs.ready)
+                msg_info "Waiting NFS to be ready."
+            	while [ "$nfs_ready" == "false" ]
+            	do
+            		sleep 10;
+            		nfs_ready=$(ss-get $SLAVE_NAME.$i:nfs.ready)
+            	done
+                
+            	$SPARK_ROOT_DIR/sbin/stop-all.sh
+            	$SPARK_ROOT_DIR/sbin/start-all.sh
+            done
+        fi
+    else
+        msg_info "master is a compute node"
+	fi
+	ss-set spark.ready "true"
+	
+	msg_info "SPARK is configured."
+}
+
+Config_SPARK_slave()
+{
+    Config_iptables_spark
+    
+	test -f $SPARK_ROOT_DIR/conf/slaves && VAL=1 || VAL=0
+	echo waiting...
+	while [ $VAL -eq 0 ]
+	do
+		echo $SPARK_ROOT_DIR/conf/slaves not found
+		sleep 10;
+		test -f $SPARK_ROOT_DIR/conf/slaves && VAL=1 || VAL=0
+	done
+	sleep 1
+	echo $SPARK_ROOT_DIR/conf/slaves found
+    
+    ss-set nfs.ready "true"
+}
