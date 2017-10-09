@@ -164,14 +164,15 @@ Config_SPARK_master()
             		sleep 10;
             		nfs_ready=$(ss-get $SLAVE_NAME.$i:nfs.ready)
             	done
-                
-            	$SPARK_ROOT_DIR/sbin/stop-all.sh
-            	$SPARK_ROOT_DIR/sbin/start-all.sh
             done
         fi
     else
         msg_info "master is a compute node"
 	fi
+    
+	$SPARK_ROOT_DIR/sbin/stop-all.sh
+	$SPARK_ROOT_DIR/sbin/start-all.sh
+    
 	ss-set spark.ready "true"
 	
 	msg_info "SPARK is configured."
@@ -197,4 +198,113 @@ Config_SPARK_slave()
     
     ss-set nfs.ready "true"
     msg_info "SPARK is configured."
+}
+
+add_nodes() {
+    MASTER_ID=1
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        HOSTNAME=$(ss-get nodename)-$MASTER_ID
+    else
+        HOSTNAME=machine-$MASTER_ID
+    fi
+    echo "$HOSTNAME" > /etc/hostname
+    hostname $HOSTNAME
+    
+    ss-display "ADD slave..."
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+        
+        echo "Processing $INSTANCE_NAME"
+        # Do something here. Example:
+        #ss-get $INSTANCE_NAME:ready
+        
+        if [ $IP_PARAMETER == "hostname" ]; then
+            ss-get --timeout=3600 $INSTANCE_NAME:net.services.enable
+            ss-set $INSTANCE_NAME:net.services.enable "[]"
+            ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
+            PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+        else
+            PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:hostname)
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+        fi
+        sed -i "s|$PUBLIC_SLAVE_IP|$SLAVE_IP|g" /etc/hosts
+        echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME_SAFE, $SLAVE_IP"
+        
+        NFS_export_add /opt/spark
+        NFS_export_add /home
+       
+       if grep -q $SLAVE_IP /etc/hosts; then
+            echo "$SLAVE_IP ready"
+        else
+            echo "$SLAVE_IP $INSTANCE_NAME_SAFE" >> /etc/hosts
+        fi
+        
+		if grep -q $node_host "$SPARK_ROOT_DIR/conf/slaves"; then
+		    echo "$node_host ready"
+		else
+			echo "$node_host" >> "$SPARK_ROOT_DIR/conf/slaves"
+		fi
+        
+        ss-get --timeout=3600 $SLAVE_NAME.$i:nfs.ready
+        nfs_ready=$(ss-get $SLAVE_NAME.$i:nfs.ready)
+        msg_info "Waiting NFS to be ready."
+    	while [ "$nfs_ready" == "false" ]
+    	do
+    		sleep 10;
+    		nfs_ready=$(ss-get $SLAVE_NAME.$i:nfs.ready)
+    	done
+    done
+    NFS_start
+    
+	$SPARK_ROOT_DIR/sbin/stop-all.sh
+	$SPARK_ROOT_DIR/sbin/start-all.sh
+    
+    ss-set spark.ready "true"
+    ss-display "Slave is added."
+}
+
+## Remove slaves
+rm_nodes() {
+    MASTER_ID=1
+    category=$(ss-get ss:category)
+    if [ "$category" == "Deployment" ]; then
+        HOSTNAME=$(ss-get nodename)-$MASTER_ID
+    else
+        HOSTNAME=machine-$MASTER_ID
+    fi
+    echo "$HOSTNAME" > /etc/hostname
+    hostname $HOSTNAME
+    
+    ss-display "RM slave..."
+    for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
+        INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
+    
+        echo "Processing $INSTANCE_NAME"
+        # Do something here. Example:
+        #ss-get $INSTANCE_NAME:ready
+        #SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+        
+        if [ $IP_PARAMETER == "hostname" ]; then
+            ss-get --timeout=3600 $INSTANCE_NAME:ip.ready
+            PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:ip.ready)
+        else
+            PUBLIC_SLAVE_IP=$(ss-get $INSTANCE_NAME:hostname)
+            SLAVE_IP=$(ss-get $INSTANCE_NAME:$IP_PARAMETER)
+        fi
+        sed -i "s|$SLAVE_IP.*||g" /etc/hosts
+        
+        #remove nfs export
+        sed -i 's|'$SLAVE_IP'(rw,sync,no_subtree_check,no_root_squash)||' /etc/exports
+        
+        #remove node
+        sed -i 's|'$INSTANCE_NAME_SAFE'||' $SPARK_ROOT_DIR/conf/slaves
+    done
+    
+	$SPARK_ROOT_DIR/sbin/stop-all.sh
+	$SPARK_ROOT_DIR/sbin/start-all.sh
+    
+    ss-display "Slave is removed."
 }
