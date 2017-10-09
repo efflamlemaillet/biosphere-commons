@@ -70,6 +70,6 @@ conda_install()
 
 echo "function loaded"
 echo "You can do:"
-echo "    source /scripts/conda/sge_install.sh"
+echo "    source /scripts/conda/miniconda.sh"
 echo "    miniconda_pkg"
 echo "    conda_install"
