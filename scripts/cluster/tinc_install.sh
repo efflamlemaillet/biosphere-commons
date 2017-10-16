@@ -49,6 +49,9 @@ configure_tinc_server(){
     
     NB_PROC=$(nproc)
     ss-set cpu.nb "$NB_PROC"
+
+    NB_RAM_GO=$(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024 * 1000))))
+    ss-set ram.GB "$NB_RAM_GO"
     
     configure_firewall
     
@@ -119,6 +122,9 @@ configure_tinc_client(){
     
     NB_PROC=$(nproc)
     ss-set cpu.nb "$NB_PROC"
+    
+    NB_RAM_GO=$(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024 * 1000))))
+    ss-set ram.GB "$NB_RAM_GO"
     
     configure_firewall
     
