@@ -143,8 +143,8 @@ config_elasticluster(){
             host_slave=$SLAVE_NAME-$i
             
             NB_RAM_GO=$(ss-get $SLAVE_NAME.$i:ram.GB)
-            memory_master=$(echo $(($NB_RAM_GO * 1000)))
-            vcpu_master=$(ss-get $SLAVE_NAME.$i:cpu.nb)
+            memory_slave=$(echo $(($NB_RAM_GO * 1000)))
+            vcpu_slave=$(ss-get $SLAVE_NAME.$i:cpu.nb)
             
             if [ $cluster_type == "slurm" ]; then
                 echo "$host_slave SLURM_ACCOUNTING_HOST=$host_slave ansible_memtotal_mb=$memory_slave ansible_processor_vcpus=$vcpu_slave" >> $playbook_dir/hosts
@@ -256,8 +256,8 @@ add_nodes_elasticluster(){
             host_slave=$INSTANCE_NAME_SAFE
             
             NB_RAM_GO=$(ss-get $INSTANCE_NAME:ram.GB)
-            memory_master=$(echo $(($NB_RAM_GO * 1000)))
-            vcpu_master=$(ss-get $INSTANCE_NAME:cpu.nb)
+            memory_slave=$(echo $(($NB_RAM_GO * 1000)))
+            vcpu_slave=$(ss-get $INSTANCE_NAME:cpu.nb)
         
             if [ $cluster_type == "slurm" ]; then
                 sed -i '/\[slurm_worker\]/a '$host_slave' SLURM_ACCOUNTING_HOST='$host_slave' ansible_memtotal_mb='$memory_slave' ansible_processor_vcpus='$vcpu_slave'' $playbook_dir/hosts
