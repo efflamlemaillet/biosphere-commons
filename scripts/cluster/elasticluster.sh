@@ -264,6 +264,14 @@ add_nodes_elasticluster(){
             if [ $cluster_type == "slurm" ]; then
                 sed -i '/\[slurm_worker\]/a '$host_slave' SLURM_ACCOUNTING_HOST='$host_slave' ansible_memtotal_mb='$memory_slave' ansible_processor_vcpus='$vcpu_slave'' $playbook_dir/hosts
             fi
+            
+            status=$(ssh -q -o "BatchMode=yes" $INSTANCE_NAME_SAFE "echo 2>&1" && echo "OK" || echo "NOK")
+            msg_info "Waiting SSH to be configured."
+        	while [ "$status" == "NOK" ]
+        	do
+        		sleep 10;
+        		status=$(ssh -q -o "BatchMode=yes" $INSTANCE_NAME_SAFE "echo 2>&1" && echo "OK" || echo "NOK")
+        	done
         done
         
         if [ $cluster_type == "slurm" ]; then
