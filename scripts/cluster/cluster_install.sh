@@ -214,12 +214,22 @@ install_edugain_ubuntu16()
     publish_pubkey
     allow_others
     
-    source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
-    if [ "$(echo $(ss-get net.services.enable) | grep vpn | wc -l)" == "1" ]; then
-        populate_hosts_with_components_name_and_ips vpn.address
+    component_vpn_name=${component_vpn_name:-vpn}
+    check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
+    if [ "$check_vpn" != "0" ]; then
+        if [ "$category" == "Deployment" ]; then
+            source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+            if [ "$(echo $(ss-get net.services.enable) | grep vpn | wc -l)" == "1" ]; then
+                populate_hosts_with_components_name_and_ips vpn.address
+            else
+                populate_hosts_with_components_name_and_ips hostname
+            fi
+        else
+            populate_hosts_with_components_name_and_ips hostname
+        fi
     else
         populate_hosts_with_components_name_and_ips hostname
-    fi
+    fi   
 
     if [ "$OPENSTACK_HOSTNAME" == "" ]; then
         echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
