@@ -214,11 +214,11 @@ install_edugain_ubuntu16()
     publish_pubkey
     allow_others
     
+    source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
     component_vpn_name=${component_vpn_name:-vpn}
     check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
     if [ "$check_vpn" != "0" ]; then
-        if [ "$category" == "Deployment" ]; then
-            source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+        if [ "$category" == "Deployment" ]; then            
             if [ "$(echo $(ss-get net.services.enable) | grep vpn | wc -l)" == "1" ]; then
                 populate_hosts_with_components_name_and_ips vpn.address
             else
