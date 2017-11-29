@@ -1,3 +1,5 @@
+source /scripts/toolshed/os_detection.sh
+
 MINICONDA_VERSION=${MINICONDA_VERSION:-"3"}
 MINICONDA_SUBVERSION=${MINICONDA_SUBVERSION:-"latest"}
 
@@ -16,7 +18,15 @@ msg_info()
 
 miniconda_pkg()
 {
-    msg_info ""    
+    msg_info "Installing dependencies for miniconda..."
+    if isubuntu; then
+        apt-get install -y wget bzip2
+    elif iscentos; then
+        yum install -y wget bzip2
+    else
+        msg_info "Os not supported."
+    fi
+    
     msg_info "Installing MiniConda..."
     miniconda_dir=/opt/miniconda
     miniconda_name=miniconda$MINICONDA_VERSION-$MINICONDA_SUBVERSION
@@ -33,11 +43,9 @@ miniconda_pkg()
     echo "export PATH=$miniconda_bin:\$PATH" > /etc/profile.d/miniconda.sh
     #exec /bin/bash
     
-    msg_info ""
     msg_info "Updating MiniConda..."
     $miniconda_bin/conda update conda
     $miniconda_bin/conda install -y anaconda-client
-    msg_info ""
     msg_info "MiniConda (v $miniconda_name)' is installed and updated."
 }
 
@@ -56,7 +64,6 @@ conda_install()
     
     add_tools=$(echo $tools_name | sed -e 's/,/ /g;s/;/ /g')
     
-    msg_info ""    
     msg_info "Conda will be RUN and INSTALL $add_tools.."
     
     $miniconda_dir/conda install -y $add_channels $add_tools 2>/tmp/miniconda_error_message.txt
