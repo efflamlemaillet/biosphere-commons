@@ -3,6 +3,18 @@ source /scripts/toolshed/os_detection.sh
 port_tinc=${port_tinc:-443}
 IP_subnet=${IP_subnet:-10}
 
+msg_info()
+{
+    ss-display "test if deployment" 1>/dev/null 2>/dev/null
+    ret=$?
+    if [ $ret -ne 0 ]; then
+        echo -e "$@"
+    else
+        echo -e "$@"
+        ss-display "$@"
+    fi
+}
+
 configure_firewall(){    
     # Allow Tinc VPN connections
     iptables -A INPUT -p tcp --sport $port_tinc -j ACCEPT
