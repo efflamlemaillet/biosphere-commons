@@ -1,4 +1,4 @@
-source /scripts/cluster/cluster_install.sh
+source /scripts/toolshed/os_detection.sh
 
 port_tinc=${port_tinc:-443}
 IP_subnet=${IP_subnet:-10}
@@ -57,8 +57,10 @@ configure_tinc_server(){
     
     tinc_dir="/usr/local/etc/tinc"
     
-    component_server_name=${component_server_name:-master}
-    component_client_name=${component_client_name:-slave}
+    client_name=${component_client_name}
+    if [ -z "${client_name}" ] ; then
+        return
+    fi
     
     NETWORK_MODE=$(ss-get network)
     if [ "$NETWORK_MODE" == "Public" ]; then
@@ -66,7 +68,7 @@ configure_tinc_server(){
         #ss-set hostname "${PRIVATE_IP}"
         HOSTIP=$(echo $(hostname -I | sed 's/ /\n/g' | head -n 1))
     else
-        ss-abort "You need to deploy the $component_server_name with a public network!!!"
+        ss-abort "You need to deploy the server with a public network!!!"
         #PUBLIC_IP=$(ss-get $IP_PARAMETER)
         #HOSTIP=$(ss-get $IP_PARAMETER)
     fi
@@ -75,7 +77,7 @@ configure_tinc_server(){
     INTERFACE="tun0"
     netname="vpn"
     externalnyc="vpn_server"
-    externalnyc_public_IP=$(ss-get $component_server_name:hostname)
+    externalnyc_public_IP=$(ss-get hostname)
     second_mask=$(echo $externalnyc_public_IP | cut -d. -f3)
     third_mask=$(echo $externalnyc_public_IP | cut -d. -f4)
     
@@ -101,14 +103,14 @@ configure_tinc_server(){
     
     ss-set hosts_configuration_file "$(cat $tinc_dir/$netname/hosts/$externalnyc)"
     
-    ss-set $component_server_name:vpn.address "$IP_subnet.$second_mask.$third_mask.1"
+    ss-set vpn.address "$IP_subnet.$second_mask.$third_mask.1"
     
-    for i in $(echo "$(ss-get $component_client_name:ids)" | sed 's/,/\n/g'); do
+    for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
         j=$[$i+1]
-        ss-set $component_client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
+        ss-set $client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
         
-        node_name=$component_client_name$i
-        ss-get --timeout=3600 $component_client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
+        node_name=$client_name$i
+        ss-get --timeout=3600 $client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
     done
     #echo 1 >/proc/sys/net/ipv4/ip_forward
     
@@ -130,8 +132,10 @@ configure_tinc_client(){
     
     tinc_dir="/usr/local/etc/tinc"
     
-    component_server_name=${component_server_name:-master}
-    component_client_name=${component_client_name:-slave}
+    server_name=${component_server_name}
+    if [ -z "${server_name}" ] ; then
+        return
+    fi
     
     NETWORK_MODE=$(ss-get network)
     if [ "$NETWORK_MODE" == "Public" ]; then
@@ -148,7 +152,8 @@ configure_tinc_client(){
     netname="vpn"
     externalnyc="vpn_server"
     ID=$(ss-get id)
-    node_name=$component_client_name$ID
+    client_name=$(ss-get nodename)
+    node_name=$client_name$ID
     
     mkdir -p $tinc_dir/$netname/hosts
     echo "Name = $node_name" > $tinc_dir/$netname/tinc.conf
@@ -171,17 +176,17 @@ configure_tinc_client(){
     chmod 755 $tinc_dir/$netname/tinc-*
     mkdir -p /usr/local/var/run/
     
-    externalnyc_private_IP=$(ss-get $component_server_name:private_ip)
+    externalnyc_private_IP=$(ss-get $server_name:private_ip)
     ss-set hosts_configuration_file "$(cat $tinc_dir/$netname/hosts/$node_name)"
     
-    ss-get --timeout=3600 $component_server_name:hosts_configuration_file > $tinc_dir/$netname/hosts/$externalnyc
+    ss-get --timeout=3600 $server_name:hosts_configuration_file > $tinc_dir/$netname/hosts/$externalnyc
     #sed -i "s|Address = .*|Address = "$externalnyc_private_IP"|" $tinc_dir/$netname/hosts/$externalnyc
     
     echo "# This file contains all names of the networks to be started on system startup." > $tinc_dir/nets.boot
     echo "$netname" >> $tinc_dir/nets.boot
     #echo 1 >/proc/sys/net/ipv4/ip_forward
     
-    ss-get --timeout=3600 $component_server_name:vpn.ready
+    ss-get --timeout=3600 $server_name:vpn.ready
     tincd -n $netname -D&
     #service tinc start
     
