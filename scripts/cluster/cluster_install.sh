@@ -222,11 +222,11 @@ install_edugain_ubuntu16()
         populate_hosts_with_components_name_and_ips hostname
     fi   
 
-    if [ "$OPENSTACK_HOSTNAME" == "" ]; then
-        echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname 
-    else
-        echo $OPENSTACK_HOSTNAME > /etc/hostname
-    fi
+#    if [ "$OPENSTACK_HOSTNAME" == "" ]; then
+#        echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname
+#    else
+#        echo $OPENSTACK_HOSTNAME > /etc/hostname
+#    fi
 
     #hostname -F /etc/hostname
 
