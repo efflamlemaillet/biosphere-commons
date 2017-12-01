@@ -160,15 +160,6 @@ initiate_install_edugain_ubuntu16()
     else
         echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/public-ipv4" >> /etc/cyclone/cyclone.conf
     fi
-
-    ## INSTALL SCRIPTS
-    if [ ! -e /scripts/ ]; then
-        git clone https://github.com/cyclone-project/usecases-hackathon-2016/ /tmp/usecases-hackathon-2016
-        #ln -s /tmp/usecases-hackathon-2016/scripts /scripts
-        cp -rf /tmp/usecases-hackathon-2016/scripts /scripts
-        chmod a+rx -R /scripts/
-        pip install -r /scripts/requirements.txt
-    fi
     
     # Clean up installation files
     #cd ~ && rm -rf cyclone-pam    
@@ -237,7 +228,7 @@ install_edugain_ubuntu16()
         echo $OPENSTACK_HOSTNAME > /etc/hostname
     fi
 
-    hostname -F /etc/hostname 
+    #hostname -F /etc/hostname
 
     if [ "$(ss-get cloudservice)" == "cyclone-fr2" ]; then
         # set the service url to SSH url
