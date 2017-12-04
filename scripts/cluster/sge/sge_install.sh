@@ -11,7 +11,10 @@ initiate_master()
     HOSTIP=$(ss-get $IP_PARAMETER)
 
     if [ "$category" == "Deployment" ]; then
+        ss-set master.nodename $(ss-get nodename)
         HOSTNAME=$(ss-get nodename)-$ID
+
+        ss-get --timeout=3600 slave.nodename
         SLAVE_NAME=$(ss-get slave.nodename)
         #echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
     else
@@ -53,12 +56,14 @@ initiate_slave()
     if [ "$category" != "Deployment" ]; then
         ss-abort "You need to deploy with a master!!!"
     fi
-    
+
+    ss-set slave.nodename $(ss-get nodename)
     SLAVE_HOSTNAME=$(ss-get nodename).$(ss-get id)
     SLAVE_HOSTNAME_SAFE=$(ss-get nodename)-$(ss-get id)
 
     SLAVE_IP=$(ss-get $SLAVE_HOSTNAME:$IP_PARAMETER)
 
+    ss-get --timeout=3600 master.nodename
     MASTER_HOSTNAME=$(ss-get master.nodename)
     MASTER_HOSTNAME_SAFE=$MASTER_HOSTNAME-$ID
 
