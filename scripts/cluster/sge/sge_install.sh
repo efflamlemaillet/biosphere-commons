@@ -21,7 +21,7 @@ initiate_master()
         HOSTNAME=machine-$ID
         echo $HOSTIP $HOSTNAME |  tee -a /etc/hosts
     fi
-    if [ "$(ss-get edugain.enable)" == "false" ] ; then
+    if [ "$(ss-get $component_vpn_name:edugain.enable)" == "false" ] ; then
         ssh_root=/root/.ssh
         ssh_user=/home/$USER_NEW/.ssh
         if [ ! -f $ssh_user/authorized_keys ]; then
