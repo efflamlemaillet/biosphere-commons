@@ -122,6 +122,7 @@ initiate_install_edugain()
 {
     apt-get install -y python python-dev python-pip libpam-python
     pip install scriptine
+    pip install requests[security]
     wget -O - https://raw.githubusercontent.com/cyclone-project/cyclone-python-pam/master/setup.sh | sed 's/~/\/tmp\//g' | sh
     wget -O /lib/security/cyclone_pam.py https://raw.githubusercontent.com/bryan-brancotte/cyclone-python-pam/patch-5/lib/security/cyclone_pam.py
     echo "{
