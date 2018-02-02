@@ -117,9 +117,9 @@ configure_tinc_server(){
     groups=$(ss-get ss:groups)
     IFS=','
     read -ra ADDR <<< "$groups"
-    for i in "${ADDR[@]}"; do
+    for c in "${ADDR[@]}"; do
         IFS=':'
-        read -ra ADDR <<< "$i"
+        read -ra ADDR <<< "$c"
         client_name=${ADDR[1]}
         if [ ${client_name} != ${server_name} ]; then
             for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
