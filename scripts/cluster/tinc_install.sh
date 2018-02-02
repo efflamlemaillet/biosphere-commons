@@ -69,11 +69,6 @@ configure_tinc_server(){
     
     tinc_dir="/usr/local/etc/tinc"
     
-    client_name=${component_client_name}
-    if [ -z "${client_name}" ] ; then
-        return
-    fi
-    
     NETWORK_MODE=$(ss-get network)
     if [ "$NETWORK_MODE" == "Public" ]; then
         PUBLIC_IP=$(ss-get hostname)
@@ -116,13 +111,27 @@ configure_tinc_server(){
     ss-set hosts_configuration_file "$(cat $tinc_dir/$netname/hosts/$externalnyc)"
     
     ss-set vpn.address "$IP_subnet.$second_mask.$third_mask.1"
-    
-    for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
-        j=$[$i+1]
-        ss-set $client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
-        
-        node_name=$client_name$i
-        ss-get --timeout=3600 $client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
+
+    server_name=$(ss-get nodename)
+    # ss:groups  cyclone-fr2:VPN,cyclone-fr1:client2,cyclone-fr2:client1
+    groups=$(ss-get ss:groups)
+    IFS=','
+    read -ra ADDR <<< "$groups"
+    for i in "${ADDR[@]}"; do
+        IFS=':'
+        read -ra ADDR <<< "$i"
+        client_name=${ADDR[1]}
+        if [ -z "${client_name}" ] || [ ${client_name} == ${server_name} ]; then
+            continue
+        fi
+
+        for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
+            j=$[$i+1]
+            ss-set $client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
+
+            node_name=$client_name$i
+            ss-get --timeout=3600 $client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
+        done
     done
     #echo 1 >/proc/sys/net/ipv4/ip_forward
     
