@@ -121,17 +121,17 @@ configure_tinc_server(){
 #        IFS=':'
 #        read -ra ADDR <<< "$c"
 #        client_name=${ADDR[1]}
-    j = 0
+    j=1
     for client_name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do
         if [ "$client_name" != "$server_name" ]; then
             for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
-                j=$[$j+$i+1]
+                j=$[$j+$i]
                 ss-set $client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
 
                 node_name=$client_name$i
                 ss-get --timeout=3600 $client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
             done
-            j=$[$j+1]
+            j=$[$j+0]
         fi
     done
     #echo 1 >/proc/sys/net/ipv4/ip_forward
@@ -230,6 +230,7 @@ add_tinc_client(){
         third_mask=$(echo $externalnyc_public_IP | cut -d. -f4)
         
         ID=$(ss-get $INSTANCE_NAME:id)
+        #todo
         j=$[$ID+1]
         ss-set $INSTANCE_NAME:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
         
