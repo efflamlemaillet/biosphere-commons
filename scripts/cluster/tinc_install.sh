@@ -114,14 +114,15 @@ configure_tinc_server(){
 
     server_name=$(ss-get nodename)
     # ss:groups  cyclone-fr2:VPN,cyclone-fr1:client2,cyclone-fr2:client1
-    groups=$(ss-get ss:groups)
-    IFS=','
-    read -ra ADDR <<< "$groups"
-    for c in "${ADDR[@]}"; do
-        IFS=':'
-        read -ra ADDR <<< "$c"
-        client_name=${ADDR[1]}
-        if [ ${client_name} != ${server_name} ]; then
+#    groups=$(ss-get ss:groups)
+#    IFS=','
+#    read -ra ADDR <<< "$groups"
+#    for c in "${ADDR[@]}"; do
+#        IFS=':'
+#        read -ra ADDR <<< "$c"
+#        client_name=${ADDR[1]}
+    for client_name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do
+        if [ "$client_name" != "$server_name" ]; then
             for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
                 j=$[$i+1]
                 ss-set $client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
