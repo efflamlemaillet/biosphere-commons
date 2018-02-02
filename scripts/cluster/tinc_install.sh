@@ -121,17 +121,15 @@ configure_tinc_server(){
         IFS=':'
         read -ra ADDR <<< "$i"
         client_name=${ADDR[1]}
-        if [ -z "${client_name}" ] || [ ${client_name} == ${server_name} ]; then
-            continue
+        if [ ${client_name} != ${server_name} ]; then
+            for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
+                j=$[$i+1]
+                ss-set $client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
+
+                node_name=$client_name$i
+                ss-get --timeout=3600 $client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
+            done
         fi
-
-        for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
-            j=$[$i+1]
-            ss-set $client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
-
-            node_name=$client_name$i
-            ss-get --timeout=3600 $client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
-        done
     done
     #echo 1 >/proc/sys/net/ipv4/ip_forward
     
