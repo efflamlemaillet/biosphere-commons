@@ -82,7 +82,5 @@ while true; do
         --)
             shift
             break;;
-        *) error
-            shift;;
     esac
 done
