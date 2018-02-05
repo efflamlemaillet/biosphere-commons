@@ -109,29 +109,21 @@ configure_tinc_server(){
     mkdir -p /usr/local/var/run/
     
     ss-set hosts_configuration_file "$(cat $tinc_dir/$netname/hosts/$externalnyc)"
-    
-    ss-set vpn.address "$IP_subnet.$second_mask.$third_mask.1"
 
     server_name=$(ss-get nodename)
-    # ss:groups  cyclone-fr2:VPN,cyclone-fr1:client2,cyclone-fr2:client1
-#    groups=$(ss-get ss:groups)
-#    IFS=','
-#    read -ra ADDR <<< "$groups"
-#    for c in "${ADDR[@]}"; do
-#        IFS=':'
-#        read -ra ADDR <<< "$c"
-#        client_name=${ADDR[1]}
+    k=1
     j=1
+    ss-set vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
     for client_name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do
         if [ "$client_name" != "$server_name" ]; then
             for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
-                j=$[$j+$i]
+                j=$[$k+$i]
                 ss-set $client_name.$i:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
 
                 node_name=$client_name$i
                 ss-get --timeout=3600 $client_name.$i:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
             done
-            j=$[$j+0]
+            k=$[$j+0]
         fi
     done
     #echo 1 >/proc/sys/net/ipv4/ip_forward
@@ -218,7 +210,7 @@ configure_tinc_client(){
 add_tinc_client(){
     tinc_dir="/usr/local/etc/tinc"
     netname="vpn"
-    
+
     msg_info "ADD client to vpn."
     for INSTANCE_NAME in $SLIPSTREAM_SCALING_VMS; do
         INSTANCE_NAME_SAFE=$(echo $INSTANCE_NAME | sed "s/\./-/g")
@@ -228,11 +220,32 @@ add_tinc_client(){
         externalnyc_public_IP=$(ss-get hostname)
         second_mask=$(echo $externalnyc_public_IP | cut -d. -f3)
         third_mask=$(echo $externalnyc_public_IP | cut -d. -f4)
-        
-        ID=$(ss-get $INSTANCE_NAME:id)
-        #todo
-        j=$[$ID+1]
-        ss-set $INSTANCE_NAME:vpn.address "$IP_subnet.$second_mask.$third_mask.$j"
+
+        server_name=$(ss-get nodename)
+        client_list=()
+        for client_name in `ss-get ss:groups | sed 's/, /,/g' | sed 's/,/\n/g' | cut -d':' -f2`; do
+            if [ "$client_name" != "$server_name" ]; then
+                for i in $(echo "$(ss-get $client_name:ids)" | sed 's/,/\n/g'); do
+                    ip_client=$(ss-get $client_name.$i:vpn.address)
+
+                    fourth_mask=$(echo $ip_client | cut -d. -f4)
+                    client_list+=($fourth_mask)
+                done
+            fi
+        done
+
+        s=2
+        search(){
+            if [[ " ${client_list[*]} " == *" $s "* ]];
+            then
+                s=$[$s+1]
+                search
+            else
+                echo $s
+                ss-set $INSTANCE_NAME:vpn.address "$IP_subnet.$second_mask.$third_mask.$s"
+            fi
+        }
+        search
         
         node_name=$(echo $INSTANCE_NAME | sed "s/\.//g")
         ss-get --timeout=3600 $INSTANCE_NAME:hosts_configuration_file > $tinc_dir/$netname/hosts/$node_name
