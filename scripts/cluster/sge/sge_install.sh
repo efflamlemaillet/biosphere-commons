@@ -454,6 +454,7 @@ add_nodes() {
     else
         HOSTNAME=machine-$MASTER_ID
     fi
+    HOSTNAME=$(echo $HOSTNAME | sed "s|_|-|g")
     echo "$HOSTNAME" > /etc/hostname
     hostname $HOSTNAME
     
@@ -525,6 +526,7 @@ rm_nodes() {
     else
         HOSTNAME=machine-$MASTER_ID
     fi
+    HOSTNAME=$(echo $HOSTNAME | sed "s|_|-|g")
     echo "$HOSTNAME" > /etc/hostname
     hostname $HOSTNAME
     

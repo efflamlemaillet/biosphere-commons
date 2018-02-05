@@ -88,7 +88,8 @@ initiate_master_cluster()
         cat $ssh_root/authorized_keys >> $ssh_user/authorized_keys
         msg_info "ssh key of root imported to $USER_NEW."
     fi
-        
+
+    HOSTNAME=$(echo $HOSTNAME | sed "s|_|-|g")
     echo "$HOSTNAME" > /etc/hostname
     hostname $HOSTNAME   
 }
@@ -114,7 +115,9 @@ initiate_slave_cluster()
     MASTER_HOSTNAME_SAFE=$MASTER_HOSTNAME-$ID
 
     MASTER_IP=$(ss-get $MASTER_HOSTNAME:$IP_PARAMETER)
-    
+
+    SLAVE_HOSTNAME_SAFE=$(echo $SLAVE_HOSTNAME_SAFE | sed "s|_|-|g")
+    echo "$SLAVE_HOSTNAME_SAFE" > /etc/hostname
     hostname $SLAVE_HOSTNAME_SAFE
 }
 

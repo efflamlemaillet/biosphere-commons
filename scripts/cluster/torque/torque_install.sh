@@ -44,7 +44,8 @@ initiate_master_torque()
         cat $ssh_root/authorized_keys >> $ssh_user/authorized_keys
         msg_info "ssh key of root imported to $USER_NEW."
     fi
-        
+
+    HOSTNAME=$(echo $HOSTNAME | sed "s|_|-|g")
     echo "$HOSTNAME" > /etc/hostname
     hostname $HOSTNAME  
 }
