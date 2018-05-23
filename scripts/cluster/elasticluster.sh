@@ -210,6 +210,7 @@ install_playbooks(){
             sed -i "s|'{{ pkg_install_state }}'|'latest'|g" /opt/elasticluster/src/elasticluster/share/playbooks/roles/slurm-master/tasks/install-slurmdbd.yml
             sed -i "s|'{{ pkg_install_state }}'|'latest'|g" /opt/elasticluster/src/elasticluster/share/playbooks/roles/slurm-master/tasks/db.yml
             sed -i "s|'{{ pkg_install_state }}'|'latest'|g" /opt/elasticluster/src/elasticluster/share/playbooks/roles/slurm-worker/tasks/main.yml
+            sed -i "s|'{{ pkg_install_state }}'|'latest'|g" /opt/elasticluster/src/elasticluster/share/playbooks/roles/lmod/tasks/build.yml
             ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml            
             
             #add new user
