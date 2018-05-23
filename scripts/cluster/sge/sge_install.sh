@@ -411,7 +411,7 @@ Config_SGE_master()
                     node_host=$(ss-get $SLAVE_NAME.$i:$IP_PARAMETER)
                 fi
         	    node_name=$SLAVE_NAME-$i
-        	    node_name=$(echo $node_name | sed "s|_|-|g")
+        	    
         	    #echo $node_host $node_name |  tee -a /etc/hosts
         	    
                 msg_info "\t. on node $node_host"
