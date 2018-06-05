@@ -8,7 +8,7 @@ install_elasticluster(){
     if isubuntu; then
         msg_info "Installing requirements with apt-get."
         apt-get update -y
-        apt-get install -y gcc g++ git libc6-dev libffi-dev libssl-dev python python-dev git
+        apt-get install -y gcc g++ git libc6-dev libffi-dev libssl-dev python python-dev git python3-pip
         curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
         python get-pip.py
     elif iscentos; then
@@ -32,6 +32,7 @@ install_elasticluster(){
     cd $elastic_dir
     git clone https://github.com/gc3-uzh-ch/elasticluster.git src
     cd src
+    git checkout 6c8c8f8528d71e613cc17e71e1c6e3050b9f4b18
     
     pip install -e .
     elasticluster list-templates 1>/dev/null 2>/dev/null
@@ -42,35 +43,9 @@ install_elasticluster(){
 
 install_ansible(){
     msg_info "Installing ansible playbook."
-    
-    #if isubuntu; then
-    #    apt-get update -y
-    #    apt-get install -y software-properties-common
-    #    apt-add-repository -y ppa:ansible/ansible
-    #    apt-get update -y
-    #    apt-get install -y ansible
-    #elif iscentos; then
-    #    yum install -y epel-release
-    #    yum install -y ansible
-    #fi
-    ORCH_IP=$(ss-get hostname)
-    
-    echo "[ansible]" >> $playbook_dir/hosts
-    echo $ORCH_IP >> $playbook_dir/hosts
-    
-    if [ -f /root/.ssh/id_rsa ]; then
-        ssh-keygen -t rsa -f /root/.ssh/id_rsa -q -P ""
-        cat /root/.ssh/id_rsa.pub | cat >> /root/.ssh/authorized_keys
-    fi
-    
-    if [ -f /root/.ssh/config ]; then
-        echo "Host *" > /root/.ssh/config
-        echo "   StrictHostKeyChecking no" >> /root/.ssh/config
-        echo "   UserKnownHostsFile /dev/null" >> /root/.ssh/config
-    fi
-    
-    ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/ansible.yml
-    
+    pip3 install cryptography==1.5
+    pip3 install ansible
+
     ansible_dir="/etc/ansible"    
     #sed -i '/\[defaults\]/a library = /usr/share/ansible:library' $ansible_dir/ansible.cfg
     #sed -i 's|#host_key_checking.*|host_key_checking = False|' $ansible_dir/ansible.cfg
@@ -202,8 +177,9 @@ install_playbooks(){
             rm -f $playbook_dir/roles/slurm.yml
             wget -O $playbook_dir/roles/slurm.yml https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/slurm/slurm.yml
 
-            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml            
-            
+            ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml
+            #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts --extra-vars "pkg_install_state='present' __at__='='" $playbook_dir/roles/slurm.yml
+
             #add new user
             sacctmgr -i add user $USER_NEW DefaultAccount=root AdminLevel=Admin
             
