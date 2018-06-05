@@ -46,9 +46,11 @@ install_ansible(){
     pip3 install cryptography==1.5
     pip3 install ansible
 
-    ansible_dir="/etc/ansible"    
+    ansible_dir="/etc/ansible"
+    mkdir -p $ansible_dir
+    wget -O $ansible_dir/ansible.cfg https://raw.githubusercontent.com/ansible/ansible/devel/examples/ansible.cfg
     #sed -i '/\[defaults\]/a library = /usr/share/ansible:library' $ansible_dir/ansible.cfg
-    #sed -i 's|#host_key_checking.*|host_key_checking = False|' $ansible_dir/ansible.cfg
+    sed -i 's|#host_key_checking.*|host_key_checking = False|' $ansible_dir/ansible.cfg
     sed -i 's|#pipelining.*|pipelining = True|' $ansible_dir/ansible.cfg
     
     msg_info "Ansible playbook is installed."
@@ -93,7 +95,7 @@ config_elasticluster(){
             sed -i "s|ControlMachine=.*|ControlMachine="$host_master"|" $playbook_dir/roles/slurm-common/templates/slurm.conf.j2
     
             echo "[slurm_master]" >> $playbook_dir/hosts
-            echo "$MASTER_IP ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
+            echo "$host_master ansible_user=$ansible_user SLURM_ACCOUNTING_HOST=$host_master ansible_memtotal_mb=$memory_master ansible_processor_vcpus=$vcpu_master"  >> $playbook_dir/hosts
         fi
     
         #slave
@@ -130,7 +132,7 @@ config_elasticluster(){
         
         if [ $cluster_type == "slurm" ]; then
             echo "[slurm_submit]" >> $playbook_dir/hosts
-            echo "$MASTER_IP"  >> $playbook_dir/hosts
+            echo "$host_master"  >> $playbook_dir/hosts
             msg_info "Slurm hosts are configured."
         fi
     fi
@@ -182,9 +184,15 @@ install_playbooks(){
 
             #add new user
             sacctmgr -i add user $USER_NEW DefaultAccount=root AdminLevel=Admin
-            
-            slurmctld -D&
-            
+
+            slurmctld -D& 2> /opt/slurm_error_message.log
+            ret=$?
+            if [ $ret -ne 0 ]; then
+                msg_info ""
+                msg_info "Install Slurm aborted."
+                msg_info ""
+                ss-abort "$(cat /opt/slurm_error_message.log)"
+            fi
             #ansible-playbook -M $playbook_dir/library -i $playbook_dir/hosts $playbook_dir/roles/slurm.yml --extra-vars "ansible_memtotal_mb=$ansible_memtotal_mb ansible_processor_vcpus=$ansible_processor_vcpus SLURM_ACCOUNTING_HOST=master-1 ansible_user=root"
             msg_info "Slurm cluster is installed."
         fi
