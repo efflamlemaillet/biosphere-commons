@@ -6,6 +6,18 @@ source /scripts/toolshed/os_detection.sh
 # server.nodename
 # client.nodename
 
+msg_info()
+{
+    ss-display "test if deployment" 1>/dev/null 2>/dev/null
+    ret=$?
+    if [ $ret -ne 0 ]; then
+        echo -e "$@"
+    else
+        echo -e "$@"
+        ss-display "$@"
+    fi
+}
+
 NFS_start()
 {
 	msg_info "Starting NFS..."
