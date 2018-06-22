@@ -8,7 +8,7 @@ source /scripts/toolshed/os_detection.sh
 
 msg_info()
 {
-    ss-display "test" 1>/dev/null 2>/dev/null
+    ss-display "test if deployment" 1>/dev/null 2>/dev/null
     ret=$?
     if [ $ret -ne 0 ]; then
         echo -e "$@"
