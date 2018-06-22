@@ -1,10 +1,10 @@
-source /scripts/toolshed/os_detection.sh
+source ../../toolshed/os_detection.sh
 
 # Warning: Use this script with parent component ****-ifb
 # Slipstream parameter:
 # nfs.ready
-# server.nodename
-# client.nodename
+# server.nodename (ss-set to do on server)
+# client.nodename (ss-set to do on client)
 
 msg_info()
 {
@@ -63,7 +63,6 @@ NFS_export()
         else
             msg_info "Exporting NFS share of $EXPORT_DIR..."
 
-            ss-set server.nodename $(ss-get nodename)
             ss-get --timeout=3600 client.nodename
             CLIENT_NAME=$(ss-get client.nodename)
         
@@ -92,24 +91,22 @@ NFS_export()
 NFS_mount()
 {
     # Pas de paramètre
-    if [[ $# -lt 1 ]]; then
-        echo "This function expects a directory in argument !"
+    if [[ $# -lt 2 ]]; then
+        echo "This function expects a distant directory and a local directory in argument !"
     else
-        MOUNT_DIR=$1
-
+        MOUNT_DEVICE=$1
+        MOUNT_DIR=$2
         if [ ! -d "$MOUNT_DIR" ]; then
             msg_info "$MOUNT_DIR doesn't exist !"
         else
-            msg_info "Mounting $MOUNT_DIR..."
+            msg_info "Mounting $MOUNT_DEVICE to $MOUNT_DIR..."
 
-            ss-set client.nodename $(ss-get nodename)
             ss-get --timeout=3600 server.nodename
             SERVER_HOSTNAME=$(ss-get server.nodename)
 
             SERVER_IP=$(ss-get $SERVER_HOSTNAME:private_ip)
 
-            umount $MOUNT_DIR
-            mount $SERVER_IP:$MOUNT_DIR $MOUNT_DIR 2>/tmp/mount_error_message.txt
+            mount $SERVER_IP:$MOUNT_DEVICE $MOUNT_DIR 2>/tmp/mount_error_message.txt
             ret=$?
             msg_info "$(cat /tmp/mount_error_message.txt)"
 
