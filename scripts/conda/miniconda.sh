@@ -1,4 +1,5 @@
-source ../../toolshed/os_detection.sh
+cd ../toolshed
+source os_detection.sh
 
 MINICONDA_VERSION=${MINICONDA_VERSION:-"3"}
 MINICONDA_SUBVERSION=${MINICONDA_SUBVERSION:-"latest"}
@@ -77,6 +78,6 @@ conda_install()
 
 echo "function loaded"
 echo "You can do:"
-echo "    source /scripts/conda/miniconda.sh"
+echo "    source miniconda.sh"
 echo "    miniconda_pkg"
 echo "    conda_install"

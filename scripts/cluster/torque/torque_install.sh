@@ -1,4 +1,5 @@
-source ../cluster_install.sh
+cd ..
+source cluster_install.sh
 
 initiate_variable_global_torque()
 {

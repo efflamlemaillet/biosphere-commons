@@ -1,4 +1,5 @@
-source ../cluster_install.sh
+cd ..
+source cluster_install.sh
 
 SPARK_DIR=/opt
 SPARK_ROOT_DIR=$SPARK_DIR/spark

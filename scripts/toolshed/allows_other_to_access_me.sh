@@ -1,6 +1,6 @@
 check_json_tool_shed(){
     if [ ! -e ./json_tool_shed.py ]; then
-        wget https://github.com/IFB-ElixirFr/biosphere-commons/blob/master/scripts/toolshed/json_tool_shed.py  -O ./json_tool_shed.py
+        wget https://github.com/IFB-ElixirFr/biosphere-commons/blob/devel/scripts/toolshed/json_tool_shed.py  -O ./json_tool_shed.py
         chmod a+rx ./json_tool_shed.py
     fi
 }

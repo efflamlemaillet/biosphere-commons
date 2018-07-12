@@ -50,7 +50,7 @@ File required to enable all SGE options during configuration: [deployment of mas
 
 usage:
 ```
-source /scripts/edugain_access_tool_shed.sh --dry-run
+source edugain_access_tool_shed.sh --dry-run
 init_edugain_acces_to_user edugain
 add_email_for_edugain_acces_to_user $(echo_owner_email) edugain
 add_email_for_edugain_acces_to_user john.doe@nowhere.com edugain
@@ -60,7 +60,7 @@ add_email_for_edugain_acces_to_user john.doe@nowhere.com edugain
 
 usage:
 ```
-source /scripts/edugain_access_tool_shed.sh --dry-run
+source edugain_access_tool_shed.sh --dry-run
 OWNER_EMAIL=$(echo_owner_email)
 ```
 
@@ -68,7 +68,7 @@ OWNER_EMAIL=$(echo_owner_email)
 
 usage:
 ```
-source /scripts/edugain_access_tool_shed.sh --dry-run
+source edugain_access_tool_shed.sh --dry-run
 init_edugain_acces_to_user edugain
 ```
 
@@ -87,7 +87,7 @@ populate file /etc/hosts with component name and ips to allow you to do `ssh vis
 * Component vpn : one of them
 
 ```
-source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+source populate_hosts_with_components_name_and_ips.sh --dry-run
 populate_hosts_with_components_name_and_ips hostname
 ```
 content added in /etc/hosts : 
@@ -99,7 +99,7 @@ content added in /etc/hosts :
 ```
 
 ```
-source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+source populate_hosts_with_components_name_and_ips.sh --dry-run
 populate_hosts_with_components_name_and_ips vpn.address
 ```
 content added in /etc/hosts : 

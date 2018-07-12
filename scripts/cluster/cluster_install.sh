@@ -1,4 +1,5 @@
-source ../toolshed/os_detection.sh
+cd ../toolshed
+source os_detection.sh
 
 check_if_vpn_or_not()
 {
@@ -199,8 +200,9 @@ install_edugain_ubuntu16()
 
     NEW_USER="$(ss-get edugain_username)"
 
-    source ../toolshed/edugain_access_tool_shed.sh --dry-run
-    source ../toolshed/allows_other_to_access_me.sh --dry-run
+    cd ../toolshed
+    source edugain_access_tool_shed.sh --dry-run
+    source allows_other_to_access_me.sh --dry-run
 
     auto_gen_users
     gen_key_for_user $NEW_USER
@@ -208,7 +210,7 @@ install_edugain_ubuntu16()
     publish_pubkey
     allow_others
     
-    source ../toolshed/populate_hosts_with_components_name_and_ips.sh --dry-run
+    source populate_hosts_with_components_name_and_ips.sh --dry-run
     component_vpn_name=${component_vpn_name:-vpn}
     check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
     if [ "$check_vpn" != "0" ]; then
@@ -245,15 +247,16 @@ install_edugain_ubuntu16()
     
 install_edugain()
 {
-    source ../toolshed/edugain_access_tool_shed.sh --dry-run
-    source ../toolshed/allows_other_to_access_me.sh --dry-run
+    cd ../toolshed
+    source edugain_access_tool_shed.sh --dry-run
+    source allows_other_to_access_me.sh --dry-run
     #auto_gen_users
     gen_key_for_user $USER_NEW
     init_edugain_acces_to_user $USER_NEW
     add_email_for_edugain_acces_to_user $(echo_owner_email) $USER_NEW
     #publish_pubkey
     #allow_others
-    #source ../toolshed/populate_hosts_with_components_name_and_ips.sh --dry-run
+    #source populate_hosts_with_components_name_and_ips.sh --dry-run
     #populate_hosts_with_components_name_and_ips $IP_PARAMETER
     
     service ssh restart
