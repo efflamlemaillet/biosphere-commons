@@ -1,6 +1,5 @@
 check_json_tool_shed(){
     if [ ! -e ./json_tool_shed.py ]; then
-        mkdir -p /scripts/
         wget https://github.com/IFB-ElixirFr/biosphere-commons/blob/master/scripts/toolshed/json_tool_shed.py  -O ./json_tool_shed.py
         chmod a+rx ./json_tool_shed.py
     fi
@@ -125,7 +124,7 @@ publish_pubkey(){
         pubkey_path="$(getent passwd $user | cut -d: -f6)/.ssh/id_rsa.pub"
         if [ -e $pubkey_path ]; then 
             echo "Publishing pubkey of $user"
-            pubkey=$(/scripts/json_tool_shed.py add_in_json "$pubkey" "$user" "u'$(cat $pubkey_path)'" --print-value)
+            pubkey=$(./json_tool_shed.py add_in_json "$pubkey" "$user" "u'$(cat $pubkey_path)'" --print-value)
         else
             echo "Publishing pubkey of $user impossible, $pubkey_path is missing "
         fi
@@ -165,7 +164,7 @@ allow_others(){
                 else
                     pubkey=$(ss-get --timeout 1200 $name:pubkey)
                 fi
-                pubkey=$(/scripts/json_tool_shed.py find_in_json "$pubkey" "$remote_user" --print-values)
+                pubkey=$(./json_tool_shed.py find_in_json "$pubkey" "$remote_user" --print-values)
                 if [ "$pubkey" == "" ]; then
                     ss-abort "Failed to retrieve pubkey of user $remote_user from host $name.$i on $(ss-get hostname)"
                     return 1

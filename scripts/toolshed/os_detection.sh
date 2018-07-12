@@ -36,7 +36,7 @@ error(){
 }
 
 usage(){
-    echo "Usage: source /scripts/toolshed/os_detection.sh"
+    echo "Usage: source os_detection.sh"
     echo "--help ou -h : displays help"
     echo "-u : displays ubuntu help" 
     echo "-c : displays centos help"

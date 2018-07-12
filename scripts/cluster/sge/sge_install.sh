@@ -194,7 +194,7 @@ Install_SGE_slave()
         cd /opt/sge
         . /opt/sge/default/common/settings.sh         
         ./inst_sge -x -auto util/install_modules/inst_template.conf
-        wget -O /etc/profile.d/sge_lib.sh https://github.com/cyclone-project/usecases-hackathon-2016/raw/master/scripts/cluster/sge/sge_lib.sh
+        wget -O /etc/profile.d/sge_lib.sh https://raw.githubusercontent.com/IFB-ElixirFr/biosphere-commons/devel/scripts/cluster/sge/sge_lib.sh
     elif isubuntu; then   
         echo "gridengine-common       shared/gridenginemaster string  $MASTER_HOSTNAME_SAFE" |  debconf-set-selections
         echo "gridengine-common       shared/gridenginecell   string  default" |  debconf-set-selections
@@ -478,9 +478,8 @@ add_nodes() {
         fi
         sed -i "s|$PUBLIC_SLAVE_IP|$SLAVE_IP|g" /etc/hosts
         echo "New instance of $SLIPSTREAM_SCALING_NODE: $INSTANCE_NAME_SAFE, $SLAVE_IP"
-        
-        NFS_export_add /root/mydisk
-        NFS_export_add /home/$USER_NEW
+
+        NFS_export_add /home
         if iscentos; then
             NFS_export_add /opt/sge
         fi
@@ -591,7 +590,7 @@ usage(){
 master_help(){
     echo "You can do:"
     echo "    #Post-install part:"
-    echo "    make_file_test_sge /root/mydisk"
+    echo "    make_file_test_sge /home/\$USER_NEW"
     echo "    check_if_vpn_or_not"
     echo "    if [ \$IP_PARAMETER == 'hostname' ]; then"
     echo "        if isubuntu 14; then"
@@ -617,8 +616,7 @@ master_help(){
     echo "    if [ '\$category' == 'Deployment' ]; then"
     echo "        node_multiplicity=$(ss-get \$SLAVE_NAME:multiplicity)"
     echo "        if [ '\$node_multiplicity '!= '0' ]; then"
-    echo "            NFS_export /root/mydisk"
-    echo "            NFS_export /home/\$USER_NEW"
+    echo "            NFS_export /home"
     echo "            if iscentos; then"
     echo "                NFS_export /opt/sge"
     echo "            fi"
@@ -666,7 +664,6 @@ slave_help(){
     echo "        fi"
     echo "    fi"
     echo "    NFS_ready"
-    echo "    NFS_mount /root/mydisk"
     echo "    NFS_mount /home/\$USER_NEW"
     echo "    if iscentos; then"
     echo "        mkdir -p /opt/sge"

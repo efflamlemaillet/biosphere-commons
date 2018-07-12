@@ -50,11 +50,6 @@ check_if_vpn_or_not()
         ss-set ss:url.service "${url}"
     fi
     
-    WORKDIR=/root/mydisk
-    mkdir -p $WORKDIR
-    chmod 750 /root
-    chmod 775 $WORKDIR
-    
     ss-set allowed_components "$(echo $(ss-get allowed_components) | sed 's|ifbuser|'$USER_NEW'|g' )"
 }
 
@@ -201,7 +196,6 @@ install_edugain_ubuntu16()
         echo "HOSTNAME = $OPENSTACK_HOSTNAME" >> /etc/cyclone/cyclone.conf
     fi
 
-    cd /scripts/
 
     NEW_USER="$(ss-get edugain_username)"
 
@@ -229,15 +223,7 @@ install_edugain_ubuntu16()
         fi
     else
         populate_hosts_with_components_name_and_ips hostname
-    fi   
-
-#    if [ "$OPENSTACK_HOSTNAME" == "" ]; then
-#        echo $(hostname -I | sed 's/ /\n/g' | head -n 1) > /etc/hostname
-#    else
-#        echo $OPENSTACK_HOSTNAME > /etc/hostname
-#    fi
-
-    #hostname -F /etc/hostname
+    fi
 
     if [ "$(ss-get cloudservice)" == "cyclone-fr2" ]; then
         # set the service url to SSH url
