@@ -159,6 +159,12 @@ initiate_install_edugain_ubuntu16()
     echo "OIDC_HOST = https://federation.cyclone-project.eu" >> /etc/cyclone/cyclone.conf
     echo "PORTS = 20000-25000" >> /etc/cyclone/cyclone.conf
     
+    # Clean up installation files
+    #cd ~ && rm -rf cyclone-pam    
+}
+
+install_edugain_ubuntu16()
+{
     if [ "$(echo $(ss-get cloudservice) | grep exoscale | wc -l)" == "1" ]; then
         EXO_HOSTNAME=$(ss-get hostname)
         echo "HOSTNAME_OPENSTACK = $EXO_HOSTNAME" >> /etc/cyclone/cyclone.conf
@@ -169,13 +175,7 @@ initiate_install_edugain_ubuntu16()
     else
         echo "HOSTNAME_OPENSTACK = http://169.254.169.254/latest/meta-data/public-ipv4" >> /etc/cyclone/cyclone.conf
     fi
-    
-    # Clean up installation files
-    #cd ~ && rm -rf cyclone-pam    
-}
 
-install_edugain_ubuntu16()
-{
     EDUGAIN_OTHERS_USERS=$(ss-get edugain.others.users)
     if [ -z "$EDUGAIN_OTHERS_USERS" -o $( echo "$EDUGAIN_OTHERS_USERS" | grep -c "@") == 0 ]; then
         msg_info "No new user to add in federation proxy Eudgain ."
@@ -205,8 +205,8 @@ install_edugain_ubuntu16()
 
     NEW_USER="$(ss-get edugain_username)"
 
-    source /scripts/edugain_access_tool_shed.sh --dry-run
-    source /scripts/allows_other_to_access_me.sh --dry-run
+    source ../toolshed/edugain_access_tool_shed.sh --dry-run
+    source ../toolshed/allows_other_to_access_me.sh --dry-run
 
     auto_gen_users
     gen_key_for_user $NEW_USER
@@ -214,7 +214,7 @@ install_edugain_ubuntu16()
     publish_pubkey
     allow_others
     
-    source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+    source ../toolshed/populate_hosts_with_components_name_and_ips.sh --dry-run
     component_vpn_name=${component_vpn_name:-vpn}
     check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
     if [ "$check_vpn" != "0" ]; then
@@ -259,15 +259,15 @@ install_edugain_ubuntu16()
     
 install_edugain()
 {
-    source /scripts/edugain_access_tool_shed.sh --dry-run
-    source /scripts/allows_other_to_access_me.sh --dry-run
+    source ../toolshed/edugain_access_tool_shed.sh --dry-run
+    source ../toolshed/allows_other_to_access_me.sh --dry-run
     #auto_gen_users
     gen_key_for_user $USER_NEW
     init_edugain_acces_to_user $USER_NEW
     add_email_for_edugain_acces_to_user $(echo_owner_email) $USER_NEW
     #publish_pubkey
     #allow_others
-    #source /scripts/populate_hosts_with_components_name_and_ips.sh --dry-run
+    #source ../toolshed/populate_hosts_with_components_name_and_ips.sh --dry-run
     #populate_hosts_with_components_name_and_ips $IP_PARAMETER
     
     service ssh restart
