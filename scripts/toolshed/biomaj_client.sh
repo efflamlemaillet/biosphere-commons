@@ -1,4 +1,4 @@
-source /scripts/toolshed/os_detection.sh
+source ./os_detection.sh
 
 install_autofs(){
     if iscentos 7; then
@@ -85,7 +85,7 @@ install_biomaj_client(){
 if [ "$1" == "--dry-run" ]; then
     echo "function loaded"
     echo "You can do:"
-    echo "    source /scripts/toolshed/biomaj_client.sh --dry-run "
+    echo "    source biomaj_client.sh --dry-run "
     echo "    install_biomaj_client"
 else
     install_biomaj_client

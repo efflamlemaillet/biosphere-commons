@@ -1,4 +1,4 @@
-source /scripts/toolshed/os_detection.sh
+source ../toolshed/os_detection.sh
 
 check_if_vpn_or_not()
 {

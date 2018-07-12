@@ -1,8 +1,8 @@
 check_json_tool_shed(){
-    if [ ! -e /scripts/json_tool_shed.py ]; then
+    if [ ! -e ./json_tool_shed.py ]; then
         mkdir -p /scripts/
-        wget https://github.com/cyclone-project/usecases-hackathon-2016/blob/master/scripts/json_tool_shed.py  -O /scripts/json_tool_shed.py
-        chmod a+rx -R /scripts/
+        wget https://github.com/IFB-ElixirFr/biosphere-commons/blob/master/scripts/toolshed/json_tool_shed.py  -O ./json_tool_shed.py
+        chmod a+rx ./json_tool_shed.py
     fi
 }
 
@@ -231,7 +231,7 @@ auto_gen_users(){
 if [ "$1" == "--dry-run" ]; then
     echo "function loaded"
     echo "You can do:"
-    echo "    source /scripts/allows_other_to_access_me.sh --dry-run "
+    echo "    source allows_other_to_access_me.sh --dry-run "
     echo "    auto_gen_users"
     echo "    gen_key_for_user alice"
     echo "    gen_key_for_user bob"

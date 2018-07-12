@@ -1,4 +1,4 @@
-source /scripts/toolshed/os_detection.sh
+source ../../toolshed/os_detection.sh
 
 msg_info()
 {

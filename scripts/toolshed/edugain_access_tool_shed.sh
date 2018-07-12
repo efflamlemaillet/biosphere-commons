@@ -2,12 +2,12 @@
 
 add_email_for_edugain_acces_to_user(){
     echo "Adding $1 for user $2 (in /home/$2/.edugain)"
-    echo $(/scripts/json_tool_shed.py add-in-json "$(cat /home/$2/.edugain)" "users" "u'$1'" --print-values) > /home/$2/.edugain
+    echo $(./json_tool_shed.py add-in-json "$(cat /home/$2/.edugain)" "users" "u'$1'" --print-values) > /home/$2/.edugain
 }
 
 init_edugain_acces_to_user(){
     echo "Initializing user $1 (in /home/$1/.edugain)"
-    echo $(/scripts/json_tool_shed.py add-in-json "{}" "users" "[]" --print-values) > /home/$1/.edugain
+    echo $(./json_tool_shed.py add-in-json "{}" "users" "[]" --print-values) > /home/$1/.edugain
 }
 
 echo_owner_email(){

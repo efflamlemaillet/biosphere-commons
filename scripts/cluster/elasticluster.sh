@@ -1,4 +1,4 @@
-source /scripts/cluster/cluster_install.sh
+source ./cluster_install.sh
 
 install_elasticluster(){
     elastic_dir="/opt/elasticluster"

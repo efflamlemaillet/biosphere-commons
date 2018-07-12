@@ -187,7 +187,7 @@ function copy_data_sharedspace_to_local()
 if [ "$1" == "--dry-run" ]; then
     echo "function loaded"
     echo "You can do:"
-    echo "    source /scripts/shared_data_with_irods.sh --dry-run "
+    echo "    source shared_data_with_irods.sh --dry-run "
     echo "    install_irods_client"
     echo "    configure_irods_client"
     echo "    mount_irods_directory"

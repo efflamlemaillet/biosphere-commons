@@ -1,4 +1,4 @@
-source /scripts/toolshed/os_detection.sh
+source ../../toolshed/os_detection.sh
 
 MINICONDA_VERSION=${MINICONDA_VERSION:-"3"}
 MINICONDA_SUBVERSION=${MINICONDA_SUBVERSION:-"latest"}

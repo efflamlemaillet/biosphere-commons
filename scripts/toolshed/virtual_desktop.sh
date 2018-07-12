@@ -1,4 +1,4 @@
-source /scripts/toolshed/os_detection.sh
+source ./os_detection.sh
 
 install_x2go(){
     if iscentos 7; then

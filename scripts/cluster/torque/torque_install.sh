@@ -1,4 +1,4 @@
-source /scripts/cluster/cluster_install.sh
+source ../cluster_install.sh
 
 initiate_variable_global_torque()
 {
@@ -564,7 +564,7 @@ error(){
 } 
 
 usage(){ 
-    echo "Usage: source /scripts/cluster/torque/torque_install.sh" 
+    echo "Usage: source torque_install.sh"
     echo "--help ou -h : afficher l'aide"
     echo "-m : Install pbs master" 
     echo "-s : Install pbs slave"

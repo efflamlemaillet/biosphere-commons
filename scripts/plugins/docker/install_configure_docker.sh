@@ -306,7 +306,7 @@ function change_options_docker()
 if [ "$1" == "--dry-run" ]; then
     echo -e "function loaded"
     echo -e "You can do:"
-    echo -e "\tsource /scripts/install_configure_docker.sh --dry-run "
+    echo -e "\tsource install_configure_docker.sh --dry-run "
     echo -e "\tinstall_docker"
     echo -e "\t\texport DOCKER_VERSION, to not install latest."
     echo -e "\t\texport DOCKER_STORE_DIRECTORY, to change /var/lib/docker."

@@ -1,4 +1,4 @@
-source /scripts/toolshed/os_detection.sh
+source ../toolshed/os_detection.sh
 
 port_tinc=${port_tinc:-443}
 IP_subnet=${IP_subnet:-10}
