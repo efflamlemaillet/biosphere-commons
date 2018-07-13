@@ -4,33 +4,22 @@ source os_detection.sh
 check_if_vpn_or_not()
 {
     component_vpn_name=${component_vpn_name:-vpn}
-    
+    if isubuntu; then
+        export USER_NEW=${USER_NEW:-ubuntu}
+    elif iscentos; then
+        export USER_NEW=${USER_NEW:-centos}
+    fi
     ss-display "test if deployment" 1>/dev/null 2>/dev/null
     ret=$?
     if [ $ret -ne 0 ]; then
-        if isubuntu; then
-            export USER_NEW=${USER_NEW:-ubuntu}
-        elif iscentos; then
-            export USER_NEW=${USER_NEW:-centos}
-        fi
         export IP_PARAMETER=${IP_PARAMETER:-hostname}
     else
-        EDUGAIN_ENABLE=$(ss-get edugain.enable)
-        if [ "$EDUGAIN_ENABLE" == "true" ]; then
-            USER_NEW=$(ss-get edugain_username)
-        elif isubuntu; then
-            USER_NEW="ubuntu"
-        elif iscentos; then
-            USER_NEW="centos"
-        fi
-
         check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
         category=$(ss-get ss:category)
-        if [ "$check_vpn" != "0" ]; then            
+        if [ "$check_vpn" != "0" ]; then
             if [ "$category" == "Deployment" ]; then
                 vpn_multiplicity=$(ss-get $component_vpn_name:multiplicity)
                 if [ "$vpn_multiplicity" != "0" ]; then
-                    USER_NEW=${USER_NEW:-ifbuser}
                     if [ "$(echo $(ss-get net.services.enable) | grep '"vpn"' | wc -l)" == "1" ]; then
                         IP_PARAMETER=vpn.address
                         ss-set net.services.enable "[\"vpn\"]"
@@ -39,17 +28,14 @@ check_if_vpn_or_not()
                         IP_PARAMETER=hostname
                     fi
                 else
-                    USER_NEW=${USER_NEW:-ifbuser}
                     ss-set net.services.enable "[]"
                     IP_PARAMETER=hostname
                 fi
             else
-                USER_NEW=${USER_NEW:-ifbuser}
                 ss-set net.services.enable "[]"
                 IP_PARAMETER=hostname
             fi
         else
-            USER_NEW=${USER_NEW:-ifbuser}
             IP_PARAMETER=hostname
         fi
     fi
