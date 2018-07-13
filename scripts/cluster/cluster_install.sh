@@ -329,15 +329,23 @@ install_federation_proxy()
 
 user_add()
 {
-    getent passwd $USER_NEW > /dev/null
-    user_missing=$?
-    if [ "$user_missing" != "0" ]; then
-        useradd --create-home -u 666 $USER_NEW --shell /bin/bash
-    else
-        usermod -u 666 $USER_NEW
-        groupmod -g 666 $USER_NEW
+    if isubuntu; then
+        first_user="ubuntu"
+    elif iscentos; then
+        first_user="centos"
     fi
-    usermod -aG root $USER_NEW
+
+    if [ "$USER_NEW" != "$first_user" ]; then
+        getent passwd $USER_NEW > /dev/null
+        user_missing=$?
+        if [ "$user_missing" != "0" ]; then
+            useradd --create-home -u 666 $USER_NEW --shell /bin/bash
+        else
+            usermod -u 666 $USER_NEW
+            groupmod -g 666 $USER_NEW
+        fi
+        usermod -aG root $USER_NEW
+    fi
     
     msg_info ""
     msg_info "$USER_NEW created for launch job"
