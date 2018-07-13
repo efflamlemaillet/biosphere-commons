@@ -8,9 +8,22 @@ check_if_vpn_or_not()
     ss-display "test if deployment" 1>/dev/null 2>/dev/null
     ret=$?
     if [ $ret -ne 0 ]; then
-        export USER_NEW=${USER_NEW:-ifbuser}
+        if isubuntu; then
+            export USER_NEW=${USER_NEW:-ubuntu}
+        elif iscentos; then
+            export USER_NEW=${USER_NEW:-centos}
+        fi
         export IP_PARAMETER=${IP_PARAMETER:-hostname}
     else
+        EDUGAIN_ENABLE=$(ss-get edugain.enable)"
+        if [ "$EDUGAIN_ENABLE" == "true" ]; then
+            USER_NEW="$(ss-get edugain_username)"
+        elif isubuntu; then
+            USER_NEW="ubuntu"
+        elif iscentos; then
+            USER_NEW="centos"
+        fi
+
         check_vpn=$(ss-get ss:groups | grep -c ":$component_vpn_name")
         category=$(ss-get ss:category)
         if [ "$check_vpn" != "0" ]; then            
@@ -376,7 +389,8 @@ check_ip()
 
 check_ip_slave_for_master()
 {
-    if isubuntu; then
+    EDUGAIN_ENABLE=$(ss-get edugain.enable)"
+    if [ "$EDUGAIN_ENABLE" == "true" ]; then
         USER_NEW="$(ss-get edugain_username)"
     fi
     
