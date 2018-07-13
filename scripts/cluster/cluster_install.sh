@@ -389,9 +389,9 @@ check_ip()
 
 check_ip_slave_for_master()
 {
-    EDUGAIN_ENABLE=$(ss-get edugain.enable)"
+    EDUGAIN_ENABLE=$(ss-get edugain.enable)
     if [ "$EDUGAIN_ENABLE" == "true" ]; then
-        USER_NEW="$(ss-get edugain_username)"
+        USER_NEW=$(ss-get edugain_username)
     fi
     
     url="ssh://$USER_NEW@$PUBLIC_IP"
