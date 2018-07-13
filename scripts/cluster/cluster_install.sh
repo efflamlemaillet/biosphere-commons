@@ -15,9 +15,9 @@ check_if_vpn_or_not()
         fi
         export IP_PARAMETER=${IP_PARAMETER:-hostname}
     else
-        EDUGAIN_ENABLE=$(ss-get edugain.enable)"
+        EDUGAIN_ENABLE=$(ss-get edugain.enable)
         if [ "$EDUGAIN_ENABLE" == "true" ]; then
-            USER_NEW="$(ss-get edugain_username)"
+            USER_NEW=$(ss-get edugain_username)
         elif isubuntu; then
             USER_NEW="ubuntu"
         elif iscentos; then
