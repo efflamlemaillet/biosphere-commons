@@ -191,7 +191,7 @@ allow_others(){
                     ls -laHi $DOT_SSH
                     echo -e "Allowing $remote_user of $name.$i to ssh me on user $local_user done"
                 fi
-                chmod 700 "$LOCAL_USER_HOME_DIR/.ssh/authorized_keys"
+                chmod 600 "$LOCAL_USER_HOME_DIR/.ssh/authorized_keys"
                 chown -R $local_user:$local_user "$LOCAL_USER_HOME_DIR"
             done
         fi
