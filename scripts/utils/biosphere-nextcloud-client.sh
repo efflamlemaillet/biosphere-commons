@@ -3,6 +3,10 @@
 NEXTCLOUD_HOST=10.158.16.80
 
 # Install client for Ubuntu
+cat <<EOF | sudo debconf-set-selections
+davfs2 davfs2/suid_file boolean true
+EOF
+
 sudo apt-get -y install davfs2
 
 # Configure server certificate
