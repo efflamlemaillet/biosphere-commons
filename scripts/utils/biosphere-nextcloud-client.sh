@@ -26,4 +26,4 @@ sudo chown -R $LOCUSER:$LOCUSER $LOCUSER_HOME/.davfs2
 sudo chmod 600 $LOCUSER_HOME/.davfs2/secrets
 
 # Configure mount
-echo "https://$NEXTCLOUD_HOST/remote.php/webdav/ $LOCUSER_HOME/nextcloud davfs user,rw,auto 0 0" | sudo tee -a /etc/fstab
+echo "https://$NEXTCLOUD_HOST/remote.php/webdav/ $LOCUSER_HOME/nextcloud davfs user,rw,noauto 0 0" | sudo tee -a /etc/fstab
