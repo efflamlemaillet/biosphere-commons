@@ -3,7 +3,7 @@
 PROFILECONF=/etc/profile.d/ebame18-longread-metagenomics.sh
 DATADIR=/mnt/ebame18
 sudo mkdir -p $DATADIR
-chown ubuntu.ubuntu $DATADIR
+sudo chown ubuntu.ubuntu $DATADIR
 
 # get Kraken data
 
