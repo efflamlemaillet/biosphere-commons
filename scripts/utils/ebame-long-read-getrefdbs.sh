@@ -13,7 +13,8 @@ URL_KRAKEN=https://ccb.jhu.edu/software
 cd $DATADIR
 wget $URL_KRAKEN/kraken/dl/minikraken_20171019_8GB.tgz
 tar xvfz minikraken_20171019_8GB.tgz
-echo 'export KRAKEN_DEFAULT_DB=/mnt/ebame18/minikraken_20171019_8GB' >> $PROFILECONF
+rm minikraken_20171019_8GB.tgz
+echo 'export KRAKEN_DEFAULT_DB=/mnt/ebame18/minikraken_20171019_8GB' | sudo tee -a $PROFILECONF
 
 
 # get Kraken2 data
@@ -29,7 +30,7 @@ wget $URL_KRAKEN2/kraken2-microbial/taxo.k2d
 wget $URL_KRAKEN2/kraken2-microbial/database.kraken
 wget $URL_KRAKEN2/kraken2-microbial/database2500mers.kraken
 wget $URL_KRAKEN2/kraken2-microbial/database2500mers.kmer_distrib
-echo 'export KRAKEN2_DEFAULT_DB=/mnt/ebame18/kraken2-microbial-fatfree' >> $PROFILECONF
+echo 'export KRAKEN2_DEFAULT_DB=/mnt/ebame18/kraken2-microbial-fatfree' | sudo tee -a $PROFILECONF
 
 # get Nanopore data
 
@@ -38,3 +39,5 @@ URL_NANOPORE=http://nanopore.s3.climb.ac.uk
 
 cd $DATADIR
 wget $URL_NANOPORE/Kefir_RBK.fastq
+
+source $PROFILECONF
