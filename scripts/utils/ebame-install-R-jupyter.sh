@@ -8,7 +8,7 @@ apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB
 
 apt install -y r-base-dev
 
-R -e "install.packages(c('Matrix', 'igraph', 'huge', 'BiocInstaller', 'gtools'))"
+R -e "install.packages(c('Matrix', 'igraph', 'huge', 'BiocInstaller', 'gtools', 'devtools'))"
 
 R -e "source('http://bioconductor.org/biocLite.R');biocLite('phyloseq')"
 
@@ -18,8 +18,7 @@ R -e "library(devtools);install_github(\"zdk123/SpiecEasi\")"
 # https://irkernel.github.io/docs/IRkernel/0.7/
 
 R -e "install.packages(c('repr', 'IRdisplay', 'crayon', 'pbdZMQ', 'devtools'))"
-R -e "library(devtools);install_github('IRkernel/IRkernel')"
-R -e "IRkernel::installspec()"
+R -e "library(devtools);install_github('IRkernel/IRkernel');IRkernel::installspec()"
 
 #if necessary
 #/opt/miniconda/miniconda3-4.2.12/bin/jupyter notebook --allow-root > /var/log/jupyter/jupyter.log &
