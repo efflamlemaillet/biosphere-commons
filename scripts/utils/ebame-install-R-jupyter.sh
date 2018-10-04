@@ -22,4 +22,4 @@ R -e "library(devtools);install_github('IRkernel/IRkernel')"
 R -e "IRkernel::installspec()"
 
 #if necessary
-#/opt/miniconda/miniconda3-4.2.12/bin/jupyter notebook --allow-root > /var/log/jupyter/jupyter.log &)
+#/opt/miniconda/miniconda3-4.2.12/bin/jupyter notebook --allow-root > /var/log/jupyter/jupyter.log &
