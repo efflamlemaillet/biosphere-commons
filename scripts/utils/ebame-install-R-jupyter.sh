@@ -45,7 +45,7 @@ CONF=/root/.jupyter/jupyter_notebook_config.py
 echo "c.NotebookApp.port = 80" >> $CONF
 echo "c.NotebookApp.ip = \"0.0.0.0\" " >> $CONF
 JUPYTER_TOKEN=`openssl rand -hex 32`
-echo $JUPYTER_TOKEN
+echo "JUPYTER_TOKEN = ${JUPYTER_TOKEN}"
 echo "c.NotebookApp.token = '${JUPYTER_TOKEN}' " >> $CONF
 echo "c.NotebookApp.open_browser = False " >> $CONF
 echo "c.NotebookApp.allow_origin = '*' " >> $CONF
