@@ -1,7 +1,7 @@
 import json
 import os
 import argparse
-import subprocess
+from subprocess import Popen
 
 parser = argparse.ArgumentParser()
 parser.add_argument("data_manila_export", help="data manila export parameter in slipstream (e.g. ss-get data_manila_export)")
@@ -13,11 +13,10 @@ args = parser.parse_args()
 
 
 def config_manila(data_manila_export, src_dir="/automount_ifb", dst_dir="/ifb/data"):
-    #dict = os.popen('ss-get data_manila_export').read()
     data = json.loads(data_manila_export)
     os.makedirs(src_dir, exist_ok=True)
     os.makedirs(dst_dir, exist_ok=True)
-    with open('/etc/auto.master', 'a') as f:
+    with open('/etc/auto.master', 'w') as f:
         f.write('/automount_ifb /etc/auto.ifb_manila')
 
     ifb_manila_file = open("/etc/auto.ifb_manila", "w")
@@ -27,8 +26,7 @@ def config_manila(data_manila_export, src_dir="/automount_ifb", dst_dir="/ifb/da
         os.symlink(src, dst)
         ifb_manila_file.write(k + " -fstype=nfs,rw " + v + "\n")
     ifb_manila_file.close()
-    command = ['service', 'autofs', 'restart']
-    subprocess.call(command, shell=True)
+    Popen(['service', 'autofs', 'restart'])
 
 
 if __name__ == '__main__':
