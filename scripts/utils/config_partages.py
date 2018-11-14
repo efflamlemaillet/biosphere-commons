@@ -4,22 +4,22 @@ import argparse
 from subprocess import Popen
 
 parser = argparse.ArgumentParser()
-parser.add_argument("data_manila_export", help="data manila export parameter in slipstream (e.g. ss-get data_manila_export)")
+parser.add_argument("share_params", help="share parameter in json (e.g. {<name_share>:<endpoint>,...}")
 parser.add_argument("-s", "--src",
-                    help="source of mount directory (default=/automount_ifb)")
+                    help="source of mount directory (default=/var/autofs)")
 parser.add_argument("-d", "--dst",
                     help="destination of mount directory (default=/ifb/data)")
 args = parser.parse_args()
 
 
-def config_manila(data_manila_export, src_dir="/automount_ifb", dst_dir="/ifb/data"):
+def config_shares(data_manila_export, src_dir="/var/autofs/ifb", dst_dir="/ifb/data"):
     data = json.loads(data_manila_export)
     os.makedirs(src_dir, exist_ok=True)
     os.makedirs(dst_dir, exist_ok=True)
-    with open('/etc/auto.master', 'w') as f:
-        f.write('/automount_ifb /etc/auto.ifb_manila')
+    with open('/etc/auto.master', 'a') as f:
+        f.write('\n' + src_dir + ' /etc/auto.ifb_share')
 
-    ifb_manila_file = open("/etc/auto.ifb_manila", "w")
+    ifb_manila_file = open("/etc/auto.ifb_share", "w")
     for k, v in data.items():
         src = src_dir + "/" + k
         dst = dst_dir + "/" + k
@@ -31,10 +31,10 @@ def config_manila(data_manila_export, src_dir="/automount_ifb", dst_dir="/ifb/da
 
 if __name__ == '__main__':
     if args.src and args.dst:
-        config_manila(args.data_manila_export, src_dir=args.src, dst_dir=args.dst)
+        config_shares(args.share_params, src_dir=args.src, dst_dir=args.dst)
     elif args.src and not args.dst:
-        config_manila(args.data_manila_export, src_dir=args.src)
+        config_shares(args.share_params, src_dir=args.src)
     elif not args.src and args.dst:
-        config_manila(args.data_manila_export, dst_dir=args.dst)
+        config_shares(args.share_params, dst_dir=args.dst)
     else:
-        config_manila(args.data_manila_export)
+        config_shares(args.share_params)
