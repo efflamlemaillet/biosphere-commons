@@ -14,11 +14,9 @@ args = parser.parse_args()
 
 def config_manila(data_manila_export, src_dir="/automount_ifb", dst_dir="/ifb/data"):
     #dict = os.popen('ss-get data_manila_export').read()
-    print(data_manila_export)
-    print(src_dir)
-    print(dst_dir)
     data = json.loads(data_manila_export)
     os.makedirs(src_dir, exist_ok=True)
+    os.makedirs(dst_dir, exist_ok=True)
     with open('/etc/auto.master', 'w') as f:
         f.write('/automount_ifb /etc/auto.ifb_manila')
 
