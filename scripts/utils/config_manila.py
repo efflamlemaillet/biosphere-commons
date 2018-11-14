@@ -17,7 +17,7 @@ def config_manila(data_manila_export, src_dir="/automount_ifb", dst_dir="/ifb/da
     data = json.loads(data_manila_export)
     os.makedirs(src_dir, exist_ok=True)
     os.makedirs(dst_dir, exist_ok=True)
-    with open('/etc/auto.master', 'w') as f:
+    with open('/etc/auto.master', 'a') as f:
         f.write('/automount_ifb /etc/auto.ifb_manila')
 
     ifb_manila_file = open("/etc/auto.ifb_manila", "w")
