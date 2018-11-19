@@ -17,7 +17,7 @@ def config_shares(data_manila_export, src_dir="/var/autofs/ifb", dst_dir="/ifb/d
     os.makedirs(src_dir, exist_ok=True)
     os.makedirs(dst_dir, exist_ok=True)
     with open('/etc/auto.master', 'a') as f:
-        f.write('\n' + src_dir + ' /etc/auto.ifb_share')
+        f.write('\n' + src_dir + ' /etc/auto.ifb_share' + '\n')
 
     ifb_manila_file = open("/etc/auto.ifb_share", "w")
     for k, v in data.items():
