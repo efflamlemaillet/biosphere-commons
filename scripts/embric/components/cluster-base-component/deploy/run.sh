@@ -38,7 +38,7 @@ _run () {
 
 	create_ssh_key
 	set_hostname
-	ss-set hosts_entry $(ss-get private_ip) $(hostname -s)
+	ss-set hosts_entry "$(ss-get private_ip) $(hostname -s)"
 
 }
 
