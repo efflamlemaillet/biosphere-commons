@@ -1,6 +1,10 @@
 #!/bin/bash
 
 
+set_hostname(){
+	hostnamectl set-hostname $(ss-get nodename)$(ss-get id)
+}
+
 rsa_with_passphrase_exists (){
         file=${1:-~/.ssh/id_rsa}
         rc=0
@@ -32,11 +36,11 @@ create_ssh_key(){
 
 _run () {
 
-        create_ssh_key
-	ss-set hosts-entry $(ss-get hostname) $(ss-get nodename)$(ss-get id)
+	create_ssh_key
+	ss-set hosts-entry $(ss-get private_ip) $(hostname -s)
 
 }
 
 
 
-_run()
+_run
