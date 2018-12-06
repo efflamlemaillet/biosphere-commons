@@ -39,3 +39,11 @@ EOF
 	sudo tar -xzvf spark-${SPARK_V}-bin-hadoop2.7.tgz -C ${SPARK_LOCAL_DIR}  --strip-components 1
 
 }
+
+_run(){
+	install_scala
+	install_spark
+
+}
+
+_run
