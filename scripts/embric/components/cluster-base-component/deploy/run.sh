@@ -23,7 +23,17 @@ rsa_with_passphrase_exists (){
                 ")
         fi
 }
-
+gather_hosts_entries(){
+	IFS=','
+	for group in $(ss-get ss:groups)
+	do
+		component_name=${group##*:}
+		for id in $(ss-get "${component_name}:ids")
+		do
+			echo $(ss-get ${component_name}.$id:hosts_entry) >> /etc/hosts
+		done
+	done
+}
 create_ssh_key(){
         yesv="n"
         rsa_with_passphrase_exists
@@ -39,6 +49,8 @@ _run () {
 	create_ssh_key
 	set_hostname
 	ss-set hosts_entry "$(ss-get private_ip) $(hostname -s)"
+	gather_hosts_entries
+
 
 }
 
