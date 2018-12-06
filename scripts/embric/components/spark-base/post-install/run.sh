@@ -8,7 +8,7 @@ install_scala(){
 
 	#install scala
 	wget $SCALA_URL
-	sudo yum install ${SCALA_PKG}
+	sudo yum -y install ${SCALA_PKG}
 
 
 		
