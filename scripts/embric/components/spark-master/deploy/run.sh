@@ -37,12 +37,6 @@ add_slaves_config(){
 }
 
 
-$SPARK_LOCAL_DIR/sbin/start-all.sh
-
-# provide status information through web UI
-ss-display "Webserver ready on ${link}!"
-
-
 _run(){
 	config_spark_env
 	add_slaves_config
