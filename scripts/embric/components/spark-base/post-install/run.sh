@@ -26,7 +26,6 @@ install_spark(){
 
 	touch /etc/profile.d/spark-env.sh
 	cat >> /etc/profile.d/spark-env.sh <<EOF
-export SPARK_LOCAL_DIR="/usr/local/spark/"
 export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
 export SPARK_V="$SPARK_V"
 export SPARK_LOCAL_DIR="$SPARK_LOCAL_DIR"

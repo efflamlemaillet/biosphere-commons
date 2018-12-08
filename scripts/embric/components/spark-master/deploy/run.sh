@@ -38,6 +38,7 @@ add_slaves_config(){
 
 
 _run(){
+	. /etc/profile.d/*spark*
 	config_spark_env
 	add_slaves_config
 	#start master and slaves
