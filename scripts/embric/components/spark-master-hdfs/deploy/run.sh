@@ -28,10 +28,10 @@ config_hadoop_slaves(){
 add_property(){
 	if [[ "$1" == "$2" ]];
 	then
-		xmlstarlet edit -s '//configuration' -t elem -n "property" \
+		xmlstarlet edit --inplace -s '//configuration' -t elem -n "property" \
 		-s '//configuration/property[last()]' -t elem -n "name"  -v $3 \
 		-s '//configuration/property[last()]' -t elem -n "value" -v $4 \
-		$1 --inplace 
+		$1 
 
 	else
 		xmlstarlet edit -s '//configuration' -t elem -n "property" \
