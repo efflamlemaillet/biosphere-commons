@@ -49,6 +49,8 @@ _run () {
 	ss-set component_name $(ss-get nodename)
 	create_ssh_key
 	set_hostname
+	#authorize local ssh 
+	cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 	#publish ssh pub key & /etc/hosts entry
 	ss-set public_key  "$(cat /root/.ssh/id_rsa.pub)"
 	ss-set hosts_entry "$(ss-get private_ip) $(hostname -s)"

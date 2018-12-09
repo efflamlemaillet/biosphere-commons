@@ -8,8 +8,8 @@ install_hadoop(){
 
 	wget http://mirrors.standaloneinstaller.com/apache/hadoop/common/hadoop-$HADOOP_V/$HADOOP_PKG
 
-	sudo mkdir -p ${HADOOP_LOCAL_DIR}
-	sudo tar -xzvf $HADOOP_PKG -C ${HADOOP_LOCAL_DIR}  --strip-components 1
+	mkdir -p ${HADOOP_LOCAL_DIR}
+	tar -xzvf $HADOOP_PKG -C ${HADOOP_LOCAL_DIR}  --strip-components 1
 
 	touch /etc/profile.d/hadoop-env.sh
 	cat >>/etc/profile.d/hadoop-env.sh <<EOF
