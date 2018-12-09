@@ -30,7 +30,7 @@ gather_hosts_entries(){
 		component_name=${group##*:}
 		for id in $(ss-get "${component_name}:ids")
 		do
-			echo $(ss-get ${component_name}.$id:hosts_entry) >> /etc/hosts
+			echo $(ss-get --timeout=3600 ${component_name}.$id:hosts_entry) >> /etc/hosts
 		done
 	done
 }

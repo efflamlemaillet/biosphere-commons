@@ -17,6 +17,9 @@ config_hadoop_slaves(){
 	#wait for all slave scripts to set hostname
 	for id in ${slave_ids[@]} ; do
 	    echo $(ss-get $slave_name.$id:hostname) >> ${HADOOP_LOCAL_DIR}/etc/hadoop/slaves
+	    ssh-keyscan $(grep -e $slave_name$id -m 1 /etc/hosts|tr -s ' ' ',' ) > ~/.ssh/known_hosts
+	    scp ${HADOOP_LOCAL_DIR}/etc/hadoop/core-site.xml $slave_name$id:${HADOOP_LOCAL_DIR}/etc/hadoop/core-site.xml 
+	    scp ${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml $slave_name$id:${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml 
 	done
 }
 
@@ -29,16 +32,18 @@ add_property(){
 	
 }
 config_hadoop_xml(){
-	add_property "${HADOOP_LOCAL_DIR}/share/hadoop/common/templates/core-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/core-site.xml" "fs.default.name" "hdfs://master.local:9000"
-	add_property "${HADOOP_LOCAL_DIR}/share/hadoop/hdfs/templates/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "dfs.replication" "3"
+	add_property "${HADOOP_LOCAL_DIR}/share/hadoop/common/templates/core-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/core-site.xml" "fs.default.name" "hdfs://$(hostname -s):9000"
+	add_property "${HADOOP_LOCAL_DIR}/share/hadoop/hdfs/templates/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "dfs.replication" "1"
 	add_property "${HADOOP_LOCAL_DIR}/share/hadoop/hdfs/templates/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "dfs.data.dir" "/srv/hadoop/datanode" 
 	add_property "${HADOOP_LOCAL_DIR}/share/hadoop/hdfs/templates/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "dfs.name.dir" "/srv/hadoop/namenode"
+		
 }
 
 
 
 _run(){
 	. /etc/profile.d/*hadoop*
+	config_hadoop_xml
 	config_hadoop_slaves
 	#format hdfs
 	${HADOOP_LOCAL_DIR}/bin/hdfs namenode -format
