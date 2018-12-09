@@ -26,10 +26,19 @@ config_hadoop_slaves(){
 
 #$1 = input $2 output $3 = name  $4 = value
 add_property(){
-	xmlstarlet edit -s '//configuration' -t elem -n "property" \
+	if [[ "$1" == "$2" ]];
+	then
+		xmlstarlet edit -s '//configuration' -t elem -n "property" \
+		-s '//configuration/property[last()]' -t elem -n "name"  -v $3 \
+		-s '//configuration/property[last()]' -t elem -n "value" -v $4 \
+		$1 --inplace 
+
+	else
+		xmlstarlet edit -s '//configuration' -t elem -n "property" \
 		-s '//configuration/property[last()]' -t elem -n "name"  -v $3 \
 		-s '//configuration/property[last()]' -t elem -n "value" -v $4 \
 		$1 > $2
+	fi
 	
 }
 config_hadoop_xml(){
