@@ -37,7 +37,7 @@ add_property(){
 		xmlstarlet edit -s '//configuration' -t elem -n "property" \
 		-s '//configuration/property[last()]' -t elem -n "name"  -v $3 \
 		-s '//configuration/property[last()]' -t elem -n "value" -v $4 \
-		$1 > $2
+		$1 | xmlstarlet fo > $2
 	fi
 	
 }
