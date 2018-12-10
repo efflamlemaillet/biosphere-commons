@@ -31,6 +31,8 @@ gather_hosts_entries(){
 		for id in $(ss-get "${component_name}:ids")
 		do
 			echo $(ss-get --timeout=3600 ${component_name}.$id:hosts_entry) >> /etc/hosts
+			#trust it in firewalld
+			firewall-cmd --permanent --zone=trusted --add-source=$(ss-get --timeout=3600 ${component_name}.$id:private_ip)
 		done
 	done
 }
@@ -51,12 +53,12 @@ _run () {
 	set_hostname
 	#authorize local ssh 
 	cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+	ssh-keyscan $(hostname -s),$(hostname -i),0.0.0.0 >> ~/.ssh/known_hosts
 	#publish ssh pub key & /etc/hosts entry
 	ss-set public_key  "$(cat /root/.ssh/id_rsa.pub)"
 	ss-set hosts_entry "$(ss-get private_ip) $(hostname -s)"
 	gather_hosts_entries
-
-
+	
 }
 
 
