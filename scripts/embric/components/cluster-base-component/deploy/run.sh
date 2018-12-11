@@ -2,7 +2,9 @@
 
 
 set_hostname(){
-	hostnamectl set-hostname $(ss-get nodename)$(ss-get id)
+	export HOSTNAME=$(ss-get nodename)$(ss-get id)
+	hostname $HOSTNAME
+	hostnamectl set-hostname $HOSTNAME
 }
 
 rsa_with_passphrase_exists (){
@@ -31,18 +33,13 @@ gather_hosts_entries(){
 		for id in $(ss-get "${component_name}:ids")
 		do
 			echo $(ss-get --timeout=3600 ${component_name}.$id:hosts_entry) >> /etc/hosts
-			#trust it in firewalld
-			firewall-cmd --permanent --zone=trusted --add-source=$(ss-get --timeout=3600 ${component_name}.$id:private_ip)
 		done
 	done
 }
 create_ssh_key(){
-        yesv="n"
-        rsa_with_passphrase_exists
-        if [[ $? -eq 1 ]];then
-                yesv="y"
-        fi
-        yes ${yesv}|ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
+        
+        #rsa_with_passphrase_exists
+        ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 
 }
 
@@ -51,9 +48,8 @@ _run () {
 	ss-set component_name $(ss-get nodename)
 	create_ssh_key
 	set_hostname
-	if ! systemctl -q is-active firewalld ;then
-		systemctl start firewalld
-	fi
+	systemctl stop firewalld
+	systemctl disable firewalld
 	#authorize local ssh 
 	cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 	ssh-keyscan $(hostname -s),$(hostname -i),0.0.0.0 >> ~/.ssh/known_hosts

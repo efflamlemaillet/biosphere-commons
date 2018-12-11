@@ -57,8 +57,6 @@ _run(){
 	config_hadoop_slaves
 	#format hdfs
 	#add hdfs ui
-	firewall-cmd --permanent --zone=public --add-port 50070/tcp
-	systemctl restart firewalld
 	${HADOOP_LOCAL_DIR}/bin/hdfs namenode -format
 	${HADOOP_LOCAL_DIR}/sbin/start-dfs.sh
 }
