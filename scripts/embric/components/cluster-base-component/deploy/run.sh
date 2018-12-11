@@ -51,7 +51,7 @@ _run () {
 	ss-set component_name $(ss-get nodename)
 	create_ssh_key
 	set_hostname
-	if [[ ! $(systemctl -q is-active firewalld) ]];then
+	if ! systemctl -q is-active firewalld ;then
 		systemctl start firewalld
 	fi
 	#authorize local ssh 
