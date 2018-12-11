@@ -35,7 +35,7 @@ add_slaves_config(){
 		slave_state=$(ss-get $slave_name.$id:vmstate)
     		while [[ "$slave_state" != "ready" ]]
 		do
-			sleep 30
+			sleep 5
 			slave_state=$(ss-get $slave_name.$id:vmstate)
 		done
 	    echo $(ss-get $slave_name.$id:hostname) >> ${SPARK_LOCAL_DIR}/conf/slaves
