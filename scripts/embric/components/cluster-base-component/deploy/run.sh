@@ -51,6 +51,9 @@ _run () {
 	ss-set component_name $(ss-get nodename)
 	create_ssh_key
 	set_hostname
+	if [[ ! $(systemctl -q is-active firewalld) ]];then
+		systemctl start firewalld
+	fi
 	#authorize local ssh 
 	cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 	ssh-keyscan $(hostname -s),$(hostname -i),0.0.0.0 >> ~/.ssh/known_hosts
