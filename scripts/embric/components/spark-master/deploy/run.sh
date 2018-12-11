@@ -32,7 +32,14 @@ add_slaves_config(){
 	IFS=',' read -ra slave_ids <<< "$slaves_list"
 
 	for id in ${slave_ids[@]} ; do
+		slave_state=$(ss-get $slave_name.$id:vmstate)
+    		while [[ "$slave_state" != "ready" ]]
+		do
+			sleep 30
+			slave_state=$(ss-get $slave_name.$id:vmstate)
+		done
 	    echo $(ss-get $slave_name.$id:hostname) >> ${SPARK_LOCAL_DIR}/conf/slaves
+
 	done
 }
 
@@ -43,6 +50,7 @@ _run(){
 	config_spark_env
 	firewall-cmd --permanent --zone=public --add-port $(ss-get spark-web-port)/tcp
 	add_slaves_config
+
 	#start master and slaves
 	$SPARK_LOCAL_DIR/sbin/start-all.sh
 }
