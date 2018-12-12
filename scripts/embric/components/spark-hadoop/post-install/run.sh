@@ -10,14 +10,8 @@ install_hadoop(){
 
 	mkdir -p ${HADOOP_LOCAL_DIR}
 	tar -xzvf $HADOOP_PKG -C ${HADOOP_LOCAL_DIR}  --strip-components 1
-
-	touch /etc/profile.d/hadoop-env.sh
-	cat >>/etc/profile.d/hadoop-env.sh <<EOF
-export HADOOP_V=$HADOOP_V
-export HADOOP_PKG=$HADOOP_PKG
-export HADOOP_LOCAL_DIR=$HADOOP_LOCAL_DIR
-export PATH=\$PATH:${HADOOP_LOCAL_DIR}/bin
-EOF
+	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+	cp $DIR/../config/* /etc/profile.d/
 
 }
 

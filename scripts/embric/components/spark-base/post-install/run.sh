@@ -23,15 +23,7 @@ install_spark(){
 	SPARK_LOCAL_DIR="/usr/local/spark/"
 	JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
 
-
-	touch /etc/profile.d/spark-env.sh
-	cat >> /etc/profile.d/spark-env.sh <<EOF
-export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-export SPARK_V="$SPARK_V"
-export SPARK_LOCAL_DIR="$SPARK_LOCAL_DIR"
-export HADOOP_V="$HADOOP_V"
-export PATH=\$PATH:${SPARK_LOCAL_DIR}/bin
-EOF
+	cp $DIR/../config/* /etc/profile.d/
 
 	wget https://archive.apache.org/dist/spark/spark-${SPARK_V}/spark-${SPARK_V}-bin-hadoop2.7.tgz
 	sudo mkdir -p ${SPARK_LOCAL_DIR}
