@@ -23,6 +23,7 @@ install_spark(){
 	SPARK_LOCAL_DIR="/usr/local/spark/"
 	JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
 
+	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 	cp $DIR/../config/* /etc/profile.d/
 
 	wget https://archive.apache.org/dist/spark/spark-${SPARK_V}/spark-${SPARK_V}-bin-hadoop2.7.tgz

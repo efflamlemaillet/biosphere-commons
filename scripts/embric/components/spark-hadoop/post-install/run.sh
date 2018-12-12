@@ -10,6 +10,7 @@ install_hadoop(){
 
 	mkdir -p ${HADOOP_LOCAL_DIR}
 	tar -xzvf $HADOOP_PKG -C ${HADOOP_LOCAL_DIR}  --strip-components 1
+
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 	cp $DIR/../config/* /etc/profile.d/
 
