@@ -2,9 +2,9 @@
 
 install_scala(){
 
-	SCALA_V="2.12.7"
-	SCALA_PKG="scala-${SCALA_V}.rpm"
-	SCALA_URL="https://downloads.lightbend.com/scala/${SCALA_V}/${SCALA_PKG}"
+	export SCALA_V="2.12.7"
+	export SCALA_PKG="scala-${SCALA_V}.rpm"
+	export SCALA_URL="https://downloads.lightbend.com/scala/${SCALA_V}/${SCALA_PKG}"
 
 	#install scala
 	wget $SCALA_URL
@@ -18,10 +18,10 @@ install_scala(){
 
 install_spark(){
 
-	SPARK_V="2.3.2"
-	HADOOP_V="2.7"
-	SPARK_LOCAL_DIR="/usr/local/spark/"
-	JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+	export SPARK_V="2.3.2"
+	export HADOOP_V="2.7"
+	export SPARK_LOCAL_DIR="/usr/local/spark/"
+	export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
 
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 

@@ -2,9 +2,9 @@
 
 install_hadoop(){
 
-	HADOOP_V="2.7.7"
-	HADOOP_PKG="hadoop-$HADOOP_V.tar.gz"
-	HADOOP_LOCAL_DIR="/usr/local/hadoop"
+	export HADOOP_V="2.7.7"
+	export HADOOP_PKG="hadoop-$HADOOP_V.tar.gz"
+	export HADOOP_LOCAL_DIR="/usr/local/hadoop"
 
 	wget http://mirrors.standaloneinstaller.com/apache/hadoop/common/hadoop-$HADOOP_V/$HADOOP_PKG
 
