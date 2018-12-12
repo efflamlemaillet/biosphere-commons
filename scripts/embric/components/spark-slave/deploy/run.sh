@@ -21,7 +21,7 @@ authorize_masters_ssh(){
 
 _run(){
 	authorize_masters_ssh
-	ss-set vmstate "ready"
+	ss-set slave-ready "ready"
 }
 
 _run

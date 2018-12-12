@@ -32,11 +32,10 @@ add_slaves_config(){
 	IFS=',' read -ra slave_ids <<< "$slaves_list"
 
 	for id in ${slave_ids[@]} ; do
-		slave_state=$(ss-get $slave_name.$id:vmstate)
+		slave_state=$(ss-get --timeout=3600 $slave_name.$id:slave-ready)
     		while [[ "$slave_state" != "ready" ]]
 		do
-			sleep 5
-			slave_state=$(ss-get $slave_name.$id:vmstate)
+			slave_state=$(ss-get --timeout=3600 $slave_name.$id:slave-ready)
 		done
 	    echo $(ss-get $slave_name.$id:hostname) >> ${SPARK_LOCAL_DIR}/conf/slaves
 
