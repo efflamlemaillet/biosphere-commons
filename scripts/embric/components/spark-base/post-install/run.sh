@@ -25,7 +25,7 @@ install_spark(){
 
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-	envsubst < $DIR/../config/spark-env.sh > /etc/profile.d/spark-env.sh
+	envsubst '$SPARK_V,$HADOOP_V,$SPARK_LOCAL_DIR,$JAVA_HOME' < $DIR/../config/spark-env.sh > /etc/profile.d/spark-env.sh
 
 	wget https://archive.apache.org/dist/spark/spark-${SPARK_V}/spark-${SPARK_V}-bin-hadoop2.7.tgz
 	sudo mkdir -p ${SPARK_LOCAL_DIR}
