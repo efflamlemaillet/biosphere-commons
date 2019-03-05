@@ -19,8 +19,6 @@
 export output_rates=(n_seqs smallest largest n_bases mean_len n_under_200 n_over_1k n_over_10k n_with_orf mean_orf_percent n90 n70 n50 n30 n10 gc bases_n proportion_n fragments fragments_mapped p_fragments_mapped good_mappings p_good_mapping bad_mappings potential_bridges bases_uncovered p_bases_uncovered contigs_uncovbase p_contigs_uncovbase contigs_uncovered p_contigs_uncovered contigs_lowcovered p_contigs_lowcovered contigs_segmented p_contigs_segmented score optimal_score cutoff weighted)
 
 store_rr(){
-	C_DATA_DIR="${COMPONENT_NAME}_DATA_DIR"
-	data_dir=${!C_DATA_DIR}
 	#extract the list of rules
 	IFS=';' read -ra rule_list <<< "$(ss-get run_rule)"
 	for rule in "${rule_list[@]}"
@@ -43,7 +41,7 @@ store_rr(){
                         fi
                 done
                 if [[ ${error:=noerror} == "noerror" ]];then
-                        echo $rule >> $data_dir/run.rules
+                        echo $rule >> ${CWL_DATA_DIR}/run.rules
                 else
                         echo "invalid condition $condition $error  "
                 fi
@@ -55,8 +53,8 @@ _run(){
 	#load env vars
 	. /etc/profile.d/$COMPONENT_NAME
 
-	C_DATA_DIR="${COMPONENT_NAME}_DATA_DIR"
-	C_LOCAL_DIR="${COMPONENT_NAME}_LOCAL_DIR"
+	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
+	C_LOCAL_DIR="${COMPONENT_NAME^^}_LOCAL_DIR"
 	
 	CWL_LOCAL_DIR=${!C_LOCAL_DIR}
 	CWL_DATA_DIR=${!C_DATA_DIR}
