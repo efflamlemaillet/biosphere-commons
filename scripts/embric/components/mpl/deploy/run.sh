@@ -58,6 +58,7 @@ _run(){
 	
 	CWL_LOCAL_DIR=${!C_LOCAL_DIR}
 	CWL_DATA_DIR=${!C_DATA_DIR}
+	pl_counter=0
 	IFS=';' read -ra plu_list <<< "$(ss-get data_urls)"
 	for plu in "${plu_list[@]}"
 	do
