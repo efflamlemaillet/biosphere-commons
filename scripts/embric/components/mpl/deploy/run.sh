@@ -51,7 +51,7 @@ store_rr(){
 
 _run(){
 	#load env vars
-	. /etc/profile.d/$COMPONENT_NAME
+	. /etc/profile.d/$COMPONENT_NAME-env.sh
 
 	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
 	C_LOCAL_DIR="${COMPONENT_NAME^^}_LOCAL_DIR"
@@ -71,15 +71,16 @@ _run(){
 
 			#download 
 			cd ${CWL_DATA_DIR}/datasets/
-			curl ${url_list[0]} --output=$left_file
-			curl ${url_list[1]} --output=$right_file
+			curl ${url_list[0]} --output $left_file
+			curl ${url_list[1]} --output $right_file
 			
 			#prepare the outputs dirs and TA PE config
 			outdir=${CWL_DATA_DIR}/outputs/$pl_counter
 			mkdir -p ${outdir}
-
+			
 			# build the Transcriptome Assembly wf pair ended yaml file
 			SC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+			export CWL_DATA_DIR ; export left_file ; export right_file
 			envsubst '${CWL_DATA_DIR},${left_file},${right_file}' <$SC_DIR/../config/TA-PE-template.yaml >${outdir}/TA-PE.yaml
 			config_file=${outdir}/TA-PE.yaml
 			wf_file=${CWL_LOCAL_DIR}/workflows/TranscriptomeAssembly-wf.paired-end.cwl
