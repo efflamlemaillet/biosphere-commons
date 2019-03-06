@@ -51,14 +51,14 @@ store_rr(){
 
 _run(){
 	#load env vars
-	export SC_DIR_ABS_PATH="$( realpath $( dirname ${BASH_SOURCE[@]}))"
+	SC_DIR_ABS_PATH="$( realpath $( dirname ${BASH_SOURCE[@]}))"
 	. /etc/profile.d/$COMPONENT_NAME-env.sh
 
 	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
 	C_LOCAL_DIR="${COMPONENT_NAME^^}_LOCAL_DIR"
 	
 	CWL_LOCAL_DIR=${!C_LOCAL_DIR}
-	CWL_DATA_DIR=${!C_DATA_DIR}
+	export CWL_DATA_DIR=${!C_DATA_DIR}
 	pl_counter=0
 	IFS=';' read -ra plu_list <<< "$(ss-get data_urls)"
 	for plu in "${plu_list[@]}"
@@ -81,7 +81,6 @@ _run(){
 			mkdir -p ${outdir}
 			template_file="${SC_DIR_ABS_PATH}/../config/TA-PE-template.yaml"
 			ta_config="${outdir}/TA-PE.yaml"
-			export CWL_DATA_DIR left_file right_file
 			envsubst '${CWL_DATA_DIR},${left_file},${right_file}' < "${template_file}" > "${ta_config}"
 			config_file=${outdir}/TA-PE.yaml
 			wf_file=${CWL_LOCAL_DIR}/workflows/TranscriptomeAssembly-wf.paired-end.cwl
