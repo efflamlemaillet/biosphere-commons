@@ -51,7 +51,7 @@ store_rr(){
 
 _run(){
 	#load env vars
-	SC_DIR_ABS_PATH="$( realpath $( dirname ${BASH_SOURCE[@]}))"
+	export SC_DIR_ABS_PATH="$( realpath $( dirname ${BASH_SOURCE[@]}))"
 	. /etc/profile.d/$COMPONENT_NAME-env.sh
 
 	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
@@ -66,8 +66,8 @@ _run(){
 		IFS="," read -ra url_list <<< "$plu"
 		if [[ "${#url_list[@]}" -eq 2 ]];then
 
-			left_file=${url_list[0]##*/}
-			right_file=${url_list[1]##*/}
+			export left_file=${url_list[0]##*/}
+			export right_file=${url_list[1]##*/}
 
 			mkdir -p ${CWL_DATA_DIR}/datasets/
 
@@ -79,9 +79,10 @@ _run(){
 			#prepare the outputs dirs and TA PE config
 			outdir=${CWL_DATA_DIR}/outputs/$pl_counter
 			mkdir -p ${outdir}
-			
-			export CWL_DATA_DIR ; export left_file ; export right_file
-			envsubst '${CWL_DATA_DIR},${left_file},${right_file}' <${SC_DIR_ABS_PATH}/../config/TA-PE-template.yaml >${outdir}/TA-PE.yaml
+			template_file="${SC_DIR_ABS_PATH}/../config/TA-PE-template.yaml"
+			ta_config="${outdir}/TA-PE.yaml"
+			export CWL_DATA_DIR left_file right_file
+			envsubst '${CWL_DATA_DIR},${left_file},${right_file}' < ${template_file} > ${ta_config}
 			config_file=${outdir}/TA-PE.yaml
 			wf_file=${CWL_LOCAL_DIR}/workflows/TranscriptomeAssembly-wf.paired-end.cwl
 
