@@ -81,7 +81,7 @@ _run(){
 			mkdir -p ${outdir}
 			
 			export CWL_DATA_DIR ; export left_file ; export right_file
-			envsubst '${CWL_DATA_DIR},${left_file},${right_file}' <$SC_DIR_ABS_PATH/../config/TA-PE-template.yaml >${outdir}/TA-PE.yaml
+			envsubst '${CWL_DATA_DIR},${left_file},${right_file}' <${SC_DIR_ABS_PATH}/../config/TA-PE-template.yaml >${outdir}/TA-PE.yaml
 			config_file=${outdir}/TA-PE.yaml
 			wf_file=${CWL_LOCAL_DIR}/workflows/TranscriptomeAssembly-wf.paired-end.cwl
 
