@@ -51,7 +51,7 @@ store_rr(){
 
 _run(){
 	#load env vars
-	SC_DIR_ABS_PATH="$( realpath $( dirname ${BASH_SOURCE[@]}))"
+	SC_DIR_ABS_PATH="$( realpath $( dirname ${BASH_SOURCE[0]}))"
 	. /etc/profile.d/$COMPONENT_NAME-env.sh
 
 	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
