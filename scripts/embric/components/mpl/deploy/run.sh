@@ -51,6 +51,7 @@ store_rr(){
 
 _run(){
 	#load env vars
+	SC_DIR_ABS_PATH="$( realpath $( dirname ${BASH_SOURCE[@]}))"
 	. /etc/profile.d/$COMPONENT_NAME-env.sh
 
 	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
@@ -79,10 +80,8 @@ _run(){
 			outdir=${CWL_DATA_DIR}/outputs/$pl_counter
 			mkdir -p ${outdir}
 			
-			# build the Transcriptome Assembly wf pair ended yaml file
-			SC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 			export CWL_DATA_DIR ; export left_file ; export right_file
-			envsubst '${CWL_DATA_DIR},${left_file},${right_file}' <$SC_DIR/../config/TA-PE-template.yaml >${outdir}/TA-PE.yaml
+			envsubst '${CWL_DATA_DIR},${left_file},${right_file}' <$SC_DIR_ABS_PATH/../config/TA-PE-template.yaml >${outdir}/TA-PE.yaml
 			config_file=${outdir}/TA-PE.yaml
 			wf_file=${CWL_LOCAL_DIR}/workflows/TranscriptomeAssembly-wf.paired-end.cwl
 
