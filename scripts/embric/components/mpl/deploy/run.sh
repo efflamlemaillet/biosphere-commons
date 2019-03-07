@@ -90,7 +90,7 @@ _run(){
 		fi
 		echo "command :	cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file}" > ${outdir}/wf.info
 		cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file} > ${outdir}/cwl_stdout.json
-		((pl_counter++))
+		pl_counter=$((pl_counter + 1))
 	done
 
 }
