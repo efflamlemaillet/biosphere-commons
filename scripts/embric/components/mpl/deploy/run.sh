@@ -48,6 +48,26 @@ store_rr(){
         done
 }	
 
+check_rr(){
+	#read rule one by one and extract 
+	while read rule; do
+		IFS=',' read -ra subrule_list <<< "$rule"
+		for subrule in ${subrule_list[@]}
+		do
+			# for each subrule 
+			#1. extract colname opérator valueo
+			col="${subrule%%[<>]*}"
+			thresold="${subrule##*[<>]}"
+			[[ "$subrule" =~ <|> ]] && operator=$BASH_REMATCH
+			#2. search it in $1
+			real_value=$(csvcut -d, -c $col $1 |csvformat -K 1)
+			#3. ensure correctness
+			if [[ $subrule == '<' && $expected_value -gt $thresold || $subrule == '>' && $expected_value -lt $thresold ]] ;
+			       return 1
+		       	fi
+	 	done
+	done < ${CWL_DATA_DIR}/run.rules
+}
 
 _run(){
 	#load env vars
@@ -56,9 +76,11 @@ _run(){
 
 	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
 	C_LOCAL_DIR="${COMPONENT_NAME^^}_LOCAL_DIR"
-	
+		
 	CWL_LOCAL_DIR=${!C_LOCAL_DIR}
-	export CWL_DATA_DIR=${!C_DATA_DIR}
+	export CWL_DATA_DIR=${!C_DATA_DIR}i
+
+	store_rr
 	pl_counter=0
 	IFS=';' read -ra plu_list <<< "$(ss-get data_urls)"
 	for plu in "${plu_list[@]}"
@@ -84,13 +106,15 @@ _run(){
 			envsubst '$CWL_DATA_DIR,$left_file,$right_file' < "${template_file}" > "${ta_config}"
 			config_file=${outdir}/TA-PE.yaml
 			wf_file=${CWL_LOCAL_DIR}/workflows/TranscriptomeAssembly-wf.paired-end.cwl
-
+		
 		#elif length= 1 RUN SE 
 		#else FAILURE GO NEXT
 		fi
 		echo "command :	cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file}" > ${outdir}/wf.info
 		cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file} > ${outdir}/cwl_stdout.json
+		check_rr $( ${outdir}/cwl_stdout.json | jq -r '.transrate_output_dir.basename'/assemblies.csv )
 		pl_counter=$((pl_counter + 1))
+		
 	done
 
 }
