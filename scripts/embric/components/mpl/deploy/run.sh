@@ -50,6 +50,7 @@ store_rr(){
 
 check_rr(){
 	#read rule one by one and extract 
+	error=""
 	while read rule; do
 		IFS=',' read -ra subrule_list <<< "$rule"
 		for subrule in ${subrule_list[@]}
@@ -58,15 +59,21 @@ check_rr(){
 			#1. extract colname opérator valueo
 			col="${subrule%%[<>]*}"
 			thresold="${subrule##*[<>]}"
-			[[ "$subrule" =~ <|> ]] && operator=$BASH_REMATCH
+			[[ "$subrule" =~ (<|>) ]] && operator=$BASH_REMATCH
 			#2. search it in $1
 			real_value=$(csvcut -d, -c $col $1 |csvformat -K 1)
 			#3. ensure correctness
-			if [[ $subrule == '<' && $expected_value -gt $thresold || $subrule == '>' && $expected_value -lt $thresold ]] ;
-			       return 1
+			if [[ $(echo "${real_value}${operator}${thresold}" | bc ) -eq 0  ]]
+                        then
+                                error="${error:-}assembly thresold incorectness (rule $subrule  and $col value $real_value \n"
 		       	fi
 	 	done
 	done < ${CWL_DATA_DIR}/run.rules
+	if [[ "${error:-}" != "" ]]; then
+                printf "${error:-}" > ${outdir}/assemblies.errors
+                return 1
+        fi
+
 }
 
 _run(){
@@ -112,7 +119,12 @@ _run(){
 		fi
 		echo "command :	cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file}" > ${outdir}/wf.info
 		cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file} > ${outdir}/cwl_stdout.json
-		check_rr $( ${outdir}/cwl_stdout.json | jq -r '.transrate_output_dir.basename'/assemblies.csv )
+                assembly_data_path=$( ${outdir}/cwl_stdout.json | jq -r '.transrate_output_dir.basename'/assemblies.csv )
+                part_1_result=$(check_rr $assembly_data_path)
+                if [[ "$(part_1_result)" -eq 0 ]];then
+                        continue
+                fi
+
 		pl_counter=$((pl_counter + 1))
 		
 	done
