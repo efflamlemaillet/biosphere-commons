@@ -50,8 +50,8 @@ store_rr(){
 
 check_rr(){
 	#read rule one by one and extract 
-	error=""
 	while read rule; do
+		errors=""
 		IFS=',' read -ra subrule_list <<< "$rule"
 		for subrule in ${subrule_list[@]}
 		do
@@ -68,11 +68,17 @@ check_rr(){
                                 error="${error:-}assembly thresold incorectness (rule $subrule  and $col value $real_value \n"
 		       	fi
 	 	done
+		if [[ "${errors:-}" == "" ]];
+		then
+			valid_rules="${valid_rules:-}${valid_rules:+;}$rule"
+		fi
 	done < ${CWL_DATA_DIR}/run.rules
 	if [[ "${error:-}" != "" ]]; then
                 printf "${error:-}" > ${outdir}/assemblies.errors
-                return 1
         fi
+	if [[ "${valid_rules:-}" == "" ]];then
+		return 1
+	fi
 
 }
 
@@ -84,8 +90,7 @@ _run(){
 	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
 	C_LOCAL_DIR="${COMPONENT_NAME^^}_LOCAL_DIR"
 		
-	CWL_LOCAL_DIR=${!C_LOCAL_DIR}
-	export CWL_DATA_DIR=${!C_DATA_DIR}i
+	export CWL_DATA_DIR=${!C_DATA_DIR}
 
 	store_rr
 	pl_counter=0
