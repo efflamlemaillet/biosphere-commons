@@ -125,7 +125,7 @@ _run(){
 		fi
 		echo "command :	cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file}" > ${outdir}/wf.info
 		cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file} > ${outdir}/cwl_stdout.json
-                assembly_data_path=$( cat ${outdir}/cwl_stdout.json | jq -r '.transrate_output_dir.basename'/assemblies.csv )
+		assembly_data_path="$( cat ${outdir}/cwl_stdout.json | jq -r '.transrate_output_dir.basename')/assemblies.csv"
                 part_1_result=$(check_rr $assembly_data_path)
                 if [[ "$(part_1_result)" -eq 0 ]];then
                         continue
