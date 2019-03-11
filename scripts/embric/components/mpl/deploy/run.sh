@@ -90,7 +90,7 @@ _run(){
 	C_DATA_DIR="${COMPONENT_NAME^^}_DATA_DIR"
 	C_LOCAL_DIR="${COMPONENT_NAME^^}_LOCAL_DIR"
 
-	export CWL_LOCAL_DIR=${!C_DATA_DIR}		
+	export CWL_LOCAL_DIR=${!C_LOCAL_DIR}		
 	export CWL_DATA_DIR=${!C_DATA_DIR}
 
 	store_rr
