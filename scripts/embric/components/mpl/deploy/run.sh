@@ -19,19 +19,24 @@
 export output_rates=(n_seqs smallest largest n_bases mean_len n_under_200 n_over_1k n_over_10k n_with_orf mean_orf_percent n90 n70 n50 n30 n10 gc bases_n proportion_n fragments fragments_mapped p_fragments_mapped good_mappings p_good_mapping bad_mappings potential_bridges bases_uncovered p_bases_uncovered contigs_uncovbase p_contigs_uncovbase contigs_uncovered p_contigs_uncovered contigs_lowcovered p_contigs_lowcovered contigs_segmented p_contigs_segmented score optimal_score cutoff weighted)
 
 store_rr(){
+
+	if [[ -f "${CWL_DATA_DIR}/run.rules" ]]
+	then
+		truncate -s0 ${CWL_DATA_DIR}/run.rules
+	fi
 	#extract the list of rules
 	IFS=';' read -ra rule_list <<< "$(ss-get run_rule)"
 	for rule in "${rule_list[@]}"
 	do
                 IFS=',' read -ra cl <<< "$rule"
-                unset error     
+                local error=""
                 for condition in "${cl[@]}"
                 do
-                        col="${condition%%[<>]*}"
+                        local col="${condition%%[<>]*}"
 
                         if [[ ${output_rates[@]} =~ (^|[[:space:]])$col($|[[:space:]]) ]]
                         then
-                                value="${condition##*[<>]}"
+                                local value="${condition##*[<>]}"
                                 if [[ ! "${value}" =~ [+-]?[0-9]+\.?[0-9]* ]]
                                 then
                                         error="error in condition $condition value is not a number( $value )"
@@ -40,46 +45,55 @@ store_rr(){
                                 error="error in condition $condition $col must be in list of output_rates"
                         fi
                 done
-                if [[ ${error:=noerror} == "noerror" ]];then
+                if [[ ${error:-noerror} == "noerror" ]];then
                         echo $rule >> ${CWL_DATA_DIR}/run.rules
                 else
                         echo "invalid condition $condition $error  "
+			unset $error
                 fi
         done
 }	
 
 check_rr(){
 	#read rule one by one and extract 
+	local valid_rules=""
+	local -i rv=0
+
 	while read rule; do
-		errors=""
-		IFS=',' read -ra subrule_list <<< "$rule"
+		local error=""
+		IFS=',' read -ra subrule_list <<< "${rule}"
 		for subrule in ${subrule_list[@]}
 		do
 			# for each subrule 
 			#1. extract colname opérator valueo
-			col="${subrule%%[<>]*}"
-			thresold="${subrule##*[<>]}"
+			local col="${subrule%%[<>]*}"
+			local thresold="${subrule##*[<>]}"
 			[[ "$subrule" =~ (<|>) ]] && operator=$BASH_REMATCH
 			#2. search it in $1
-			real_value=$(csvcut -d, -c $col $1 |csvformat -K 1)
-			#3. ensure correctness
+			local real_value=$(csvcut -d, -c $col $1 |csvformat -K 1)
+# DEBUG			#echo "cond : ${real_value}${operator}${thresold}"
+			#3. ensure correctness of the condition
 			if [[ $(echo "${real_value}${operator}${thresold}" | bc ) -eq 0  ]]
                         then
-                                error="${error:-}assembly thresold incorectness (rule $subrule  and $col value $real_value \n"
+				local error="${error:-}Error $col (value : $real_value ) must be $operator $thresold \n"
 		       	fi
 	 	done
-		if [[ "${errors:-}" == "" ]];
+		if [[ "${error:-}" == "" ]];
 		then
-			valid_rules="${valid_rules:-}${valid_rules:+;}$rule"
+			local valid_rules="${valid_rules:-}$rule\n"
 		fi
-	done < ${CWL_DATA_DIR}/run.rules
-	if [[ "${error:-}" != "" ]]; then
-                printf "${error:-}" > ${outdir}/assemblies.errors
-        fi
-	if [[ "${valid_rules:-}" == "" ]];then
-		return 1
-	fi
+	done < "${CWL_DATA_DIR}/run.rules"
 
+
+	printf "${error:-'no errors'}" > ${outdir}/assemblies.errors
+
+	if [[ "${valid_rules}" == "" ]]
+	then
+		rv=1
+	else
+		printf "${valid_rules}" > ${outdir}/valid_rules
+	fi
+	return $rv
 }
 
 _run(){
@@ -98,6 +112,7 @@ _run(){
 	IFS=';' read -ra plu_list <<< "$(ss-get data_urls)"
 	for plu in "${plu_list[@]}"
 	do
+
 		IFS="," read -ra url_list <<< "$plu"
 		if [[ "${#url_list[@]}" -eq 2 ]];then
 
@@ -108,8 +123,8 @@ _run(){
 
 			#download 
 			cd ${CWL_DATA_DIR}/datasets/
-			curl ${url_list[0]} --output $left_file
-			curl ${url_list[1]} --output $right_file
+			curl ${url_list[0]} --silent --output $left_file
+			curl ${url_list[1]} --silent --output $right_file
 			
 			#prepare the outputs dirs and TA PE config
 			outdir=${CWL_DATA_DIR}/outputs/$pl_counter
@@ -125,11 +140,12 @@ _run(){
 		fi
 		echo "command :	cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file}" > ${outdir}/wf.info
 		cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file} > ${outdir}/cwl_stdout.json
-		assembly_data_path="$( cat ${outdir}/cwl_stdout.json | jq -r '.transrate_output_dir.basename')/assemblies.csv"
-                part_1_result=$(check_rr $assembly_data_path)
-                if [[ "$(part_1_result)" -eq 0 ]];then
-                        continue
+		assembly_data_path="${outdir}/$( cat ${outdir}/cwl_stdout.json | jq -r '.transrate_output_dir.basename')/assemblies.csv"
+                check_rr $assembly_data_path || part_1_result="failed"
+                if [[ "${part_1_result}" == "failed" ]];then
+			continue
                 fi
+
 
 		pl_counter=$((pl_counter + 1))
 		
