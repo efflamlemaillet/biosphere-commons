@@ -1,0 +1,10 @@
+{
+  "sparkConf": {
+    "spark.master": "spark://${MASTER-HOSTNAME}:7077",
+    "spark.app.name": "metapipeTest"
+  },
+  "packages": "$METAPIPE_HOME/packages",
+  "numThreads": 1,
+  "parallelism": 1
+}
+
