@@ -7,7 +7,8 @@ _run(){
 	#. /etc/profile.d/$COMPONENT_NAME-env.sh
 	touch /etc/profile.d/$COMPONENT_NAME-env.sh
 	export MASTER-HOSTNAME=$(hostname)
-	export METAPIPE_HOME='/var/lib/metapipe'
+	export METAPIPE_HOME='$(ss-get mount_point_path)/metapipe'
+	mkdir -p METAPIPE_HOME
 	mkdir $METAPIPE_HOME
 	echo "export METAPIPE_HOME='/var/lib/metapipe'" >> /etc/profile.d/$COMPONENT_NAME-env.sh
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
