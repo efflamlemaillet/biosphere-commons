@@ -66,8 +66,8 @@ _run(){
  	systemctl stop nfs rpcbind rpcbind.socket
 	$HADOOP_LOCAL_DIR/sbin/hadoop-daemon.sh --script $HADOOP_LOCAL_DIR/bin/hdfs start portmap
 	$HADOOP_LOCAL_DIR/sbin/hadoop-daemon.sh --script $HADOOP_LOCAL_DIR/bin/hdfs start nfs3
-	echo "${nodename}:/  /mnt/hdfs/ nfs proto=tcp,nolock,noacl,sync"
-	mount -t nfs -o vers=3,proto=tcp,nolock,noacl,sync ${nodename}:/  /mnt/hdfs/
+	#echo "${nodename}:/  /mnt/hdfs/ nfs proto=tcp,nolock,noacl,sync"
+	mount -t nfs -o vers=3,proto=tcp,nolock,noacl,sync $(hostname -s):/  /mnt/hdfs/
 }
 
 _run
