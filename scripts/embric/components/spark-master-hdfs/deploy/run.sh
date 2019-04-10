@@ -63,7 +63,7 @@ _run(){
 	#add hdfs ui
 	${HADOOP_LOCAL_DIR}/bin/hdfs namenode -format
 	${HADOOP_LOCAL_DIR}/sbin/start-dfs.sh
- 	systemctl stop nfs rpcbind
+ 	systemctl stop nfs rpcbind rpcbind.socket
 	$HADOOP_LOCAL_DIR/sbin/hadoop-daemon.sh --script $HADOOP_LOCAL_DIR/bin/hdfs start portmap
 	$HADOOP_LOCAL_DIR/sbin/hadoop-daemon.sh --script $HADOOP_LOCAL_DIR/bin/hdfs start nfs3
 	echo "${nodename}:/  /mnt/hdfs/ nfs proto=tcp,nolock,noacl,sync"
