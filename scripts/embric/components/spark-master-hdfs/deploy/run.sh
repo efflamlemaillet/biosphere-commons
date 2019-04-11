@@ -61,6 +61,7 @@ _run(){
 	config_hadoop_slaves
 	#format hdfs
 	#add hdfs ui
+	mkdir /mnt/hdfs/
 	${HADOOP_LOCAL_DIR}/bin/hdfs namenode -format
 	${HADOOP_LOCAL_DIR}/sbin/start-dfs.sh
  	systemctl stop nfs rpcbind rpcbind.socket
