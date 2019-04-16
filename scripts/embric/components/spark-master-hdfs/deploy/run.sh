@@ -42,15 +42,16 @@ add_property(){
 	
 }
 config_hadoop_xml(){
+	set -f 
 	add_property "${HADOOP_LOCAL_DIR}/share/hadoop/common/templates/core-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/core-site.xml" "fs.default.name" "hdfs://$(hostname -s):9000"
 	add_property "${HADOOP_LOCAL_DIR}/share/hadoop/hdfs/templates/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "dfs.replication" "1"
-	add_property "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "hadoop.proxyuser.root.groups" "*" 
+	add_property "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "hadoop.proxyuser.root.groups" '*'
 	add_property "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "hadoop.proxyuser.root.users" "root" 
-	add_property "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "hadoop.proxyuser.root.hosts" "*" 
+	add_property "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "hadoop.proxyuser.root.hosts" '*' 
 	add_property "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "dfs.datanode.du.reserved" "6000000000" 
 	add_property "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "dfs.data.dir" "/srv/hadoop/datanode" 
 	add_property "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "${HADOOP_LOCAL_DIR}/etc/hadoop/hdfs-site.xml" "dfs.name.dir" "/srv/hadoop/namenode"
-		
+	set +f
 }
 
 
