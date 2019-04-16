@@ -3,7 +3,7 @@
 
 _run(){
 	METAPIPE_GIT="https://gitlab.com/uit-sfb/newpan-tools.git"
-	GIT_DIR=$(basename $METAPIPE_GIT)	
+	GIT_DIR=$(basename $METAPIPE_GIT .git)	
 	#. /etc/profile.d/$COMPONENT_NAME-env.sh
 	touch /etc/profile.d/$COMPONENT_NAME-env.sh
 	export MASTER_HOSTNAME=$(hostname)

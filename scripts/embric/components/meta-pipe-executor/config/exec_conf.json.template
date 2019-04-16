@@ -1,6 +1,6 @@
 {
   "sparkConf": {
-    "spark.master": "spark://${MASTER-HOSTNAME}:7077",
+    "spark.master": "spark://${MASTER_HOSTNAME}:7077",
     "spark.app.name": "metapipeTest"
   },
   "packages": "$METAPIPE_HOME/packages",
