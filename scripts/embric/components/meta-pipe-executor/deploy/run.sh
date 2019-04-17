@@ -17,6 +17,10 @@ _run(){
 	envsubst '$MASTER_HOSTNAME' < ${DIR}/../config/exec_conf.json.template > ./newpan-tools/exec_conf.json
 	systemctl restart docker
 	cd $GIT_DIR
+	echo "admin" > minio.pswd
+	echo "password" >> minio.pswd
+	cp minio.pswd $METAPIPE_HOME/.secret/local/minio/
+
 	./example/services/minio/minio.sh start -c admin password
 	./example/services/authService/auth.sh start
 	./example/services/jobManager/jobman.sh start
