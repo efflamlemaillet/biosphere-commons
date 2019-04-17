@@ -19,7 +19,8 @@ _run(){
 	cd $GIT_DIR
 	echo "admin" > minio.pswd
 	echo "password" >> minio.pswd
-	cp minio.pswd $METAPIPE_HOME/.secret/local/minio/
+	mkdir -p $METAPIPE_HOME/.secret/local/minio/
+	cp minio.pswd $METAPIPE_HOME"/.secret/local/minio/"
 
 	./example/services/minio/minio.sh start -c admin password
 	./example/services/authService/auth.sh start
