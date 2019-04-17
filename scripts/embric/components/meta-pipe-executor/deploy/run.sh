@@ -22,7 +22,7 @@ _run(){
 	mkdir -p $METAPIPE_HOME/.secret/local/minio/
 	cp minio.pswd $METAPIPE_HOME"/.secret/local/minio/"
 
-	./example/services/minio/minio.sh start -c admin password
+	./example/services/minio/minio.sh start 
 	./example/services/authService/auth.sh start
 	./example/services/jobManager/jobman.sh start
 	./example/services/executor/executor.sh start -e ./exec_conf.json
