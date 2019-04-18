@@ -4,25 +4,28 @@
 _run(){
 	METAPIPE_GIT="https://gitlab.com/uit-sfb/newpan-tools.git"
 	GIT_DIR=$(basename $METAPIPE_GIT .git)
+
+	. /etc/profile.d/$COMPONENT_NAME-env.sh
+
+	if [[ ! ( -z ${METAPIPE_HOME+x} && -d METAPIPE_HOME ) ]];then
+		mp_id="$(ss-get dependencies_fs_id)"
+		mp_options="$(ss-get dependencies_fs_options)"
+		mp_type="$(ss-get dependencies_fs_type)"
+		mp_path="$(ss-get dependencies_mount_point)"
+		export METAPIPE_HOME=$mp_path'/metapipe'
+		mkdir -p $METAPIPE_HOME
+		echo "export METAPIPE_HOME=\"$METAPIPE_HOME\"" >> /etc/profile.d/$COMPONENT_NAME-env.sh
+		mount -t $mp_type -o $mp_options $mp_id $mp_path
+	fi
 	
-	#. /etc/profile.d/$COMPONENT_NAME-env.sh
-	touch /etc/profile.d/$COMPONENT_NAME-env.sh
-	export MASTER_HOSTNAME=$(hostname)
-	export METAPIPE_HOME=$(ss-get mount_point_path)'/metapipe'
-	mkdir -p $METAPIPE_HOME
-	
-	echo "export METAPIPE_HOME='/var/lib/metapipe'" >> /etc/profile.d/$COMPONENT_NAME-env.sh
+
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-	git clone $METAPIPE_GIT
+	export MASTER_HOSTNAME=$(hostname)
 	envsubst '$MASTER_HOSTNAME' < ${DIR}/../config/exec_conf.json.template > ./newpan-tools/exec_conf.json
 	systemctl restart docker
 	cd $GIT_DIR
-	echo "admin" > minio.pswd
-	echo "password" >> minio.pswd
-	mkdir -p $METAPIPE_HOME/.secret/local/minio/
-	cp minio.pswd $METAPIPE_HOME"/.secret/local/minio/"
 
-	./example/services/minio/minio.sh start 
+	./example/services/minio/minio.sh start -c admin password 
 	./example/services/authService/auth.sh start
 	./example/services/jobManager/jobman.sh start
 	./example/services/executor/executor.sh start -e ./exec_conf.json
