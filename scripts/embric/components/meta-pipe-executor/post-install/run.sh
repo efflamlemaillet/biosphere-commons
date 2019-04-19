@@ -24,7 +24,7 @@ _run(){
         GIT_DIR=$(basename $METAPIPE_GIT .git)
 
 	git clone $METAPIPE_GIT
-	export METAPIPE_SBIN_DIR=$DIR/GIT_DIR
+	export METAPIPE_SBIN_DIR=$DIR/$GIT_DIR
 
 	cenv_lines=$(cat <<-EOF
 export METAPIPE_SBIN_DIR=$DIR/GIT_DIR
