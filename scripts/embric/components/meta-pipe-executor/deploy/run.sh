@@ -6,8 +6,10 @@ _run(){
 	GIT_DIR=$(basename $METAPIPE_GIT .git)
 
 	. /etc/profile.d/$COMPONENT_NAME-env.sh
-
-	if [[ ! ( -z ${METAPIPE_HOME+x} && -d METAPIPE_HOME ) ]];then
+	
+	# si $METAPIPE_HOME existes ET est un repertoire valide
+	# on n'executes pas la suite
+	if [[ ! ( -n ${METAPIPE_HOME+x} && -d $METAPIPE_HOME ) ]];then
 		mp_id="$(ss-get dependencies_fs_id)"
 		mp_options="$(ss-get dependencies_fs_options)"
 		mp_type="$(ss-get dependencies_fs_type)"
