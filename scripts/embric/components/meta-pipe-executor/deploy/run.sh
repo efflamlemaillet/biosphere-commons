@@ -21,9 +21,9 @@ _run(){
 
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 	export MASTER_HOSTNAME=$(hostname)
-	envsubst '$MASTER_HOSTNAME' < ${DIR}/../config/exec_conf.json.template > $METAPIPE_SBIN_DIR/newpan-tools/exec_conf.json
+	envsubst '$MASTER_HOSTNAME' < ${DIR}/../config/exec_conf.json.template > $METAPIPE_SBIN_DIR/exec_conf.json
 	systemctl restart docker
-	cd $GIT_DIR
+	cd $METAPIPE_SBIN_DIR
 
 	$METAPIPE_SBIN_DIR/example/services/minio/minio.sh start -c admin password 
 	$METAPIPE_SBIN_DIR/example/services/authService/auth.sh start
