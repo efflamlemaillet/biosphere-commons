@@ -27,16 +27,14 @@ _run(){
 	export METAPIPE_SBIN_DIR=$DIR/$GIT_DIR
 
 	cenv_lines=$(cat <<-EOF
-export METAPIPE_SBIN_DIR=$DIR/GIT_DIR
+export METAPIPE_SBIN_DIR=$DIR/$GIT_DIR
 EOF
 )
-	
-#on essaie de placer métapipe sur le root fs avec 80GO au mois de libre )
-#si on y arrive on prévient la phase deploy en ajoutant la ligne METAPIPE_HOME dans le env.sh du COMPONENT_NAME
+	METAPIPE_REQUIRED_SIZE='80G'
+	#on essaie de placer métapipe sur le root fs avec 80GO au mois de libre )
+	#si on y arrive on prévient la phase deploy en ajoutant la ligne METAPIPE_HOME dans le env.sh du COMPONENT_NAME
 
-	check_rootfs_size
-
-	if [[ $biggest != $size ]];then
+	if [[ $(check_rootfs_size $METAPIPE_REQUIRED_SIZE) ]];then
 		export METAPIPE_HOME='/var/lib/metapipe'
         	cenv_lines=$(cat <<-EOF
 export METAPIPE_HOME='/var/lib/metapipe'
