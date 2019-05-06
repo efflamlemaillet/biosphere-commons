@@ -96,6 +96,18 @@ check_rr(){
 	return $rv
 }
 
+mount_biomaj(){
+
+	mp_id="$(ss-get biomaj_fs_id)"
+	mp_options="$(ss-get biomaj_fs_options)"
+	mp_type="$(ss-get biomaj_fs_type)"
+	mp_path="$(ss-get biomaj_mount_point)"
+	mkdir -p ${mp_path}
+	mount -t $mp_type -o $mp_options $mp_id $mp_path
+	echo "export BIOMAJ_PATH=${mp_path}" >> /etc/profile.d/$COMPONENT_NAME-env.sh
+
+}
+
 _run(){
 	#load env vars
 	SC_DIR_ABS_PATH="$( realpath $( dirname ${BASH_SOURCE[0]}))"
@@ -106,8 +118,10 @@ _run(){
 
 	export CWL_LOCAL_DIR=${!C_LOCAL_DIR}		
 	export CWL_DATA_DIR=${!C_DATA_DIR}
-
+	#get condition to pass to PL part 2
 	store_rr
+	#get biomaj mount point 
+	mount_biomaj
 	pl_counter=0
 	IFS=';' read -ra plu_list <<< "$(ss-get data_urls)"
 	for plu in "${plu_list[@]}"
@@ -141,7 +155,7 @@ _run(){
 		echo "command :	cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file}" > ${outdir}/wf.info
 		cwltool --outdir ${outdir} --basedir ${CWL_DATA_DIR} ${wf_file} ${config_file} > ${outdir}/cwl_stdout.json
 		assembly_data_path="${outdir}/$( cat ${outdir}/cwl_stdout.json | jq -r '.transrate_output_dir.basename')/assemblies.csv"
-		assembled_contigs_path="${outdir}/$( cat ${outdir}/cwl_stdout.json | jq -r '.assembled_contigs.path')
+		assembled_contigs_path="${outdir}/$( cat ${outdir}/cwl_stdout.json | jq -r '.assembled_contigs.path')"
 
                 check_rr $assembly_data_path || part_1_result="failed"
                 if [[ "${part_1_result}" == "failed" ]];then
